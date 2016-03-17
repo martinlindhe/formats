@@ -16,11 +16,10 @@ func TestGetHex(t *testing.T) {
 
 	reader := io.Reader(file)
 
-	// XXX get console screen height
 	height := 2
 
-	formatting.betweenSymbols = ""
-	formatting.groupSize = 1
+	formatting.BetweenSymbols = ""
+	formatting.GroupSize = 1
 
 	hex, err := GetHex(&reader, height)
 	assert.Equal(t, nil, err)
@@ -33,8 +32,8 @@ func TestGetHex(t *testing.T) {
 	// reset file
 	file.Seek(0, os.SEEK_SET)
 
-	formatting.betweenSymbols = " "
-	formatting.groupSize = 2
+	formatting.BetweenSymbols = " "
+	formatting.GroupSize = 2
 
 	hex, err = GetHex(&reader, height)
 	assert.Equal(t, nil, err)

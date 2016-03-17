@@ -1,14 +1,17 @@
-## TODO
+# TODO - formats
+
+cmd to navigate a file's structure in hex
+
+    1. print headers with hex dump thingy, must do it
+    	hex dump   navigate prev-next field with arrow keys
+    	show info
+        use termbox-go or something else
 
 
-lib
-  format definitions
 
 
-viewer
-  gui app
 
+# TODO - prober
 
-prober
   cli tool to print some info about file
     - have 1-line short output mode, so you can batch process loads of stuff, similar to "file *"

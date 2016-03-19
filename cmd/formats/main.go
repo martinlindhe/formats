@@ -93,15 +93,10 @@ func GetHex(file *os.File, layout formats.Layout) (res string, err error) {
 
 	symbols := []string{}
 
-	// XXX respect layout
-	// fmt.Println(layout)
-
 	base, err := file.Seek(0, os.SEEK_CUR)
 	if err != nil {
 		return "", err
 	}
-
-	// fmt.Println(base)
 
 	for w := int64(0); w < 16; w++ {
 		var b byte
@@ -113,7 +108,7 @@ func GetHex(file *os.File, layout formats.Layout) (res string, err error) {
 		groupFmt := "%02x"
 		ceil := base + w
 
-		if layout.Offset >= ceil {
+		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
 			groupFmt = "[%02x](fg-red)"
 		}
 

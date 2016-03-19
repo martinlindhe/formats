@@ -43,7 +43,7 @@ func CombineHexRow(symbols []string) string {
 
 // Layout represents a parsed file structure layout as a flat list
 type Layout struct {
-	Offset uint64
+	Offset int64
 	Length byte
 	Type   DataType
 	Info   string

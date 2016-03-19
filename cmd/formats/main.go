@@ -18,7 +18,7 @@ var (
 	startingRow  = int64(0)
 	visibleRows  = 10
 	rowWidth     = 16
-	currentField = uint64(0)
+	currentField = 0
 
 	// XXX we fake result from structToFlatStruct() to test presentation
 	fileLayout = []formats.Layout{
@@ -70,7 +70,7 @@ func prettyHexView(file *os.File) string {
 	ceil := base + int64(visibleRows*rowWidth)
 
 	val := fileLayout[currentField]
-	fmt.Printf("Using field %v, field %d\n", val, currentField)
+	// fmt.Printf("Using field %v, field %d\n", val, currentField)
 
 	for i := base; i < ceil; i += int64(rowWidth) {
 
@@ -94,15 +94,30 @@ func GetHex(file *os.File, layout formats.Layout) (res string, err error) {
 	symbols := []string{}
 
 	// XXX respect layout
-	fmt.Println(layout)
+	// fmt.Println(layout)
 
-	for w := 0; w < 16; w++ {
+	base, err := file.Seek(0, os.SEEK_CUR)
+	if err != nil {
+		return "", err
+	}
+
+	// fmt.Println(base)
+
+	for w := int64(0); w < 16; w++ {
 		var b byte
 		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
 			res = formats.CombineHexRow(symbols)
 			return
 		}
-		group := fmt.Sprintf("%02x", b)
+
+		groupFmt := "%02x"
+		ceil := base + w
+
+		if layout.Offset >= ceil {
+			groupFmt = "[%02x](fg-red)"
+		}
+
+		group := fmt.Sprintf(groupFmt, b)
 		symbols = append(symbols, group)
 	}
 	res = formats.CombineHexRow(symbols)
@@ -156,8 +171,8 @@ func uiLoop(layout *[]formats.Layout, file *os.File) {
 
 	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
 		currentField++
-		if currentField >= uint64(len(fileLayout)) {
-			currentField = uint64(len(fileLayout)) - 1
+		if currentField >= len(fileLayout) {
+			currentField = len(fileLayout) - 1
 		}
 		hexPar.Text = prettyHexView(file)
 		termui.Render(hexPar)

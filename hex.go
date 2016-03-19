@@ -23,13 +23,29 @@ var (
 		BetweenSymbols: " ",
 		GroupSize:      1,
 	}
-	hexViewState = HexViewState{
+	HexView = HexViewState{
 		StartingRow:  0,
 		VisibleRows:  10,
 		RowWidth:     16,
 		CurrentField: 0,
 	}
 )
+
+// Next moves focus to the next field
+func (f HexViewState) Next(max int) {
+	f.CurrentField++
+	if f.CurrentField >= max {
+		f.CurrentField = max - 1
+	}
+}
+
+// Prev moves focus to the previous field
+func (f HexViewState) Prev() {
+	f.CurrentField--
+	if f.CurrentField < 0 {
+		f.CurrentField = 0
+	}
+}
 
 // Formatting ...
 func Formatting(fmt HexFormatting) { formatting = fmt }

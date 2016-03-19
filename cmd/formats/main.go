@@ -60,7 +60,7 @@ func uiLoop(file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
 
-	hex := prettyHexView(file)
+	hex := formats.PrettyHexView(file, fileLayout)
 
 	err := termui.Init()
 	if err != nil {
@@ -69,7 +69,7 @@ func uiLoop(file *os.File) {
 	defer termui.Close()
 
 	hexPar := termui.NewPar(hex)
-	hexPar.Height = visibleRows + 2
+	hexPar.Height = formats.HexView.VisibleRows + 2
 	hexPar.Width = 56
 	hexPar.Y = 0
 	hexPar.BorderLabel = "Hex"
@@ -97,58 +97,52 @@ func uiLoop(file *os.File) {
 	})
 
 	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
-		currentField++
-		if currentField >= len(fileLayout) {
-			currentField = len(fileLayout) - 1
-		}
-		hexPar.Text = prettyHexView(file)
+		formats.HexView.Next(len(fileLayout))
+		hexPar.Text = formats.PrettyHexView(file, fileLayout)
 		termui.Render(hexPar)
 	})
 
 	termui.Handle("/sys/kbd/<left>", func(termui.Event) {
-		currentField--
-		if currentField < 0 {
-			currentField = 0
-		}
-		hexPar.Text = prettyHexView(file)
+		formats.HexView.Prev()
+		hexPar.Text = formats.PrettyHexView(file, fileLayout)
 		termui.Render(hexPar)
 	})
 
 	termui.Handle("/sys/kbd/<up>", func(termui.Event) {
-		startingRow--
-		if startingRow < 0 {
-			startingRow = 0
+		formats.HexView.StartingRow--
+		if formats.HexView.StartingRow < 0 {
+			formats.HexView.StartingRow = 0
 		}
-		hexPar.Text = prettyHexView(file)
+		hexPar.Text = formats.PrettyHexView(file, fileLayout)
 		termui.Render(hexPar)
 	})
 
 	termui.Handle("/sys/kbd/<down>", func(termui.Event) {
-		startingRow++
-		if startingRow > (fileLen / 16) {
-			startingRow = fileLen / 16
+		formats.HexView.StartingRow++
+		if formats.HexView.StartingRow > (fileLen / 16) {
+			formats.HexView.StartingRow = fileLen / 16
 		}
-		hexPar.Text = prettyHexView(file)
+		hexPar.Text = formats.PrettyHexView(file, fileLayout)
 		termui.Render(hexPar)
 	})
 
 	termui.Handle("/sys/kbd/<previous>", func(termui.Event) {
 		// pgup jump a whole screen
-		startingRow -= int64(visibleRows)
-		if startingRow < 0 {
-			startingRow = 0
+		formats.HexView.StartingRow -= int64(formats.HexView.VisibleRows)
+		if formats.HexView.StartingRow < 0 {
+			formats.HexView.StartingRow = 0
 		}
-		hexPar.Text = prettyHexView(file)
+		hexPar.Text = formats.PrettyHexView(file, fileLayout)
 		termui.Render(hexPar)
 	})
 
 	termui.Handle("/sys/kbd/<next>", func(termui.Event) {
 		// pgdown, jump a whole screen
-		startingRow += int64(visibleRows)
-		if startingRow > (fileLen / 16) {
-			startingRow = fileLen / 16
+		formats.HexView.StartingRow += int64(formats.HexView.VisibleRows)
+		if formats.HexView.StartingRow > (fileLen / 16) {
+			formats.HexView.StartingRow = fileLen / 16
 		}
-		hexPar.Text = prettyHexView(file)
+		hexPar.Text = formats.PrettyHexView(file, fileLayout)
 		termui.Render(hexPar)
 	})
 

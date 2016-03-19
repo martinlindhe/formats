@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 )
 
@@ -16,33 +17,28 @@ type HexFormatting struct {
 var (
 	formatting = HexFormatting{
 		BetweenSymbols: " ",
-		GroupSize:      1, // XXX TODO other group sizes
+		GroupSize:      1,
 	}
 )
 
 // Formatting ...
-func Formatting(fmt HexFormatting) {
-	formatting = fmt
-}
+func Formatting(fmt HexFormatting) { formatting = fmt }
 
-// GetHex ...
-func GetHex(r *io.Reader, height int) (res []string, err error) {
-	// XXX dump one screen of hex (300 byte or so, ) from io.Reader
+// GetHex dumps a row of hex from io.Reader
+func GetHex(r *io.Reader) (res string, err error) {
 
-	for h := 0; h < height; h++ {
-		symbols := []string{}
+	symbols := []string{}
 
-		for w := 0; w < 16; w++ {
-			var b byte
-			if err = binary.Read(*r, binary.LittleEndian, &b); err != nil {
-				res = append(res, combineHexRow(symbols))
-				return
-			}
-			group := fmt.Sprintf("%02x", b)
-			symbols = append(symbols, group)
+	for w := 0; w < 16; w++ {
+		var b byte
+		if err = binary.Read(*r, binary.LittleEndian, &b); err != nil {
+			res = combineHexRow(symbols)
+			return
 		}
-		res = append(res, combineHexRow(symbols))
+		group := fmt.Sprintf("%02x", b)
+		symbols = append(symbols, group)
 	}
+	res = combineHexRow(symbols)
 	return
 }
 
@@ -62,4 +58,68 @@ func combineHexRow(symbols []string) string {
 		}
 	}
 	return strings.Join(row, formatting.BetweenSymbols)
+}
+
+// Layout represents a parsed file structure layout as a flat list
+type Layout struct {
+	Length byte
+	Type   DataType
+	Info   string
+}
+
+// DataType ...
+type DataType int
+
+func (dt DataType) String() string {
+
+	m := map[DataType]string{
+		ASCIIZ:   "ASCIIZ",
+		Byte:     "byte",
+		Uint16le: "uint16-le",
+		Uint32le: "uint32-le",
+		Int16le:  "int16-le",
+		Int32le:  "int32-le",
+	}
+
+	if val, ok := m[dt]; ok {
+		return val
+	}
+
+	// NOTE should only be able to panic during dev (as in:
+	// adding a new datatype and forgetting to add it to the map)
+	panic(dt)
+}
+
+// ...
+const (
+	_               = iota
+	ASCIIZ DataType = iota
+	Byte
+	Uint16le
+	Uint32le
+	Int16le
+	Int32le
+)
+
+func structToFlatStruct(obj interface{}) []Layout { // XXX implement
+
+	res := []Layout{}
+
+	//	spew.Dump(x)
+
+	// XXX iterate over struct, create a 2d rep of the structure mapping
+
+	s := reflect.ValueOf(obj).Elem()
+	typeOfT := s.Type()
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+
+		// XXX is it a struct ?
+		// fmt.Println(f.Tag)
+
+		fmt.Printf("%d: %s %s = %v\n", i,
+			typeOfT.Field(i).Name, f.Type(), f.Interface())
+	}
+
+	return res
 }

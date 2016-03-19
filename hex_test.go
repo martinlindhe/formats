@@ -1,12 +1,22 @@
 package formats
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestXXX(t *testing.T) {
+
+	// XXX we fake result from structToFlatStruct() to test presentation
+	x := map[uint64]Layout{0x0000: Layout{1, ASCIIZ, "hej"}}
+
+	// XXXx
+	fmt.Println(x)
+}
 
 func TestGetHex(t *testing.T) {
 
@@ -16,18 +26,13 @@ func TestGetHex(t *testing.T) {
 
 	reader := io.Reader(file)
 
-	height := 2
-
 	formatting.BetweenSymbols = ""
 	formatting.GroupSize = 1
 
-	hex, err := GetHex(&reader, height)
+	hex, err := GetHex(&reader)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, []string{
-		"60ea2b00220b01021000029265785e52",
-		"65785e52000000000000000000000000",
-	}, hex)
+	assert.Equal(t, "60ea2b00220b01021000029265785e52", hex)
 
 	// reset file
 	file.Seek(0, os.SEEK_SET)
@@ -35,11 +40,8 @@ func TestGetHex(t *testing.T) {
 	formatting.BetweenSymbols = " "
 	formatting.GroupSize = 2
 
-	hex, err = GetHex(&reader, height)
+	hex, err = GetHex(&reader)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, []string{
-		"60ea 2b00 220b 0102 1000 0292 6578 5e52",
-		"6578 5e52 0000 0000 0000 0000 0000 0000",
-	}, hex)
+	assert.Equal(t, "60ea 2b00 220b 0102 1000 0292 6578 5e52", hex)
 }

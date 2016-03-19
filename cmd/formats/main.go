@@ -2,18 +2,21 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"reflect"
 
-	"github.com/davecgh/go-spew/spew"
-	ui "github.com/gizak/termui"
-	"github.com/martinlindhe/arj"
+	//"github.com/davecgh/go-spew/spew"
+	"github.com/gizak/termui"
+	// "github.com/martinlindhe/arj"
 	"github.com/martinlindhe/formats"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
-	inFile = kingpin.Arg("file", "Input file").Required().String()
+	inFile      = kingpin.Arg("file", "Input file").Required().String()
+	startingRow = int64(0)
+	visibleRows = 10
+	rowWidth    = 16
 )
 
 func main() {
@@ -24,7 +27,7 @@ func main() {
 
 	formats.Formatting(formats.HexFormatting{
 		BetweenSymbols: " ",
-		GroupSize:      2,
+		GroupSize:      1,
 	})
 
 	file, _ := os.Open(*inFile)
@@ -32,81 +35,130 @@ func main() {
 
 	// ---
 
-	// extract arj struct
-	arj, err := arj.ParseARJArchive(file)
-	if err != nil {
-		fmt.Println("error:", err)
-		os.Exit(1)
-	}
-
-	res := arjStructToFlatStruct(&arj)
-
-	spew.Dump(res)
-
 	/*
-		reader := io.Reader(file)
+		// extract arj struct
+		arj, err := arj.ParseARJArchive(file)
+		if err != nil {
+			fmt.Println("error:", err)
+			os.Exit(1)
+		}
 
-		// rewind
-		file.Seek(0, os.SEEK_SET)
-
-		// XXX get console screen height
-		hex, _ := formats.GetHex(&reader, 3)
-		fmt.Println(hex)
+		res := structToFlatStruct(&arj)
 	*/
 
-	// uiLoop()
-}
-
-func arjStructToFlatStruct(t *arj.Arj) []string { // XXX figure out return type
-
-	res := []string{}
-
-	//	spew.Dump(x)
-
-	// XXX iterate over struct, create a 2d rep of the structure mapping
-
-	s := reflect.ValueOf(t).Elem()
-	typeOfT := s.Type()
-	for i := 0; i < s.NumField(); i++ {
-		f := s.Field(i)
-		fmt.Printf("%d: %s %s = %v\n", i,
-			typeOfT.Field(i).Name, f.Type(), f.Interface())
+	// XXX we fake result from structToFlatStruct() to test presentation
+	fileLayout := map[uint64]formats.Layout{
+		0x0000:     formats.Layout{2, formats.Uint16le, "magic"}, // XXX also data type
+		0x0002:     formats.Layout{4, formats.Uint32le, "width"},
+		0x0006:     formats.Layout{4, formats.Uint32le, "height"},
+		0x000a:     formats.Layout{9, formats.ASCIIZ, "NAME.EXT"}, // XXX asciiz
+		0x000a + 9: formats.Layout{2, formats.Uint16le, "tag"},
 	}
 
-	return res
+	// XXX get console screen height
+
+	uiLoop(&fileLayout, file)
 }
 
-func uiLoop() {
+func prettyHexView(file *os.File) string {
 
-	err := ui.Init()
+	reader := io.Reader(file)
+
+	hex := ""
+
+	base := startingRow * int64(rowWidth)
+	ceil := base + int64(visibleRows*rowWidth)
+
+	for i := base; i < ceil; i += int64(rowWidth) {
+
+		file.Seek(i, os.SEEK_SET)
+		line, err := formats.GetHex(&reader)
+		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
+		if err != nil {
+			fmt.Println("got err", err)
+			break
+		}
+	}
+	return hex
+}
+
+func uiLoop(layout *map[uint64]formats.Layout, file *os.File) {
+
+	fileLen, _ := file.Seek(0, os.SEEK_END)
+
+	hex := prettyHexView(file)
+
+	err := termui.Init()
 	if err != nil {
 		panic(err)
 	}
-	defer ui.Close()
+	defer termui.Close()
 
-	p := ui.NewPar(":PRESS q TO QUIT DEMO")
+	//hex := "Simple colored text\nwith label. It [can be](fg-red) multilined with \\n or [break automatically](fg-red,fg-bold)"
+	/*
+	   	hex := `[[0000]](fg-yellow) [0a bb](fg-blue) 2c ff 8e 88 00 0a 01 02 00 ff ff 3f 17 fe
+	   [0020] 0a bb 2c ff 8e 88 00 0a 01 02 00 ff ff 3f 17 fe`
+	*/
+	hexPar := termui.NewPar(hex)
+	hexPar.Height = visibleRows + 2
+	hexPar.Width = 56
+	hexPar.Y = 0
+	hexPar.BorderLabel = "Hex"
+	// hexPar.BorderFg = termui.ColorYellow
+
+	p := termui.NewPar(":PRESS q TO QUIT DEMO")
 	p.Height = 3
 	p.Width = 50
-	p.TextFgColor = ui.ColorWhite
+	p.Y = 15
+	p.TextFgColor = termui.ColorWhite
 	p.BorderLabel = "Text Box"
-	p.BorderFg = ui.ColorCyan
-
-	g := ui.NewGauge()
-	g.Percent = 50
-	g.Width = 50
-	g.Height = 3
-	g.Y = 11
-	g.BorderLabel = "Gauge"
-	g.BarColor = ui.ColorRed
-	g.BorderFg = ui.ColorWhite
-	g.BorderLabelFg = ui.ColorCyan
+	p.BorderFg = termui.ColorCyan
 
 	// handle key q pressing
-	ui.Handle("/sys/kbd/q", func(ui.Event) {
+	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit
-		ui.StopLoop()
+		termui.StopLoop()
 	})
 
-	ui.Render(p, g) // feel free to call Render, it's async and non-block
-	ui.Loop()       // block until StopLoop is called
+	termui.Handle("/sys/kbd/<up>", func(termui.Event) {
+		startingRow--
+		if startingRow < 0 {
+			startingRow = 0
+		}
+		hexPar.Text = prettyHexView(file)
+		termui.Render(hexPar)
+	})
+
+	termui.Handle("/sys/kbd/<down>", func(termui.Event) {
+		startingRow++
+		if startingRow > (fileLen / 16) {
+			startingRow = fileLen / 16
+		}
+		hexPar.Text = prettyHexView(file)
+		termui.Render(hexPar)
+	})
+
+	termui.Handle("/sys/kbd/<previous>", func(termui.Event) {
+		// pgup jump a whole screen
+		startingRow -= int64(visibleRows)
+		if startingRow < 0 {
+			startingRow = 0
+		}
+		hexPar.Text = prettyHexView(file)
+		termui.Render(hexPar)
+	})
+
+	termui.Handle("/sys/kbd/<next>", func(termui.Event) {
+		// pgdown, jump a whole screen
+		startingRow += int64(visibleRows)
+		if startingRow > (fileLen / 16) {
+			startingRow = fileLen / 16
+		}
+		hexPar.Text = prettyHexView(file)
+		termui.Render(hexPar)
+	})
+
+	termui.Render(p, hexPar) // feel free to call Render, it's async and non-block
+	termui.Loop()            // block until StopLoop is called
+
 }

@@ -1,8 +1,6 @@
 package formats
 
 import (
-	"io"
-
 	"os"
 	"testing"
 
@@ -17,8 +15,6 @@ func TestGetHex(t *testing.T) {
 	file, err := os.Open("samples/tiny.arj")
 	defer file.Close()
 	assert.Equal(t, nil, err)
-
-	reader := io.Reader(file)
 
 	formatting.BetweenSymbols = ""
 	formatting.GroupSize = 1

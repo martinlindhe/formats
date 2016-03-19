@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
-	"io"
 	"os"
 
 	//"github.com/davecgh/go-spew/spew"
@@ -32,7 +30,13 @@ func main() {
 	file, _ := os.Open(*inFile)
 	defer file.Close()
 
-	fileLayout = formats.ParseLayout(file)
+	var err error
+
+	fileLayout, err = formats.ParseLayout(file)
+	if err != nil {
+		fmt.Println("error:", err)
+		os.Exit(1)
+	}
 
 	// ---
 
@@ -49,10 +53,10 @@ func main() {
 
 	// XXX get console screen height
 
-	uiLoop(&fileLayout, file)
+	uiLoop(file)
 }
 
-func uiLoop(layout *[]formats.Layout, file *os.File) {
+func uiLoop(file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
 

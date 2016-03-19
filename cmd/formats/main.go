@@ -14,20 +14,8 @@ import (
 )
 
 var (
-	inFile       = kingpin.Arg("file", "Input file").Required().String()
-	startingRow  = int64(0)
-	visibleRows  = 10
-	rowWidth     = 16
-	currentField = 0
-
-	// XXX we fake result from structToFlatStruct() to test presentation
-	fileLayout = []formats.Layout{
-		formats.Layout{0x0000, 2, formats.Uint16le, "magic"},
-		formats.Layout{0x0002, 4, formats.Uint32le, "width"},
-		formats.Layout{0x0006, 4, formats.Uint32le, "height"},
-		formats.Layout{0x000a, 9, formats.ASCIIZ, "NAME.EXT"},
-		formats.Layout{0x000a + 9, 2, formats.Uint16le, "tag"},
-	}
+	inFile     = kingpin.Arg("file", "Input file").Required().String()
+	fileLayout = []formats.Layout{}
 )
 
 func main() {
@@ -43,6 +31,8 @@ func main() {
 
 	file, _ := os.Open(*inFile)
 	defer file.Close()
+
+	fileLayout = formats.ParseLayout(file)
 
 	// ---
 
@@ -62,63 +52,6 @@ func main() {
 	uiLoop(&fileLayout, file)
 }
 
-func prettyHexView(file *os.File) string {
-
-	hex := ""
-
-	base := startingRow * int64(rowWidth)
-	ceil := base + int64(visibleRows*rowWidth)
-
-	val := fileLayout[currentField]
-	// fmt.Printf("Using field %v, field %d\n", val, currentField)
-
-	for i := base; i < ceil; i += int64(rowWidth) {
-
-		file.Seek(i, os.SEEK_SET)
-		line, err := GetHex(file, val)
-
-		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
-		if err != nil {
-			fmt.Println("got err", err)
-			break
-		}
-	}
-	return hex
-}
-
-// GetHex dumps a row of hex from io.Reader
-func GetHex(file *os.File, layout formats.Layout) (res string, err error) {
-
-	reader := io.Reader(file)
-
-	symbols := []string{}
-
-	base, err := file.Seek(0, os.SEEK_CUR)
-	if err != nil {
-		return "", err
-	}
-
-	for w := int64(0); w < 16; w++ {
-		var b byte
-		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
-			res = formats.CombineHexRow(symbols)
-			return
-		}
-
-		groupFmt := "%02x"
-		ceil := base + w
-
-		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
-			groupFmt = "[%02x](fg-red)"
-		}
-
-		group := fmt.Sprintf(groupFmt, b)
-		symbols = append(symbols, group)
-	}
-	res = formats.CombineHexRow(symbols)
-	return
-}
-
 func uiLoop(layout *[]formats.Layout, file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
@@ -131,11 +64,6 @@ func uiLoop(layout *[]formats.Layout, file *os.File) {
 	}
 	defer termui.Close()
 
-	//hex := "Simple colored text\nwith label. It [can be](fg-red) multilined with \\n or [break automatically](fg-red,fg-bold)"
-	/*
-	   	hex := `[[0000]](fg-yellow) [0a bb](fg-blue) 2c ff 8e 88 00 0a 01 02 00 ff ff 3f 17 fe
-	   [0020] 0a bb 2c ff 8e 88 00 0a 01 02 00 ff ff 3f 17 fe`
-	*/
 	hexPar := termui.NewPar(hex)
 	hexPar.Height = visibleRows + 2
 	hexPar.Width = 56

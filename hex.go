@@ -1,8 +1,6 @@
 package formats
 
 import (
-	"fmt"
-	"reflect"
 	"strings"
 )
 
@@ -12,18 +10,31 @@ type HexFormatting struct {
 	GroupSize      byte
 }
 
+// HexViewState ...
+type HexViewState struct {
+	StartingRow  int64
+	VisibleRows  int
+	RowWidth     int
+	CurrentField int
+}
+
 var (
 	formatting = HexFormatting{
 		BetweenSymbols: " ",
 		GroupSize:      1,
+	}
+	hexViewState = HexViewState{
+		StartingRow:  0,
+		VisibleRows:  10,
+		RowWidth:     16,
+		CurrentField: 0,
 	}
 )
 
 // Formatting ...
 func Formatting(fmt HexFormatting) { formatting = fmt }
 
-// CombineHexRow ...
-func CombineHexRow(symbols []string) string {
+func combineHexRow(symbols []string) string {
 
 	group := []string{}
 	row := []string{}
@@ -39,69 +50,4 @@ func CombineHexRow(symbols []string) string {
 		}
 	}
 	return strings.Join(row, formatting.BetweenSymbols)
-}
-
-// Layout represents a parsed file structure layout as a flat list
-type Layout struct {
-	Offset int64
-	Length byte
-	Type   DataType
-	Info   string
-}
-
-// DataType ...
-type DataType int
-
-func (dt DataType) String() string {
-
-	m := map[DataType]string{
-		ASCIIZ:   "ASCIIZ",
-		Byte:     "byte",
-		Uint16le: "uint16-le",
-		Uint32le: "uint32-le",
-		Int16le:  "int16-le",
-		Int32le:  "int32-le",
-	}
-
-	if val, ok := m[dt]; ok {
-		return val
-	}
-
-	// NOTE should only be able to panic during dev (as in:
-	// adding a new datatype and forgetting to add it to the map)
-	panic(dt)
-}
-
-// ...
-const (
-	_               = iota
-	ASCIIZ DataType = iota
-	Byte
-	Uint16le
-	Uint32le
-	Int16le
-	Int32le
-)
-
-func structToFlatStruct(obj interface{}) []Layout { // XXX implement
-
-	res := []Layout{}
-
-	//	spew.Dump(x)
-
-	// XXX iterate over struct, create a 2d rep of the structure mapping
-
-	s := reflect.ValueOf(obj).Elem()
-	typeOfT := s.Type()
-	for i := 0; i < s.NumField(); i++ {
-		f := s.Field(i)
-
-		// XXX is it a struct ?
-		// fmt.Println(f.Tag)
-
-		fmt.Printf("%d: %s %s = %v\n", i,
-			typeOfT.Field(i).Name, f.Type(), f.Interface())
-	}
-
-	return res
 }

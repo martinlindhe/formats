@@ -96,21 +96,18 @@ func PrettyHexView(file *os.File, fileLayout []Layout) string {
 	layout := fileLayout[HexView.CurrentField]
 	// fmt.Printf("Using field %v, field %d\n", val, currentField)
 
-	lineCount := 0
 	for i := base; i < ceil; i += int64(HexView.RowWidth) {
 
 		file.Seek(i, os.SEEK_SET)
 		line, err := GetHex(file, layout)
 
 		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
-		lineCount++
 		if err != nil {
 			fmt.Println("got err", err)
 			break
 		}
 	}
 
-	fmt.Println("XXX lineCount:", lineCount)
 	return hex
 }
 

@@ -32,7 +32,7 @@ var (
 )
 
 // Next moves focus to the next field
-func (f HexViewState) Next(max int) {
+func (f *HexViewState) Next(max int) {
 	f.CurrentField++
 	if f.CurrentField >= max {
 		f.CurrentField = max - 1
@@ -40,7 +40,7 @@ func (f HexViewState) Next(max int) {
 }
 
 // Prev moves focus to the previous field
-func (f HexViewState) Prev() {
+func (f *HexViewState) Prev() {
 	f.CurrentField--
 	if f.CurrentField < 0 {
 		f.CurrentField = 0

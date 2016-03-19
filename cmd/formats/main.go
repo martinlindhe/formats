@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -13,10 +14,20 @@ import (
 )
 
 var (
-	inFile      = kingpin.Arg("file", "Input file").Required().String()
-	startingRow = int64(0)
-	visibleRows = 10
-	rowWidth    = 16
+	inFile       = kingpin.Arg("file", "Input file").Required().String()
+	startingRow  = int64(0)
+	visibleRows  = 10
+	rowWidth     = 16
+	currentField = uint64(0)
+
+	// XXX we fake result from structToFlatStruct() to test presentation
+	fileLayout = []formats.Layout{
+		formats.Layout{0x0000, 2, formats.Uint16le, "magic"},
+		formats.Layout{0x0002, 4, formats.Uint32le, "width"},
+		formats.Layout{0x0006, 4, formats.Uint32le, "height"},
+		formats.Layout{0x000a, 9, formats.ASCIIZ, "NAME.EXT"},
+		formats.Layout{0x000a + 9, 2, formats.Uint16le, "tag"},
+	}
 )
 
 func main() {
@@ -46,15 +57,6 @@ func main() {
 		res := structToFlatStruct(&arj)
 	*/
 
-	// XXX we fake result from structToFlatStruct() to test presentation
-	fileLayout := map[uint64]formats.Layout{
-		0x0000:     formats.Layout{2, formats.Uint16le, "magic"}, // XXX also data type
-		0x0002:     formats.Layout{4, formats.Uint32le, "width"},
-		0x0006:     formats.Layout{4, formats.Uint32le, "height"},
-		0x000a:     formats.Layout{9, formats.ASCIIZ, "NAME.EXT"}, // XXX asciiz
-		0x000a + 9: formats.Layout{2, formats.Uint16le, "tag"},
-	}
-
 	// XXX get console screen height
 
 	uiLoop(&fileLayout, file)
@@ -62,17 +64,19 @@ func main() {
 
 func prettyHexView(file *os.File) string {
 
-	reader := io.Reader(file)
-
 	hex := ""
 
 	base := startingRow * int64(rowWidth)
 	ceil := base + int64(visibleRows*rowWidth)
 
+	val := fileLayout[currentField]
+	fmt.Printf("Using field %v, field %d\n", val, currentField)
+
 	for i := base; i < ceil; i += int64(rowWidth) {
 
 		file.Seek(i, os.SEEK_SET)
-		line, err := formats.GetHex(&reader)
+		line, err := GetHex(file, val)
+
 		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
 		if err != nil {
 			fmt.Println("got err", err)
@@ -82,7 +86,30 @@ func prettyHexView(file *os.File) string {
 	return hex
 }
 
-func uiLoop(layout *map[uint64]formats.Layout, file *os.File) {
+// GetHex dumps a row of hex from io.Reader
+func GetHex(file *os.File, layout formats.Layout) (res string, err error) {
+
+	reader := io.Reader(file)
+
+	symbols := []string{}
+
+	// XXX respect layout
+	fmt.Println(layout)
+
+	for w := 0; w < 16; w++ {
+		var b byte
+		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
+			res = formats.CombineHexRow(symbols)
+			return
+		}
+		group := fmt.Sprintf("%02x", b)
+		symbols = append(symbols, group)
+	}
+	res = formats.CombineHexRow(symbols)
+	return
+}
+
+func uiLoop(layout *[]formats.Layout, file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
 
@@ -106,6 +133,14 @@ func uiLoop(layout *map[uint64]formats.Layout, file *os.File) {
 	hexPar.BorderLabel = "Hex"
 	// hexPar.BorderFg = termui.ColorYellow
 
+	box := termui.NewPar("info box")
+	box.Height = 8
+	box.Width = 40
+	box.X = 60
+	box.TextFgColor = termui.ColorWhite
+	box.BorderLabel = "info"
+	box.BorderFg = termui.ColorCyan
+
 	p := termui.NewPar(":PRESS q TO QUIT DEMO")
 	p.Height = 3
 	p.Width = 50
@@ -114,10 +149,27 @@ func uiLoop(layout *map[uint64]formats.Layout, file *os.File) {
 	p.BorderLabel = "Text Box"
 	p.BorderFg = termui.ColorCyan
 
-	// handle key q pressing
 	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit
 		termui.StopLoop()
+	})
+
+	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
+		currentField++
+		if currentField >= uint64(len(fileLayout)) {
+			currentField = uint64(len(fileLayout)) - 1
+		}
+		hexPar.Text = prettyHexView(file)
+		termui.Render(hexPar)
+	})
+
+	termui.Handle("/sys/kbd/<left>", func(termui.Event) {
+		currentField--
+		if currentField < 0 {
+			currentField = 0
+		}
+		hexPar.Text = prettyHexView(file)
+		termui.Render(hexPar)
 	})
 
 	termui.Handle("/sys/kbd/<up>", func(termui.Event) {
@@ -158,7 +210,7 @@ func uiLoop(layout *map[uint64]formats.Layout, file *os.File) {
 		termui.Render(hexPar)
 	})
 
-	termui.Render(p, hexPar) // feel free to call Render, it's async and non-block
-	termui.Loop()            // block until StopLoop is called
+	termui.Render(p, hexPar, box)
 
+	termui.Loop() // block until StopLoop is called
 }

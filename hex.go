@@ -1,9 +1,7 @@
 package formats
 
 import (
-	"encoding/binary"
 	"fmt"
-	"io"
 	"reflect"
 	"strings"
 )
@@ -24,25 +22,8 @@ var (
 // Formatting ...
 func Formatting(fmt HexFormatting) { formatting = fmt }
 
-// GetHex dumps a row of hex from io.Reader
-func GetHex(r *io.Reader) (res string, err error) {
-
-	symbols := []string{}
-
-	for w := 0; w < 16; w++ {
-		var b byte
-		if err = binary.Read(*r, binary.LittleEndian, &b); err != nil {
-			res = combineHexRow(symbols)
-			return
-		}
-		group := fmt.Sprintf("%02x", b)
-		symbols = append(symbols, group)
-	}
-	res = combineHexRow(symbols)
-	return
-}
-
-func combineHexRow(symbols []string) string {
+// CombineHexRow ...
+func CombineHexRow(symbols []string) string {
 
 	group := []string{}
 	row := []string{}
@@ -62,6 +43,7 @@ func combineHexRow(symbols []string) string {
 
 // Layout represents a parsed file structure layout as a flat list
 type Layout struct {
+	Offset uint64
 	Length byte
 	Type   DataType
 	Info   string

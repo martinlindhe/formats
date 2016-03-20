@@ -1,6 +1,7 @@
 package formats
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -30,6 +31,15 @@ var (
 		CurrentField: 0,
 	}
 )
+
+// CurrentFieldInfo renders info of current field
+func (f *HexViewState) CurrentFieldInfo(layout []Layout) string {
+
+	field := layout[f.CurrentField]
+
+	return field.Info + fmt.Sprintf(", len %d, type %s", field.Length, field.Type)
+
+}
 
 // Next moves focus to the next field
 func (f *HexViewState) Next(max int) {

@@ -74,7 +74,7 @@ func uiLoop(file *os.File) {
 	hexPar.Y = 0
 	hexPar.BorderLabel = "Hex"
 
-	boxText := formats.HexView.CurrentFieldInfo(fileLayout)
+	boxText := formats.HexView.CurrentFieldInfo(file, fileLayout)
 	box := termui.NewPar(boxText)
 	box.Height = 8
 	box.Width = 40
@@ -99,14 +99,14 @@ func uiLoop(file *os.File) {
 	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
 		formats.HexView.Next(len(fileLayout))
 		hexPar.Text = formats.PrettyHexView(file, fileLayout)
-		box.Text = formats.HexView.CurrentFieldInfo(fileLayout)
+		box.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
 		termui.Render(hexPar, box)
 	})
 
 	termui.Handle("/sys/kbd/<left>", func(termui.Event) {
 		formats.HexView.Prev()
 		hexPar.Text = formats.PrettyHexView(file, fileLayout)
-		box.Text = formats.HexView.CurrentFieldInfo(fileLayout)
+		box.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
 		termui.Render(hexPar, box)
 	})
 

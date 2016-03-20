@@ -1,7 +1,10 @@
 package formats
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 )
 
@@ -19,6 +22,7 @@ type HexViewState struct {
 	CurrentField int
 }
 
+// ...
 var (
 	formatting = HexFormatting{
 		BetweenSymbols: " ",
@@ -33,12 +37,58 @@ var (
 )
 
 // CurrentFieldInfo renders info of current field
-func (f *HexViewState) CurrentFieldInfo(layout []Layout) string {
+func (f *HexViewState) CurrentFieldInfo(file *os.File, layout []Layout) string {
 
 	field := layout[f.CurrentField]
 
-	return field.Info + fmt.Sprintf(", len %d, type %s", field.Length, field.Type)
+	res := field.Info + fmt.Sprintf(" (%d bytes)\n\n", field.Length)
 
+	res += fmt.Sprintf("%s:\n", field.Type)
+
+	file.Seek(field.Offset, os.SEEK_SET)
+
+	// XXX decode data based on type and show
+	r := io.Reader(file)
+
+	switch field.Type {
+	case Int16le:
+		var i int16
+		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+			panic(err)
+		}
+		res += fmt.Sprintf("%d", i)
+	case Int32le:
+		var i int32
+		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+			panic(err)
+		}
+		res += fmt.Sprintf("%d", i)
+
+	case Uint16le:
+		var i uint16
+		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+			panic(err)
+		}
+		res += fmt.Sprintf("%d", i)
+	case Uint32le:
+		var i uint32
+		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+			panic(err)
+		}
+		res += fmt.Sprintf("%d", i)
+	case ASCIIZ:
+		buf := make([]byte, field.Length)
+		_, err := file.Read(buf)
+		if err != nil && err != io.EOF {
+			panic(err)
+		}
+		res += string(buf)
+
+	default:
+		res += "XXX unhandled " + field.Type.String()
+	}
+
+	return res
 }
 
 // Next moves focus to the next field

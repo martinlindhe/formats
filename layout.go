@@ -3,11 +3,43 @@ package formats
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/arj"
+	"github.com/ghodss/yaml"
 	"io"
+	"io/ioutil"
 	"os"
-	//"reflect"
+	"path/filepath"
 )
+
+// FormatDescription ...
+type FormatDescription struct {
+	Format Format `json:"format"`
+}
+
+// Format ...
+type Format struct {
+	Name   string   `json:"name"`
+	Mime   string   `json:"mime"`
+	Struct []string `json:"struct"`
+}
+
+// ReadFormatDescription ...
+func ReadFormatDescription(formatName string) (*Format, error) {
+
+	formatFile := "./formats/" + formatName + ".yml"
+
+	if !exists(formatFile) {
+		return nil, fmt.Errorf("Unknown format %s", formatFile)
+	}
+
+	data, err := ioutil.ReadFile(formatFile)
+	if err != nil {
+		return nil, err
+	}
+
+	desc := FormatDescription{}
+	err = yaml.Unmarshal(data, &desc)
+	return &desc.Format, err
+}
 
 // Layout represents a parsed file structure layout as a flat list
 type Layout struct {
@@ -51,48 +83,40 @@ const (
 	Int32le
 )
 
+func fileExt(file *os.File) string {
+
+	ext := filepath.Ext(file.Name())
+	if len(ext) > 0 {
+		// strip leading dot
+		ext = ext[1:]
+	}
+	return ext
+}
+
 // ParseLayout returns a Layout for the file
 func ParseLayout(file *os.File) ([]Layout, error) {
 
-	arj, err := arj.ParseARJArchive(file)
-	if err != nil {
-		return []Layout{}, err
+	parsed, err := parseFileByDescription(file, fileExt(file))
+
+	if parsed == nil {
+		fmt.Println("XXX if find by extension fails, search all for magic id")
 	}
 
-	res := structToFlatStruct(&arj)
-	return res, nil
+	return parsed, err
 }
 
-func structToFlatStruct(obj interface{}) []Layout { // XXX implement
+func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) {
 
-	// res := []Layout{}
-
-	//	spew.Dump(x)
-
-	// XXX iterate over struct, create a 2d rep of the structure mapping
-	/*
-		s := reflect.ValueOf(obj).Elem()
-		typeOfT := s.Type()
-		for i := 0; i < s.NumField(); i++ {
-			f := s.Field(i)
-
-			// XXX is it a struct ?
-			// fmt.Println(f.Tag)
-
-			fmt.Printf("%d: %s %s = %v\n", i,
-				typeOfT.Field(i).Name, f.Type(), f.Interface())
-		}
-		panic("flatten!")
-	*/
-
-	// XXX we fake result from structToFlatStruct() to test presentation
-	return []Layout{
-		Layout{0x0000, 2, Uint16le, "magic"},
-		Layout{0x0002, 4, Uint32le, "width"},
-		Layout{0x0006, 4, Uint32le, "height"},
-		Layout{0x000a, 9, ASCIIZ, "NAME.EXT"},
-		Layout{0x000a + 9, 2, Uint16le, "tag"},
+	format, err := ReadFormatDescription(formatName)
+	if err != nil {
+		return nil, err
 	}
+
+	fmt.Println(format)
+
+	// XXX parse yml
+	fmt.Println("XXX parse", formatName)
+	return nil, nil
 }
 
 // PrettyHexView ...

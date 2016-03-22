@@ -2,7 +2,7 @@
 
 format:
   name: gif
-  info: XXX
+  mime: image/gif
   struct:
     - magic|byte:3|GIF        # XXX field name, type, possible values (aka magic)
     - version|byte:3|87a,89a

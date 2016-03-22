@@ -6,7 +6,6 @@ import (
 
 	//"github.com/davecgh/go-spew/spew"
 	"github.com/gizak/termui"
-	// "github.com/martinlindhe/arj"
 	"github.com/martinlindhe/formats"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -37,19 +36,6 @@ func main() {
 		fmt.Println("error:", err)
 		os.Exit(1)
 	}
-
-	// ---
-
-	/*
-		// extract arj struct
-		arj, err := arj.ParseARJArchive(file)
-		if err != nil {
-			fmt.Println("error:", err)
-			os.Exit(1)
-		}
-
-		res := structToFlatStruct(&arj)
-	*/
 
 	// XXX get console screen height
 

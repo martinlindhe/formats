@@ -76,6 +76,15 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, layout []Layout) string {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
+
+	case ASCII:
+		buf := make([]byte, field.Length)
+		_, err := file.Read(buf)
+		if err != nil && err != io.EOF {
+			panic(err)
+		}
+		res += string(buf)
+
 	case ASCIIZ:
 		buf := make([]byte, field.Length)
 		_, err := file.Read(buf)

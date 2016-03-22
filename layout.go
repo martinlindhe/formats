@@ -57,12 +57,13 @@ type DataType int
 func (dt DataType) String() string {
 
 	m := map[DataType]string{
-		ASCIIZ:   "ASCIIZ",
 		Byte:     "byte",
 		Uint16le: "uint16-le",
 		Uint32le: "uint32-le",
 		Int16le:  "int16-le",
 		Int32le:  "int32-le",
+		ASCII:    "ASCII",
+		ASCIIZ:   "ASCIIZ",
 	}
 
 	if val, ok := m[dt]; ok {
@@ -76,13 +77,13 @@ func (dt DataType) String() string {
 
 // ...
 const (
-	_               = iota
-	ASCIIZ DataType = iota
-	Byte
+	Byte DataType = 1 + iota
 	Uint16le
 	Uint32le
 	Int16le
 	Int32le
+	ASCII
+	ASCIIZ
 )
 
 func fileExt(file *os.File) string {
@@ -116,15 +117,22 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 
 	reader := io.Reader(file)
 
-	for i, step := range format.Struct {
+	res := []Layout{}
 
-		fmt.Println("step", i, ":", step)
+	for _, step := range format.Struct {
+
+		// fmt.Println("step", i, ":", step)
 
 		// params: name | data type and size | type-dependant
 		//   for byte:3, this is the bytes
 		//   for byte, this is the bit field
 		params := strings.Split(step, "|")
-		fmt.Println(params)
+		// fmt.Println(params)
+
+		layout := Layout{}
+
+		layout.Offset, _ = file.Seek(0, os.SEEK_CUR)
+		layout.Info = params[0]
 
 		p1 := strings.Split(params[1], ":")
 
@@ -133,27 +141,45 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 			if err != nil {
 				return nil, err
 			}
+			if expectedLen > 255 {
+				return nil, fmt.Errorf("byte:len too big (max 255)")
+			}
 			if expectedLen <= 0 {
 				return nil, fmt.Errorf("byte:len len must be at least 1")
 			}
 
 			expectedBytes := []byte(params[2])
 
+			layout.Length = byte(expectedLen)
+			layout.Type = ASCII
+
 			//fmt.Println("XXX expects to find", expectedLen, "bytes:", string(expectedBytes))
 
 			buf := make([]byte, expectedLen)
 
-			reader.Read(buf)
+			_, err = reader.Read(buf)
+			if err != nil {
+				return nil, err
+			}
 			if string(buf) != string(expectedBytes) {
 				return nil, fmt.Errorf("didnt find expected bytes %s", string(expectedBytes))
 			}
+		} else if params[1] == "byte" {
+			layout.Length = 1
+			layout.Type = Byte
+
+		} else if params[1] == "uint16le" {
+			layout.Length = 2
+			layout.Type = Uint16le
+
+		} else {
+			return nil, fmt.Errorf("dunno how to handle %s", params[1])
 		}
 
-		// XXX map fields in file according to format.Struct
+		res = append(res, layout)
 	}
 
-	fmt.Println("XXX parse", formatName)
-	return nil, nil
+	return res, nil
 }
 
 // PrettyHexView ...

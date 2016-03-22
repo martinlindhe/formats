@@ -57,11 +57,12 @@ type DataType int
 func (dt DataType) String() string {
 
 	m := map[DataType]string{
-		Byte:     "byte",
-		Uint16le: "uint16-le",
-		Uint32le: "uint32-le",
+		Int8:     "int8",
+		Uint8:    "uint8",
 		Int16le:  "int16-le",
+		Uint16le: "uint16-le",
 		Int32le:  "int32-le",
+		Uint32le: "uint32-le",
 		ASCII:    "ASCII",
 		ASCIIZ:   "ASCIIZ",
 	}
@@ -77,11 +78,12 @@ func (dt DataType) String() string {
 
 // ...
 const (
-	Byte DataType = 1 + iota
-	Uint16le
-	Uint32le
+	Int8 DataType = 1 + iota
+	Uint8
 	Int16le
+	Uint16le
 	Int32le
+	Uint32le
 	ASCII
 	ASCIIZ
 )
@@ -164,13 +166,23 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 			if string(buf) != string(expectedBytes) {
 				return nil, fmt.Errorf("didnt find expected bytes %s", string(expectedBytes))
 			}
-		} else if params[1] == "byte" {
+		} else if params[1] == "uint8" || params[1] == "byte" {
 			layout.Length = 1
-			layout.Type = Byte
+			layout.Type = Uint8
+
+			var b byte
+			if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
+				fmt.Println(b) // XXX make use of+!
+			}
 
 		} else if params[1] == "uint16le" {
 			layout.Length = 2
 			layout.Type = Uint16le
+
+			var b uint16
+			if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
+				fmt.Println(b) // XXX make use of+!
+			}
 
 		} else {
 			return nil, fmt.Errorf("dunno how to handle %s", params[1])

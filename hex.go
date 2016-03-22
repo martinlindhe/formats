@@ -47,18 +47,26 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, layout []Layout) string {
 
 	file.Seek(field.Offset, os.SEEK_SET)
 
-	// XXX decode data based on type and show
+	// decode data based on type and show
 	r := io.Reader(file)
 
 	switch field.Type {
-	case Int16le:
-		var i int16
+	case Int8:
+		var i int8
 		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
-	case Int32le:
-		var i int32
+
+	case Uint8:
+		var i uint8
+		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+			panic(err)
+		}
+		res += fmt.Sprintf("%d", i)
+
+	case Int16le:
+		var i int16
 		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
@@ -70,6 +78,14 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, layout []Layout) string {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
+
+	case Int32le:
+		var i int32
+		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+			panic(err)
+		}
+		res += fmt.Sprintf("%d", i)
+
 	case Uint32le:
 		var i uint32
 		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
@@ -77,15 +93,7 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, layout []Layout) string {
 		}
 		res += fmt.Sprintf("%d", i)
 
-	case ASCII:
-		buf := make([]byte, field.Length)
-		_, err := file.Read(buf)
-		if err != nil && err != io.EOF {
-			panic(err)
-		}
-		res += string(buf)
-
-	case ASCIIZ:
+	case ASCII, ASCIIZ:
 		buf := make([]byte, field.Length)
 		_, err := file.Read(buf)
 		if err != nil && err != io.EOF {

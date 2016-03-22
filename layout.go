@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 // FormatDescription ...
@@ -112,9 +114,44 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 		return nil, err
 	}
 
-	fmt.Println(format)
+	reader := io.Reader(file)
 
-	// XXX parse yml
+	for i, step := range format.Struct {
+
+		fmt.Println("step", i, ":", step)
+
+		// params: name | data type and size | type-dependant
+		//   for byte:3, this is the bytes
+		//   for byte, this is the bit field
+		params := strings.Split(step, "|")
+		fmt.Println(params)
+
+		p1 := strings.Split(params[1], ":")
+
+		if p1[0] == "byte" && len(p1) == 2 {
+			expectedLen, err := strconv.ParseInt(p1[1], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			if expectedLen <= 0 {
+				return nil, fmt.Errorf("byte:len len must be at least 1")
+			}
+
+			expectedBytes := []byte(params[2])
+
+			//fmt.Println("XXX expects to find", expectedLen, "bytes:", string(expectedBytes))
+
+			buf := make([]byte, expectedLen)
+
+			reader.Read(buf)
+			if string(buf) != string(expectedBytes) {
+				return nil, fmt.Errorf("didnt find expected bytes %s", string(expectedBytes))
+			}
+		}
+
+		// XXX map fields in file according to format.Struct
+	}
+
 	fmt.Println("XXX parse", formatName)
 	return nil, nil
 }

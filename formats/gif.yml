@@ -5,37 +5,17 @@ format:
   mime: image/gif
   struct:
     - magic|byte:3|GIF        # XXX field name, type, possible values (aka magic)
-    - version|byte:3|87a,89a
+    - version|byte:3|87a      # TODO XXX also accept "87a,89a" to match either one ...
     - width|uint16le
     - height|uint16le
-    - packed|byte             # XXX show packed bit field
+    - packed|byte|0-2 size of global color table,3 color table sort, 4-6 color resolution  # XXX show packed bit field
     - background color|byte
     - aspect ratio|byte
 
 
 # XXX packed bit field - TODO display Packed bit values in UI
+
 # Packed contains the following four subfields of data (bit 0 is the least significant bit, or LSB):
 # Bits 0-2    Size of the Global Color Table
 # Bit 3   Color Table Sort Flag
 # Bits 4-6    Color Resolution
-#
-#            var Packed = ScreenHeight.RelativeToByte("Packed");
-#            byte PackedValue = ReadByte(Packed.offset);
-#            int bpp = (PackedValue & 0x7) + 1;
-#            Log("bpp = " + bpp);
-#            int colorRes = (PackedValue & 0x70) >> 4;
-#            Log("color Res = " + colorRes);
-#
-#            int colorMap = (PackedValue & 0x80);
-#            if (colorMap > 0) {
-#                Log("TOOD parse color map!");
-#                /*
-#                The global color map immediately follows the screen descriptor and has the size
-#                (2**BitsPerPixel), and has the RGB colors for each color index. 0 is none, 255
-#                is full intensity. The bytes are stored in the following format :
-#                OFFSET              Count TYPE   Description
-#                0000h                   1 byte   Red component
-#                0001h                   1 byte   Green component
-#                0002h                   1 byte   Blue component
-#                */
-#            }

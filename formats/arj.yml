@@ -1,0 +1,10 @@
+# STATUS: borked, need to figure some
+
+format:
+  name: arj
+  info: XXX
+  parse_start:
+    - XXX code snippet to find first (last in file) arj header
+  struct:
+    - magic|60ea
+    - XXX

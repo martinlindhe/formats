@@ -3,9 +3,10 @@ package formats
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/martinlindhe/arj"
 	"io"
 	"os"
-	"reflect"
+	//"reflect"
 )
 
 // Layout represents a parsed file structure layout as a flat list
@@ -53,6 +54,37 @@ const (
 // ParseLayout returns a Layout for the file
 func ParseLayout(file *os.File) ([]Layout, error) {
 
+	arj, err := arj.ParseARJArchive(file)
+	if err != nil {
+		return []Layout{}, err
+	}
+
+	res := structToFlatStruct(&arj)
+	return res, nil
+}
+
+func structToFlatStruct(obj interface{}) []Layout { // XXX implement
+
+	// res := []Layout{}
+
+	//	spew.Dump(x)
+
+	// XXX iterate over struct, create a 2d rep of the structure mapping
+	/*
+		s := reflect.ValueOf(obj).Elem()
+		typeOfT := s.Type()
+		for i := 0; i < s.NumField(); i++ {
+			f := s.Field(i)
+
+			// XXX is it a struct ?
+			// fmt.Println(f.Tag)
+
+			fmt.Printf("%d: %s %s = %v\n", i,
+				typeOfT.Field(i).Name, f.Type(), f.Interface())
+		}
+		panic("flatten!")
+	*/
+
 	// XXX we fake result from structToFlatStruct() to test presentation
 	return []Layout{
 		Layout{0x0000, 2, Uint16le, "magic"},
@@ -60,32 +92,10 @@ func ParseLayout(file *os.File) ([]Layout, error) {
 		Layout{0x0006, 4, Uint32le, "height"},
 		Layout{0x000a, 9, ASCIIZ, "NAME.EXT"},
 		Layout{0x000a + 9, 2, Uint16le, "tag"},
-	}, nil
-}
-
-func structToFlatStruct(obj interface{}) []Layout { // XXX implement
-
-	res := []Layout{}
-
-	//	spew.Dump(x)
-
-	// XXX iterate over struct, create a 2d rep of the structure mapping
-
-	s := reflect.ValueOf(obj).Elem()
-	typeOfT := s.Type()
-	for i := 0; i < s.NumField(); i++ {
-		f := s.Field(i)
-
-		// XXX is it a struct ?
-		// fmt.Println(f.Tag)
-
-		fmt.Printf("%d: %s %s = %v\n", i,
-			typeOfT.Field(i).Name, f.Type(), f.Interface())
 	}
-
-	return res
 }
 
+// PrettyHexView ...
 func PrettyHexView(file *os.File, fileLayout []Layout) string {
 
 	hex := ""

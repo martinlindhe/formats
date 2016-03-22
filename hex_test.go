@@ -12,7 +12,7 @@ func TestGetHex(t *testing.T) {
 	layout := Layout{}
 
 	// XXX how do we set up a mock reader with byte data for the test?
-	file, err := os.Open("samples/tiny.arj")
+	file, err := os.Open("samples/arj/tiny.arj")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 

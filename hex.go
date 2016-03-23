@@ -43,8 +43,6 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 
 	res := field.Info + fmt.Sprintf(" (%d bytes)\n\n", field.Length)
 
-	res += fmt.Sprintf("%s:\n", field.Type)
-
 	file.Seek(field.Offset, os.SEEK_SET)
 
 	// decode data based on type and show
@@ -104,6 +102,8 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 	default:
 		res += "XXX unhandled " + field.Type.String()
 	}
+
+	res += " (" + field.Type.String() + ")"
 
 	return res
 }

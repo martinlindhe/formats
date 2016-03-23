@@ -64,10 +64,10 @@ func uiLoop(file *os.File) {
 	boxText := formats.HexView.CurrentFieldInfo(file, fileLayout)
 	box := termui.NewPar(boxText)
 	box.Height = 8
-	box.Width = 40
+	box.Width = 30
 	box.X = 56
 	box.TextFgColor = termui.ColorWhite
-	box.BorderLabel = "info"
+	box.BorderLabel = fileLayout.FormatName
 	box.BorderFg = termui.ColorCyan
 
 	p := termui.NewPar(":PRESS q TO QUIT DEMO")

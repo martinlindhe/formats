@@ -207,7 +207,10 @@ func PrettyHexView(file *os.File, fileLayout []Layout) string {
 
 	for i := base; i < ceil; i += int64(HexView.RowWidth) {
 
-		file.Seek(i, os.SEEK_SET)
+		ofs, err := file.Seek(i, os.SEEK_SET)
+		if i != ofs {
+			fmt.Printf("err: unexpected offset %04x, expected %04x\n", ofs, i)
+		}
 		line, err := GetHex(file, layout)
 
 		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
@@ -221,7 +224,7 @@ func PrettyHexView(file *os.File, fileLayout []Layout) string {
 }
 
 // GetHex dumps a row of hex from io.Reader
-func GetHex(file *os.File, layout Layout) (res string, err error) {
+func GetHex(file *os.File, layout Layout) (string, error) {
 
 	reader := io.Reader(file)
 
@@ -235,8 +238,10 @@ func GetHex(file *os.File, layout Layout) (res string, err error) {
 	for w := int64(0); w < 16; w++ {
 		var b byte
 		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
-			res = combineHexRow(symbols)
-			return
+			if err == io.EOF {
+				return combineHexRow(symbols), nil
+			}
+			return "", err
 		}
 
 		groupFmt := "%02x"
@@ -249,6 +254,6 @@ func GetHex(file *os.File, layout Layout) (res string, err error) {
 		group := fmt.Sprintf(groupFmt, b)
 		symbols = append(symbols, group)
 	}
-	res = combineHexRow(symbols)
-	return
+
+	return combineHexRow(symbols), nil
 }

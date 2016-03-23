@@ -37,9 +37,9 @@ var (
 )
 
 // CurrentFieldInfo renders info of current field
-func (f *HexViewState) CurrentFieldInfo(file *os.File, layout []Layout) string {
+func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 
-	field := layout[f.CurrentField]
+	field := pl.Layout[f.CurrentField]
 
 	res := field.Info + fmt.Sprintf(" (%d bytes)\n\n", field.Length)
 

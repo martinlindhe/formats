@@ -12,7 +12,7 @@ import (
 
 var (
 	inFile     = kingpin.Arg("file", "Input file").Required().String()
-	fileLayout = []formats.Layout{}
+	fileLayout = formats.ParsedLayout{}
 )
 
 func main() {
@@ -29,13 +29,13 @@ func main() {
 	file, _ := os.Open(*inFile)
 	defer file.Close()
 
-	var err error
-
-	fileLayout, err = formats.ParseLayout(file)
+	layout, err := formats.ParseLayout(file)
 	if err != nil {
 		fmt.Println("error:", err)
 		os.Exit(1)
 	}
+
+	fileLayout = *layout
 
 	// XXX get console screen height
 
@@ -46,7 +46,7 @@ func uiLoop(file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
 
-	hex := formats.PrettyHexView(file, fileLayout)
+	hex := fileLayout.PrettyHexView(file)
 
 	err := termui.Init()
 	if err != nil {
@@ -58,13 +58,14 @@ func uiLoop(file *os.File) {
 	hexPar.Height = formats.HexView.VisibleRows + 2
 	hexPar.Width = 56
 	hexPar.Y = 0
-	hexPar.BorderLabel = "Hex"
+	hexPar.BorderLabel = "hex"
+	hexPar.BorderFg = termui.ColorCyan
 
 	boxText := formats.HexView.CurrentFieldInfo(file, fileLayout)
 	box := termui.NewPar(boxText)
 	box.Height = 8
 	box.Width = 40
-	box.X = 60
+	box.X = 56
 	box.TextFgColor = termui.ColorWhite
 	box.BorderLabel = "info"
 	box.BorderFg = termui.ColorCyan
@@ -83,15 +84,15 @@ func uiLoop(file *os.File) {
 	})
 
 	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
-		formats.HexView.Next(len(fileLayout))
-		hexPar.Text = formats.PrettyHexView(file, fileLayout)
+		formats.HexView.Next(len(fileLayout.Layout))
+		hexPar.Text = fileLayout.PrettyHexView(file)
 		box.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
 		termui.Render(hexPar, box)
 	})
 
 	termui.Handle("/sys/kbd/<left>", func(termui.Event) {
 		formats.HexView.Prev()
-		hexPar.Text = formats.PrettyHexView(file, fileLayout)
+		hexPar.Text = fileLayout.PrettyHexView(file)
 		box.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
 		termui.Render(hexPar, box)
 	})
@@ -101,7 +102,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow < 0 {
 			formats.HexView.StartingRow = 0
 		}
-		hexPar.Text = formats.PrettyHexView(file, fileLayout)
+		hexPar.Text = fileLayout.PrettyHexView(file)
 		termui.Render(hexPar)
 	})
 
@@ -110,7 +111,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow > (fileLen / 16) {
 			formats.HexView.StartingRow = fileLen / 16
 		}
-		hexPar.Text = formats.PrettyHexView(file, fileLayout)
+		hexPar.Text = fileLayout.PrettyHexView(file)
 		termui.Render(hexPar)
 	})
 
@@ -120,7 +121,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow < 0 {
 			formats.HexView.StartingRow = 0
 		}
-		hexPar.Text = formats.PrettyHexView(file, fileLayout)
+		hexPar.Text = fileLayout.PrettyHexView(file)
 		termui.Render(hexPar)
 	})
 
@@ -130,7 +131,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow > (fileLen / 16) {
 			formats.HexView.StartingRow = fileLen / 16
 		}
-		hexPar.Text = formats.PrettyHexView(file, fileLayout)
+		hexPar.Text = fileLayout.PrettyHexView(file)
 		termui.Render(hexPar)
 	})
 

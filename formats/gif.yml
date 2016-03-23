@@ -4,8 +4,8 @@ format:
   name: gif
   mime: image/gif
   struct:
-    - magic|byte:3|GIF        # XXX field name, type, possible values (aka magic)
-    - version|byte:3|87a      # TODO XXX also accept "87a,89a" to match either one ...
+    - magic (GIF image)|byte:3|GIF
+    - version|byte:3|87a,89a
     - width|uint16le
     - height|uint16le
     - packed|byte|0-2 size of global color table,3 color table sort, 4-6 color resolution  # XXX show packed bit field

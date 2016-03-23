@@ -76,6 +76,12 @@ func (dt DataType) String() string {
 	panic(dt)
 }
 
+// ParsedLayout ...
+type ParsedLayout struct {
+	FormatName string
+	Layout     []Layout
+}
+
 // ...
 const (
 	Int8 DataType = 1 + iota
@@ -99,18 +105,17 @@ func fileExt(file *os.File) string {
 }
 
 // ParseLayout returns a Layout for the file
-func ParseLayout(file *os.File) ([]Layout, error) {
+func ParseLayout(file *os.File) (*ParsedLayout, error) {
 
 	parsed, err := parseFileByDescription(file, fileExt(file))
-
 	if parsed == nil {
-		fmt.Println("XXX if find by extension fails, search all for magic id")
+		panic("XXX if find by extension fails, search all for magic id")
 	}
 
 	return parsed, err
 }
 
-func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) {
+func parseFileByDescription(file *os.File, formatName string) (*ParsedLayout, error) {
 
 	format, err := ReadFormatDescription(formatName)
 	if err != nil {
@@ -119,17 +124,14 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 
 	reader := io.Reader(file)
 
-	res := []Layout{}
+	res := ParsedLayout{
+		FormatName: formatName,
+	}
 
 	for _, step := range format.Struct {
 
-		// fmt.Println("step", i, ":", step)
-
 		// params: name | data type and size | type-dependant
-		//   for byte:3, this is the bytes
-		//   for byte, this is the bit field
 		params := strings.Split(step, "|")
-		// fmt.Println(params)
 
 		layout := Layout{}
 
@@ -139,6 +141,8 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 		p1 := strings.Split(params[1], ":")
 
 		if p1[0] == "byte" && len(p1) == 2 {
+			// "byte:3", params[2] holds the bytes
+
 			expectedLen, err := strconv.ParseInt(p1[1], 10, 64)
 			if err != nil {
 				return nil, err
@@ -150,12 +154,8 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 				return nil, fmt.Errorf("byte:len len must be at least 1")
 			}
 
-			expectedBytes := []byte(params[2])
-
 			layout.Length = byte(expectedLen)
 			layout.Type = ASCII
-
-			//fmt.Println("XXX expects to find", expectedLen, "bytes:", string(expectedBytes))
 
 			buf := make([]byte, expectedLen)
 
@@ -163,10 +163,25 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 			if err != nil {
 				return nil, err
 			}
-			if string(buf) != string(expectedBytes) {
-				return nil, fmt.Errorf("didnt find expected bytes %s", string(expectedBytes))
+
+			// split expected forms on comma
+			expectedForms := strings.Split(params[2], ",")
+			found := false
+			for _, expectedForm := range expectedForms {
+
+				expectedBytes := []byte(expectedForm)
+				// fmt.Println("expects to find", expectedLen, "bytes:", string(expectedBytes))
+				if !found && string(buf) == string(expectedBytes) {
+					found = true
+				}
 			}
+			if !found {
+				return nil, fmt.Errorf("didnt find expected bytes %s", params[2])
+			}
+
 		} else if params[1] == "uint8" || params[1] == "byte" {
+			// "byte", params[2] describes a bit field
+
 			layout.Length = 1
 			layout.Type = Uint8
 
@@ -188,21 +203,21 @@ func parseFileByDescription(file *os.File, formatName string) ([]Layout, error) 
 			return nil, fmt.Errorf("dunno how to handle %s", params[1])
 		}
 
-		res = append(res, layout)
+		res.Layout = append(res.Layout, layout)
 	}
 
-	return res, nil
+	return &res, nil
 }
 
 // PrettyHexView ...
-func PrettyHexView(file *os.File, fileLayout []Layout) string {
+func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 
 	hex := ""
 
 	base := HexView.StartingRow * int64(HexView.RowWidth)
 	ceil := base + int64(HexView.VisibleRows*HexView.RowWidth)
 
-	layout := fileLayout[HexView.CurrentField]
+	layout := pl.Layout[HexView.CurrentField]
 	// fmt.Printf("Using field %v, field %d\n", val, currentField)
 
 	for i := base; i < ceil; i += int64(HexView.RowWidth) {

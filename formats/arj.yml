@@ -1,10 +1,11 @@
-# STATUS: borked, need to figure some
+# STATUS: borked, need to think some
 
 format:
   name: arj
-  info: XXX
+  mime: xxx
   parse_start:
+    # XXX arj header is found by some routine that scans file backwards..., see arj.git
     - XXX code snippet to find first (last in file) arj header
   struct:
-    - magic|60ea
+    - magic (ARJ archive)|60ea
     - XXX

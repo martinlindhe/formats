@@ -1,3 +1,6 @@
+000. redden all bytes in view that is unknown (not covered by layout)
+
+
 # TODO - formats
 
 cmd to navigate a file's structure in hex

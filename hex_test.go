@@ -20,10 +20,13 @@ func TestGetHex(t *testing.T) {
 	layout, err := ParseLayout(file)
 	assert.Equal(t, nil, err)
 
+	// reset file
+	file.Seek(0, os.SEEK_SET)
+
 	hex, err := layout.GetHex(file)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, "60ea2b00220b01021000029265785e52", hex)
+	assert.Equal(t, "[60](fg-blue)[ea](fg-blue)[2b](fg-red)[00](fg-red)[22](fg-red)[0b](fg-red)[01](fg-red)[02](fg-red)[10](fg-red)[00](fg-red)[02](fg-red)[92](fg-red)[65](fg-red)[78](fg-red)[5e](fg-red)[52](fg-red)", hex)
 
 	// reset file
 	file.Seek(0, os.SEEK_SET)
@@ -34,5 +37,5 @@ func TestGetHex(t *testing.T) {
 	hex, err = layout.GetHex(file)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, "60ea 2b00 220b 0102 1000 0292 6578 5e52", hex)
+	assert.Equal(t, "[60](fg-blue)[ea](fg-blue) [2b](fg-red)[00](fg-red) [22](fg-red)[0b](fg-red) [01](fg-red)[02](fg-red) [10](fg-red)[00](fg-red) [02](fg-red)[92](fg-red) [65](fg-red)[78](fg-red) [5e](fg-red)[52](fg-red)", hex)
 }

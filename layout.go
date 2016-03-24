@@ -95,7 +95,8 @@ func getFileSize(file *os.File) int64 {
 	return fi.Size()
 }
 
-func parseFileByDescription(file *os.File, formatName string) (*ParsedLayout, error) {
+func parseFileByDescription(
+	file *os.File, formatName string) (*ParsedLayout, error) {
 
 	format, err := ReadFormatDescription(formatName)
 	if err != nil {
@@ -150,82 +151,90 @@ func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) 
 	layout.Offset, _ = file.Seek(0, os.SEEK_CUR)
 	layout.Info = params[0]
 
-	p1 := strings.Split(params[1], ":")
+	if len(params) > 1 {
+		p1 := strings.Split(params[1], ":")
 
-	if p1[0] == "byte" && len(p1) == 2 {
+		if p1[0] == "byte" && len(p1) == 2 {
 
-		expectedLen, err := strconv.ParseInt(p1[1], 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		if expectedLen > 255 {
-			return nil, fmt.Errorf("byte:len too big (max 255)")
-		}
-		if expectedLen <= 0 {
-			return nil, fmt.Errorf("byte:len len must be at least 1")
-		}
+			expectedLen, err := parseExpectedLen(p1[1])
+			if err != nil {
+				panic(err) // XXX
+			}
 
-		layout.Length = byte(expectedLen)
-		layout.Type = ASCII
+			layout.Length = byte(expectedLen)
+			layout.Type = ASCII
 
-		// "byte:3", params[2] holds the bytes
-		buf, err := layout.parseByteN(file, expectedLen)
-		if err != nil {
-			return nil, err
-		}
+			// "byte:3", params[2] holds the bytes
+			buf, err := layout.parseByteN(file, expectedLen)
+			if err != nil {
+				return nil, err
+			}
 
-		// split expected forms on comma
-		expectedForms := strings.Split(params[2], ",")
-		found := false
-		for _, expectedForm := range expectedForms {
+			// split expected forms on comma
+			expectedForms := strings.Split(params[2], ",")
+			found := false
+			for _, expectedForm := range expectedForms {
 
-			expectedBytes := []byte(expectedForm)
+				expectedBytes := []byte(expectedForm)
 
-			if int64(len(expectedForm)) == 2*expectedLen {
-				// guess it's hex
-				bytes, err := hex.DecodeString(expectedForm)
-				if err == nil && byteSliceEquals(buf, bytes) {
+				if int64(len(expectedForm)) == 2*expectedLen {
+					// guess it's hex
+					bytes, err := hex.DecodeString(expectedForm)
+					if err == nil && byteSliceEquals(buf, bytes) {
+						found = true
+					}
+				}
+
+				if !found && string(buf) == string(expectedBytes) {
 					found = true
 				}
+				if found {
+					break
+				}
+			}
+			if !found {
+				return nil, fmt.Errorf("didnt find expected bytes %s", params[2])
 			}
 
-			// fmt.Println("expects to find", expectedLen, "bytes:", string(expectedBytes))
-			if !found && string(buf) == string(expectedBytes) {
-				found = true
+		} else if params[1] == "uint8" || params[1] == "byte" {
+			// "byte", params[2] describes a bit field
+
+			layout.Length = 1
+			layout.Type = Uint8
+
+			var b byte
+			if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
+				fmt.Println(b) // XXX make use of+!
 			}
-			if found {
-				// log.Println("matched", pl.FormatName, expectedForm)
-				break
+
+		} else if params[1] == "uint16le" {
+			layout.Length = 2
+			layout.Type = Uint16le
+
+			var b uint16
+			if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
+				fmt.Println(b) // XXX make use of+!
 			}
+
+		} else {
+			return nil, fmt.Errorf("dunno how to handle %s", params[1])
 		}
-		if !found {
-			return nil, fmt.Errorf("didnt find expected bytes %s", params[2])
-		}
-
-	} else if params[1] == "uint8" || params[1] == "byte" {
-		// "byte", params[2] describes a bit field
-
-		layout.Length = 1
-		layout.Type = Uint8
-
-		var b byte
-		if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
-			fmt.Println(b) // XXX make use of+!
-		}
-
-	} else if params[1] == "uint16le" {
-		layout.Length = 2
-		layout.Type = Uint16le
-
-		var b uint16
-		if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
-			fmt.Println(b) // XXX make use of+!
-		}
-
-	} else {
-		return nil, fmt.Errorf("dunno how to handle %s", params[1])
 	}
 	return &layout, nil
+}
+
+func parseExpectedLen(s string) (int64, error) {
+	expectedLen, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	if expectedLen > 255 {
+		return 0, fmt.Errorf("len too big (max 255)")
+	}
+	if expectedLen <= 0 {
+		return 0, fmt.Errorf("len too small (min 1)")
+	}
+	return expectedLen, nil
 }
 
 // PrettyHexView ...

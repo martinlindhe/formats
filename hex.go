@@ -41,7 +41,13 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 
 	field := pl.Layout[f.CurrentField]
 
-	res := field.Info + fmt.Sprintf(" (%d bytes)\n\n", field.Length)
+	res := "field: " + field.Info
+
+	if field.Length > 4 {
+		res += fmt.Sprintf(" (%d bytes)", field.Length)
+	}
+
+	res += "\nvalue: "
 
 	file.Seek(field.Offset, os.SEEK_SET)
 

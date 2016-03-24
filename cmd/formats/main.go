@@ -63,18 +63,18 @@ func uiLoop(file *os.File) {
 
 	boxText := formats.HexView.CurrentFieldInfo(file, fileLayout)
 	box := termui.NewPar(boxText)
-	box.Height = 8
-	box.Width = 30
-	box.X = 56
+	box.Height = 5
+	box.Width = 28
+	box.X = 72
 	box.TextFgColor = termui.ColorWhite
 	box.BorderLabel = fileLayout.FormatName
 	box.BorderFg = termui.ColorCyan
 
 	help := termui.NewPar("navigate with arrow keys,\nquit with q")
-	help.Height = 5
-	help.Width = 30
-	help.X = 56
-	help.Y = 8
+	help.Height = 8
+	help.Width = 28
+	help.X = 72
+	help.Y = 5
 	help.TextFgColor = termui.ColorWhite
 	help.BorderLabel = "help"
 	//help.BorderFg = termui.ColorCyan

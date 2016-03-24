@@ -1,3 +1,9 @@
+# TODO formats
+
+    show 7bit ascii too
+
+
+
 # TODO - prober
 
   cli tool to print some info about file

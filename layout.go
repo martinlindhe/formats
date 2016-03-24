@@ -80,6 +80,7 @@ func (dt DataType) String() string {
 // ParsedLayout ...
 type ParsedLayout struct {
 	FormatName string
+	FileSize   int64
 	Layout     []Layout
 }
 
@@ -105,7 +106,7 @@ func fileExt(file *os.File) string {
 	return ext
 }
 
-// ParseLayout returns a Layout for the file
+// ParseLayout returns a ParsedLayout for the file
 func ParseLayout(file *os.File) (*ParsedLayout, error) {
 
 	parsed, err := parseFileByDescription(file, fileExt(file))
@@ -114,6 +115,15 @@ func ParseLayout(file *os.File) (*ParsedLayout, error) {
 	}
 
 	return parsed, err
+}
+
+func getFileSize(file *os.File) int64 {
+
+	fi, err := file.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fi.Size()
 }
 
 func parseFileByDescription(file *os.File, formatName string) (*ParsedLayout, error) {
@@ -127,6 +137,7 @@ func parseFileByDescription(file *os.File, formatName string) (*ParsedLayout, er
 
 	res := ParsedLayout{
 		FormatName: formatName,
+		FileSize:   getFileSize(file),
 	}
 
 	for _, step := range format.Struct {
@@ -213,6 +224,13 @@ func parseFileByDescription(file *os.File, formatName string) (*ParsedLayout, er
 // PrettyHexView ...
 func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 
+	ofsFmt := "%08x"
+	if pl.FileSize <= 0xffff {
+		ofsFmt = "%04x"
+	} else if pl.FileSize <= 0xffffff {
+		ofsFmt = "%06x"
+	}
+
 	hex := ""
 
 	base := HexView.StartingRow * int64(HexView.RowWidth)
@@ -226,7 +244,9 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 		}
 		line, err := pl.GetHex(file)
 
-		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
+		ofsText := fmt.Sprintf(ofsFmt, i)
+
+		hex += fmt.Sprintf("[[%s]](fg-yellow) %s\n", ofsText, line)
 		if err != nil {
 			fmt.Println("got err", err)
 			break

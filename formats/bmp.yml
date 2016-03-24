@@ -1,0 +1,11 @@
+# STATUS: xxx
+
+format:
+  name: bmp
+  mime: xxx
+  details:
+    - magic (BMP image)|byte:2|BM
+    - file size|uint32
+    - reserved 1|uint16
+    - reserved 2|uint16
+    - offset to pixel data|uint32

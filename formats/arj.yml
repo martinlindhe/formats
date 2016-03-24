@@ -2,10 +2,10 @@
 
 format:
   name: arj
-  mime: xxx
+  mime: application/arj
   parse_start:
     # XXX arj header is found by some routine that scans file backwards..., see arj.git
     - XXX code snippet to find first (last in file) arj header
-  struct:
-    - magic (ARJ archive)|60ea
+  details:
+    - magic (ARJ archive)|byte:2|60ea # XXX if len is 2x len, guess hex and decode and try match
     - XXX

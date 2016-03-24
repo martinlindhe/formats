@@ -9,8 +9,6 @@ import (
 
 func TestGetHex(t *testing.T) {
 
-	layout := Layout{}
-
 	// XXX how do we set up a mock reader with byte data for the test?
 	file, err := os.Open("samples/arj/tiny.arj")
 	defer file.Close()
@@ -19,7 +17,10 @@ func TestGetHex(t *testing.T) {
 	formatting.BetweenSymbols = ""
 	formatting.GroupSize = 1
 
-	hex, err := GetHex(file, layout)
+	layout, err := ParseLayout(file)
+	assert.Equal(t, nil, err)
+
+	hex, err := layout.GetHex(file)
 	assert.Equal(t, nil, err)
 
 	assert.Equal(t, "60ea2b00220b01021000029265785e52", hex)
@@ -30,7 +31,7 @@ func TestGetHex(t *testing.T) {
 	formatting.BetweenSymbols = " "
 	formatting.GroupSize = 2
 
-	hex, err = GetHex(file, layout)
+	hex, err = layout.GetHex(file)
 	assert.Equal(t, nil, err)
 
 	assert.Equal(t, "60ea 2b00 220b 0102 1000 0292 6578 5e52", hex)

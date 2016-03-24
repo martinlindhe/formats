@@ -2,47 +2,15 @@ package formats
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
-	"github.com/ghodss/yaml"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
-
-// FormatDescription ...
-type FormatDescription struct {
-	Format Format `json:"format"`
-}
-
-// Format ...
-type Format struct {
-	Name   string   `json:"name"`
-	Mime   string   `json:"mime"`
-	Struct []string `json:"struct"`
-}
-
-// ReadFormatDescription ...
-func ReadFormatDescription(formatName string) (*Format, error) {
-
-	formatFile := "./formats/" + formatName + ".yml"
-
-	if !exists(formatFile) {
-		return nil, fmt.Errorf("Unknown format %s", formatFile)
-	}
-
-	data, err := ioutil.ReadFile(formatFile)
-	if err != nil {
-		return nil, err
-	}
-
-	desc := FormatDescription{}
-	err = yaml.Unmarshal(data, &desc)
-	return &desc.Format, err
-}
 
 // Layout represents a parsed file structure layout as a flat list
 type Layout struct {
@@ -111,6 +79,7 @@ func ParseLayout(file *os.File) (*ParsedLayout, error) {
 
 	parsed, err := parseFileByDescription(file, fileExt(file))
 	if parsed == nil {
+		fmt.Println(err)
 		panic("XXX if find by extension fails, search all for magic id")
 	}
 
@@ -133,92 +102,130 @@ func parseFileByDescription(file *os.File, formatName string) (*ParsedLayout, er
 		return nil, err
 	}
 
-	reader := io.Reader(file)
-
 	res := ParsedLayout{
 		FormatName: formatName,
 		FileSize:   getFileSize(file),
 	}
 
-	for _, step := range format.Struct {
+	for _, step := range format.Details {
 
-		// params: name | data type and size | type-dependant
-		params := strings.Split(step, "|")
-
-		layout := Layout{}
-
-		layout.Offset, _ = file.Seek(0, os.SEEK_CUR)
-		layout.Info = params[0]
-
-		p1 := strings.Split(params[1], ":")
-
-		if p1[0] == "byte" && len(p1) == 2 {
-			// "byte:3", params[2] holds the bytes
-
-			expectedLen, err := strconv.ParseInt(p1[1], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			if expectedLen > 255 {
-				return nil, fmt.Errorf("byte:len too big (max 255)")
-			}
-			if expectedLen <= 0 {
-				return nil, fmt.Errorf("byte:len len must be at least 1")
-			}
-
-			layout.Length = byte(expectedLen)
-			layout.Type = ASCII
-
-			buf := make([]byte, expectedLen)
-
-			_, err = reader.Read(buf)
-			if err != nil {
-				return nil, err
-			}
-
-			// split expected forms on comma
-			expectedForms := strings.Split(params[2], ",")
-			found := false
-			for _, expectedForm := range expectedForms {
-
-				expectedBytes := []byte(expectedForm)
-				// fmt.Println("expects to find", expectedLen, "bytes:", string(expectedBytes))
-				if !found && string(buf) == string(expectedBytes) {
-					found = true
-				}
-			}
-			if !found {
-				return nil, fmt.Errorf("didnt find expected bytes %s", params[2])
-			}
-
-		} else if params[1] == "uint8" || params[1] == "byte" {
-			// "byte", params[2] describes a bit field
-
-			layout.Length = 1
-			layout.Type = Uint8
-
-			var b byte
-			if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
-				fmt.Println(b) // XXX make use of+!
-			}
-
-		} else if params[1] == "uint16le" {
-			layout.Length = 2
-			layout.Type = Uint16le
-
-			var b uint16
-			if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
-				fmt.Println(b) // XXX make use of+!
-			}
-
-		} else {
-			return nil, fmt.Errorf("dunno how to handle %s", params[1])
+		layout, err := res.intoLayout(file, step)
+		if err != nil {
+			fmt.Println("trouble parsing:", err)
 		}
 
-		res.Layout = append(res.Layout, layout)
+		res.Layout = append(res.Layout, *layout)
 	}
 
 	return &res, nil
+}
+
+func (l *Layout) parseByteN(file *os.File, expectedLen int64) ([]byte, error) {
+
+	r := io.Reader(file)
+
+	buf := make([]byte, expectedLen)
+
+	readLen, err := r.Read(buf)
+	if err != nil {
+		return nil, err
+	}
+
+	if int64(readLen) != expectedLen {
+		return nil, fmt.Errorf("Expected %d bytes, got %d", expectedLen, readLen)
+	}
+	return buf, nil
+}
+
+// transforms a part of file into a Layout, according to `step`
+func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) {
+
+	reader := io.Reader(file)
+
+	// params: name | data type and size | type-dependant
+	params := strings.Split(step, "|")
+
+	layout := Layout{}
+
+	layout.Offset, _ = file.Seek(0, os.SEEK_CUR)
+	layout.Info = params[0]
+
+	p1 := strings.Split(params[1], ":")
+
+	if p1[0] == "byte" && len(p1) == 2 {
+
+		expectedLen, err := strconv.ParseInt(p1[1], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		if expectedLen > 255 {
+			return nil, fmt.Errorf("byte:len too big (max 255)")
+		}
+		if expectedLen <= 0 {
+			return nil, fmt.Errorf("byte:len len must be at least 1")
+		}
+
+		layout.Length = byte(expectedLen)
+		layout.Type = ASCII
+
+		// "byte:3", params[2] holds the bytes
+		buf, err := layout.parseByteN(file, expectedLen)
+		if err != nil {
+			return nil, err
+		}
+
+		// split expected forms on comma
+		expectedForms := strings.Split(params[2], ",")
+		found := false
+		for _, expectedForm := range expectedForms {
+
+			expectedBytes := []byte(expectedForm)
+
+			if int64(len(expectedForm)) == 2*expectedLen {
+				// guess it's hex
+				bytes, err := hex.DecodeString(expectedForm)
+				if err == nil && byteSliceEquals(buf, bytes) {
+					found = true
+				}
+			}
+
+			// fmt.Println("expects to find", expectedLen, "bytes:", string(expectedBytes))
+			if !found && string(buf) == string(expectedBytes) {
+				found = true
+			}
+			if found {
+				// log.Println("matched", pl.FormatName, expectedForm)
+				break
+			}
+		}
+		if !found {
+			return nil, fmt.Errorf("didnt find expected bytes %s", params[2])
+		}
+
+	} else if params[1] == "uint8" || params[1] == "byte" {
+		// "byte", params[2] describes a bit field
+
+		layout.Length = 1
+		layout.Type = Uint8
+
+		var b byte
+		if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
+			fmt.Println(b) // XXX make use of+!
+		}
+
+	} else if params[1] == "uint16le" {
+		layout.Length = 2
+		layout.Type = Uint16le
+
+		var b uint16
+		if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
+			fmt.Println(b) // XXX make use of+!
+		}
+
+	} else {
+		return nil, fmt.Errorf("dunno how to handle %s", params[1])
+	}
+	return &layout, nil
 }
 
 // PrettyHexView ...

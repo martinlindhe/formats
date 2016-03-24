@@ -70,13 +70,14 @@ func uiLoop(file *os.File) {
 	box.BorderLabel = fileLayout.FormatName
 	box.BorderFg = termui.ColorCyan
 
-	p := termui.NewPar(":PRESS q TO QUIT DEMO")
-	p.Height = 3
-	p.Width = 50
-	p.Y = 15
-	p.TextFgColor = termui.ColorWhite
-	p.BorderLabel = "Text Box"
-	p.BorderFg = termui.ColorCyan
+	help := termui.NewPar("navigate with arrow keys,\nquit with q")
+	help.Height = 5
+	help.Width = 30
+	help.X = 56
+	help.Y = 8
+	help.TextFgColor = termui.ColorWhite
+	help.BorderLabel = "help"
+	//help.BorderFg = termui.ColorCyan
 
 	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit
@@ -135,7 +136,7 @@ func uiLoop(file *os.File) {
 		termui.Render(hexPar)
 	})
 
-	termui.Render(p, hexPar, box)
+	termui.Render(help, hexPar, box)
 
 	termui.Loop() // block until StopLoop is called
 }

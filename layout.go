@@ -6,6 +6,7 @@ import (
 	"github.com/ghodss/yaml"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -217,16 +218,13 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 	base := HexView.StartingRow * int64(HexView.RowWidth)
 	ceil := base + int64(HexView.VisibleRows*HexView.RowWidth)
 
-	layout := pl.Layout[HexView.CurrentField]
-	// fmt.Printf("Using field %v, field %d\n", val, currentField)
-
 	for i := base; i < ceil; i += int64(HexView.RowWidth) {
 
 		ofs, err := file.Seek(i, os.SEEK_SET)
 		if i != ofs {
-			fmt.Printf("err: unexpected offset %04x, expected %04x\n", ofs, i)
+			log.Fatalf("err: unexpected offset %04x, expected %04x\n", ofs, i)
 		}
-		line, err := GetHex(file, layout)
+		line, err := pl.GetHex(file)
 
 		hex += fmt.Sprintf("[[%04x]](fg-yellow) %s\n", i, line)
 		if err != nil {
@@ -238,8 +236,20 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 	return hex
 }
 
+func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
+
+	for _, layout := range pl.Layout {
+		if ofs >= layout.Offset && ofs < layout.Offset+int64(layout.Length) {
+			return true
+		}
+	}
+	return false
+}
+
 // GetHex dumps a row of hex from io.Reader
-func GetHex(file *os.File, layout Layout) (string, error) {
+func (pl *ParsedLayout) GetHex(file *os.File) (string, error) {
+
+	layout := pl.Layout[HexView.CurrentField]
 
 	reader := io.Reader(file)
 
@@ -259,14 +269,17 @@ func GetHex(file *os.File, layout Layout) (string, error) {
 			return "", err
 		}
 
-		groupFmt := "%02x"
 		ceil := base + w
 
+		colorName := "fg-white"
+		if !pl.isOffsetKnown(base + w) {
+			colorName = "fg-red"
+		}
 		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
-			groupFmt = "[%02x](fg-blue)"
+			colorName = "fg-blue"
 		}
 
-		group := fmt.Sprintf(groupFmt, b)
+		group := fmt.Sprintf("[%02x](%s)", b, colorName)
 		symbols = append(symbols, group)
 	}
 

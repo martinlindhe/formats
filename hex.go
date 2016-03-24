@@ -30,7 +30,7 @@ var (
 	}
 	HexView = HexViewState{
 		StartingRow:  0,
-		VisibleRows:  10,
+		VisibleRows:  11,
 		RowWidth:     16,
 		CurrentField: 0,
 	}

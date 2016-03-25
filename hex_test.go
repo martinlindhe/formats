@@ -9,7 +9,6 @@ import (
 
 func TestGetHex(t *testing.T) {
 
-	// XXX how do we set up a mock reader with byte data for the test?
 	file, err := os.Open("samples/arj/tiny.arj")
 	defer file.Close()
 	assert.Equal(t, nil, err)

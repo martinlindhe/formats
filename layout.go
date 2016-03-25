@@ -121,13 +121,11 @@ func parseFileByDescription(
 	return &res, nil
 }
 
-func (l *Layout) parseByteN(file *os.File, expectedLen int64) ([]byte, error) {
-
-	r := io.Reader(file)
+func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error) {
 
 	buf := make([]byte, expectedLen)
 
-	readLen, err := r.Read(buf)
+	readLen, err := reader.Read(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -151,76 +149,98 @@ func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) 
 	layout.Offset, _ = file.Seek(0, os.SEEK_CUR)
 	layout.Info = params[0]
 
+	param1 := ""
+	param2 := ""
 	if len(params) > 1 {
-		p1 := strings.Split(params[1], ":")
+		param1 = params[1]
+	}
+	if len(params) > 2 {
+		param2 = params[2]
+	}
 
-		if p1[0] == "byte" && len(p1) == 2 {
+	if expectedLen, err := parseExpectedBytes(&layout, reader, param1, param2); err == nil {
+		layout.Length = byte(expectedLen)
+		layout.Type = ASCII
+	} else if _, err := parseExpectedByte(reader, param1, param2); err == nil {
+		layout.Length = 1
+		layout.Type = Uint8
+	} else if _, err := parseExpectedUint16le(reader, param1, param2); err == nil {
+		layout.Length = 2
+		layout.Type = Uint16le
+	} else {
+		return nil, fmt.Errorf("dunno how to handle %s", param1)
+	}
 
-			expectedLen, err := parseExpectedLen(p1[1])
-			if err != nil {
-				panic(err) // XXX
+	return &layout, nil
+}
+
+func parseExpectedUint16le(reader io.Reader, param1 string, param2 string) (uint16, error) {
+
+	if param1 != "uint16le" {
+		return 0, fmt.Errorf("wrong type")
+	}
+	var b uint16
+	err := binary.Read(reader, binary.LittleEndian, &b);
+	return b, err
+}
+
+func parseExpectedByte(reader io.Reader, param1 string, param2 string) (byte, error) {
+
+	if param1 != "uint8" && param1 != "byte" {
+		return 0, fmt.Errorf("wrong type")
+	}
+	// XXX "byte", params[2] describes a bit field
+	var b byte
+	err := binary.Read(reader, binary.LittleEndian, &b);
+	return b, err
+}
+
+func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 string) (int64, error) {
+
+	p1 := strings.Split(param1, ":")
+
+	if p1[0] != "byte" || len(p1) != 2 {
+		return 0, fmt.Errorf("wrong type")
+	}
+
+	expectedLen, err := parseExpectedLen(p1[1])
+	if err != nil {
+		return 0,err
+	}
+
+	// "byte:3", params[2] holds the bytes
+	buf, err := layout.parseByteN(reader, expectedLen)
+	if err != nil {
+		return 0, err
+	}
+
+	// split expected forms on comma
+	expectedForms := strings.Split(param2, ",")
+	found := false
+	for _, expectedForm := range expectedForms {
+
+		expectedBytes := []byte(expectedForm)
+
+		if int64(len(expectedForm)) == 2*expectedLen {
+			// guess it's hex
+			bytes, err := hex.DecodeString(expectedForm)
+			if err == nil && byteSliceEquals(buf, bytes) {
+				found = true
 			}
+		}
 
-			layout.Length = byte(expectedLen)
-			layout.Type = ASCII
-
-			// "byte:3", params[2] holds the bytes
-			buf, err := layout.parseByteN(file, expectedLen)
-			if err != nil {
-				return nil, err
-			}
-
-			// split expected forms on comma
-			expectedForms := strings.Split(params[2], ",")
-			found := false
-			for _, expectedForm := range expectedForms {
-
-				expectedBytes := []byte(expectedForm)
-
-				if int64(len(expectedForm)) == 2*expectedLen {
-					// guess it's hex
-					bytes, err := hex.DecodeString(expectedForm)
-					if err == nil && byteSliceEquals(buf, bytes) {
-						found = true
-					}
-				}
-
-				if !found && string(buf) == string(expectedBytes) {
-					found = true
-				}
-				if found {
-					break
-				}
-			}
-			if !found {
-				return nil, fmt.Errorf("didnt find expected bytes %s", params[2])
-			}
-
-		} else if params[1] == "uint8" || params[1] == "byte" {
-			// "byte", params[2] describes a bit field
-
-			layout.Length = 1
-			layout.Type = Uint8
-
-			var b byte
-			if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
-				fmt.Println(b) // XXX make use of+!
-			}
-
-		} else if params[1] == "uint16le" {
-			layout.Length = 2
-			layout.Type = Uint16le
-
-			var b uint16
-			if err := binary.Read(reader, binary.LittleEndian, &b); err != nil {
-				fmt.Println(b) // XXX make use of+!
-			}
-
-		} else {
-			return nil, fmt.Errorf("dunno how to handle %s", params[1])
+		if !found && string(buf) == string(expectedBytes) {
+			found = true
+		}
+		if found {
+			break
 		}
 	}
-	return &layout, nil
+	if !found {
+		return 0, fmt.Errorf("didnt find expected bytes %s", param2)
+	}
+
+	return expectedLen, nil
 }
 
 func parseExpectedLen(s string) (int64, error) {

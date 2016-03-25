@@ -42,7 +42,7 @@ func (dt DataType) String() string {
 
 	// NOTE should only be able to panic during dev (as in:
 	// adding a new datatype and forgetting to add it to the map)
-	panic(dt)
+	panic(int(dt))
 }
 
 // ParsedLayout ...
@@ -180,7 +180,7 @@ func parseExpectedUint16le(reader io.Reader, param1 string, param2 string) (uint
 		return 0, fmt.Errorf("wrong type")
 	}
 	var b uint16
-	err := binary.Read(reader, binary.LittleEndian, &b);
+	err := binary.Read(reader, binary.LittleEndian, &b)
 	return b, err
 }
 
@@ -191,7 +191,7 @@ func parseExpectedByte(reader io.Reader, param1 string, param2 string) (byte, er
 	}
 	// XXX "byte", params[2] describes a bit field
 	var b byte
-	err := binary.Read(reader, binary.LittleEndian, &b);
+	err := binary.Read(reader, binary.LittleEndian, &b)
 	return b, err
 }
 

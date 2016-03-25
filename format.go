@@ -2,8 +2,9 @@ package formats
 
 import (
 	"fmt"
-	"github.com/ghodss/yaml"
 	"io/ioutil"
+
+	"github.com/ghodss/yaml"
 )
 
 // FormatDescription ...

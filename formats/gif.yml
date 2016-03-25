@@ -1,4 +1,4 @@
-# STATUS: xxx
+# STATUS: xxx, need to handle array of structs form
 
 format:
   name: gif

@@ -20,7 +20,7 @@ func TestParseGif87a(t *testing.T) {
 
 	assert.Equal(t, &ParsedLayout{
 		FormatName: "gif",
-		FileSize: 42,
+		FileSize:   42,
 		Layout: []Layout{
 			Layout{0, 3, ASCII, "magic (GIF image)"},
 			Layout{3, 3, ASCII, "version"},
@@ -44,7 +44,7 @@ func TestParseGif89a(t *testing.T) {
 
 	assert.Equal(t, &ParsedLayout{
 		FormatName: "gif",
-		FileSize: 634,
+		FileSize:   634,
 		Layout: []Layout{
 			Layout{0, 3, ASCII, "magic (GIF image)"},
 			Layout{3, 3, ASCII, "version"},

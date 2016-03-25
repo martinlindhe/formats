@@ -26,7 +26,11 @@ func main() {
 		GroupSize:      1,
 	})
 
-	file, _ := os.Open(*inFile)
+	file, err := os.Open(*inFile)
+	if err != nil {
+		fmt.Println("error:", err)
+		os.Exit(1)
+	}
 	defer file.Close()
 
 	layout, err := formats.ParseLayout(file)

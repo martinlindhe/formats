@@ -113,6 +113,7 @@ func parseFileByDescription(
 		layout, err := res.intoLayout(file, step)
 		if err != nil {
 			fmt.Println("trouble parsing:", err)
+			continue
 		}
 
 		res.Layout = append(res.Layout, *layout)
@@ -168,7 +169,7 @@ func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) 
 		layout.Length = 2
 		layout.Type = Uint16le
 	} else {
-		return nil, fmt.Errorf("dunno how to handle %s", param1)
+		return nil, fmt.Errorf("dunno how to handle %s", params[0])
 	}
 
 	return &layout, nil

@@ -26,7 +26,7 @@ func TestGetHex(t *testing.T) {
 	hex, err := layout.GetHex(file)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, "[60](fg-blue)[ea](fg-blue)[2b](fg-red)[00](fg-red)[22](fg-red)[0b](fg-red)[01](fg-red)[02](fg-red)[10](fg-red)[00](fg-red)[02](fg-red)[92](fg-red)[65](fg-red)[78](fg-red)[5e](fg-red)[52](fg-red)", hex)
+	assert.Equal(t, "[60](fg-blue)[ea](fg-blue)[2b](fg-blue)[00](fg-blue)[22](fg-red)[0b](fg-red)[01](fg-red)[02](fg-red)[10](fg-red)[00](fg-red)[02](fg-red)[92](fg-red)[65](fg-red)[78](fg-red)[5e](fg-red)[52](fg-red)", hex)
 
 	// reset file
 	file.Seek(0, os.SEEK_SET)
@@ -37,5 +37,5 @@ func TestGetHex(t *testing.T) {
 	hex, err = layout.GetHex(file)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, "[60](fg-blue)[ea](fg-blue) [2b](fg-red)[00](fg-red) [22](fg-red)[0b](fg-red) [01](fg-red)[02](fg-red) [10](fg-red)[00](fg-red) [02](fg-red)[92](fg-red) [65](fg-red)[78](fg-red) [5e](fg-red)[52](fg-red)", hex)
+	assert.Equal(t, "[60](fg-blue)[ea](fg-blue) [2b](fg-blue)[00](fg-blue) [22](fg-red)[0b](fg-red) [01](fg-red)[02](fg-red) [10](fg-red)[00](fg-red) [02](fg-red)[92](fg-red) [65](fg-red)[78](fg-red) [5e](fg-red)[52](fg-red)", hex)
 }

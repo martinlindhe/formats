@@ -158,8 +158,8 @@ func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) 
 		param2 = params[2]
 	}
 
-	if expectedLen, err := parseExpectedBytes(&layout, reader, param1, param2); err == nil {
-		layout.Length = byte(expectedLen)
+	if b, err := parseExpectedBytes(&layout, reader, param1, param2); err == nil {
+		layout.Length = byte(len(b))
 		layout.Type = ASCII
 	} else if _, err := parseExpectedByte(reader, param1, param2); err == nil {
 		layout.Length = 1
@@ -195,23 +195,23 @@ func parseExpectedByte(reader io.Reader, param1 string, param2 string) (byte, er
 	return b, err
 }
 
-func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 string) (int64, error) {
+func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 string) ([]byte, error) {
 
 	p1 := strings.Split(param1, ":")
 
 	if p1[0] != "byte" || len(p1) != 2 {
-		return 0, fmt.Errorf("wrong type")
+		return nil, fmt.Errorf("wrong type")
 	}
 
 	expectedLen, err := parseExpectedLen(p1[1])
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	// "byte:3", params[2] holds the bytes
 	buf, err := layout.parseByteN(reader, expectedLen)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	// split expected forms on comma
@@ -223,15 +223,15 @@ func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 
 			// hex string?
 			bytes, err := hex.DecodeString(expectedForm)
 			if err == nil && byteSliceEquals(buf, bytes) {
-				return expectedLen, nil
+				return expectedBytes, nil
 			}
 		}
 		if string(buf) == string(expectedBytes) {
-			return expectedLen, nil
+			return expectedBytes, nil
 		}
 	}
 
-	return 0, fmt.Errorf("didnt find expected bytes %s", param2)
+	return nil, fmt.Errorf("didnt find expected bytes %s", param2)
 }
 
 func parseExpectedLen(s string) (int64, error) {

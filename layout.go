@@ -205,7 +205,7 @@ func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 
 
 	expectedLen, err := parseExpectedLen(p1[1])
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
 
 	// "byte:3", params[2] holds the bytes
@@ -216,31 +216,22 @@ func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 
 
 	// split expected forms on comma
 	expectedForms := strings.Split(param2, ",")
-	found := false
 	for _, expectedForm := range expectedForms {
 
 		expectedBytes := []byte(expectedForm)
-
 		if int64(len(expectedForm)) == 2*expectedLen {
-			// guess it's hex
+			// hex string?
 			bytes, err := hex.DecodeString(expectedForm)
 			if err == nil && byteSliceEquals(buf, bytes) {
-				found = true
+				return expectedLen, nil
 			}
 		}
-
-		if !found && string(buf) == string(expectedBytes) {
-			found = true
-		}
-		if found {
-			break
+		if string(buf) == string(expectedBytes) {
+			return expectedLen, nil
 		}
 	}
-	if !found {
-		return 0, fmt.Errorf("didnt find expected bytes %s", param2)
-	}
 
-	return expectedLen, nil
+	return 0, fmt.Errorf("didnt find expected bytes %s", param2)
 }
 
 func parseExpectedLen(s string) (int64, error) {

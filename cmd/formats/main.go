@@ -13,6 +13,9 @@ import (
 var (
 	inFile     = kingpin.Arg("file", "Input file").Required().String()
 	fileLayout = formats.ParsedLayout{}
+	hexPar     *termui.Par
+	boxPar     *termui.Par
+	helpPar    *termui.Par
 )
 
 func main() {
@@ -50,38 +53,34 @@ func uiLoop(file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
 
-	hex := fileLayout.PrettyHexView(file)
-
 	err := termui.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termui.Close()
 
-	hexPar := termui.NewPar(hex)
+	hexPar = termui.NewPar("")
 	hexPar.Height = formats.HexView.VisibleRows + 2
 	hexPar.Width = 56
 	hexPar.Y = 0
 	hexPar.BorderLabel = "hex"
 	hexPar.BorderFg = termui.ColorCyan
 
-	boxText := formats.HexView.CurrentFieldInfo(file, fileLayout)
-	box := termui.NewPar(boxText)
-	box.Height = 5
-	box.Width = 28
-	box.X = 72
-	box.TextFgColor = termui.ColorWhite
-	box.BorderLabel = fileLayout.FormatName
-	box.BorderFg = termui.ColorCyan
+	boxPar = termui.NewPar(formats.HexView.CurrentFieldInfo(file, fileLayout))
+	boxPar.Height = 5
+	boxPar.Width = 28
+	boxPar.X = 72
+	boxPar.TextFgColor = termui.ColorWhite
+	boxPar.BorderLabel = fileLayout.FormatName
+	boxPar.BorderFg = termui.ColorCyan
 
-	help := termui.NewPar("navigate with arrow keys,\nquit with q")
-	help.Height = 8
-	help.Width = 28
-	help.X = 72
-	help.Y = 5
-	help.TextFgColor = termui.ColorWhite
-	help.BorderLabel = "help"
-	//help.BorderFg = termui.ColorCyan
+	helpPar = termui.NewPar("navigate with arrow keys,\nquit with q")
+	helpPar.Height = 8
+	helpPar.Width = 28
+	helpPar.X = 72
+	helpPar.Y = 5
+	helpPar.TextFgColor = termui.ColorWhite
+	helpPar.BorderLabel = "help"
 
 	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit
@@ -90,16 +89,12 @@ func uiLoop(file *os.File) {
 
 	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
 		formats.HexView.Next(len(fileLayout.Layout))
-		hexPar.Text = fileLayout.PrettyHexView(file)
-		box.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
-		termui.Render(hexPar, box)
+		refreshUI(file)
 	})
 
 	termui.Handle("/sys/kbd/<left>", func(termui.Event) {
 		formats.HexView.Prev()
-		hexPar.Text = fileLayout.PrettyHexView(file)
-		box.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
-		termui.Render(hexPar, box)
+		refreshUI(file)
 	})
 
 	termui.Handle("/sys/kbd/<up>", func(termui.Event) {
@@ -107,8 +102,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow < 0 {
 			formats.HexView.StartingRow = 0
 		}
-		hexPar.Text = fileLayout.PrettyHexView(file)
-		termui.Render(hexPar)
+		refreshUI(file)
 	})
 
 	termui.Handle("/sys/kbd/<down>", func(termui.Event) {
@@ -116,8 +110,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow > (fileLen / 16) {
 			formats.HexView.StartingRow = fileLen / 16
 		}
-		hexPar.Text = fileLayout.PrettyHexView(file)
-		termui.Render(hexPar)
+		refreshUI(file)
 	})
 
 	termui.Handle("/sys/kbd/<previous>", func(termui.Event) {
@@ -126,8 +119,7 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow < 0 {
 			formats.HexView.StartingRow = 0
 		}
-		hexPar.Text = fileLayout.PrettyHexView(file)
-		termui.Render(hexPar)
+		refreshUI(file)
 	})
 
 	termui.Handle("/sys/kbd/<next>", func(termui.Event) {
@@ -136,11 +128,16 @@ func uiLoop(file *os.File) {
 		if formats.HexView.StartingRow > (fileLen / 16) {
 			formats.HexView.StartingRow = fileLen / 16
 		}
-		hexPar.Text = fileLayout.PrettyHexView(file)
-		termui.Render(hexPar)
+		refreshUI(file)
 	})
 
-	termui.Render(help, hexPar, box)
-
+	refreshUI(file)
 	termui.Loop() // block until StopLoop is called
+}
+
+func refreshUI(file *os.File) {
+
+	hexPar.Text = fileLayout.PrettyHexView(file)
+	boxPar.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
+	termui.Render(helpPar, hexPar, boxPar)
 }

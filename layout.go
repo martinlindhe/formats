@@ -168,11 +168,24 @@ func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) 
 	} else if _, err := parseExpectedUint16le(reader, param1, param2); err == nil {
 		layout.Length = 2
 		layout.Type = Uint16le
+	} else if _, err := parseExpectedUint32le(reader, param1, param2); err == nil {
+		layout.Length = 4
+		layout.Type = Uint32le
 	} else {
-		return nil, fmt.Errorf("dunno how to handle %s", params[0])
+		return nil, fmt.Errorf("dunno how to handle %s, %s, %s", params[0], param1, param2)
 	}
 
 	return &layout, nil
+}
+
+func parseExpectedUint32le(reader io.Reader, param1 string, param2 string) (uint32, error) {
+
+	if param1 != "uint32le" {
+		return 0, fmt.Errorf("wrong type")
+	}
+	var b uint32
+	err := binary.Read(reader, binary.LittleEndian, &b)
+	return b, err
 }
 
 func parseExpectedUint16le(reader io.Reader, param1 string, param2 string) (uint16, error) {
@@ -247,6 +260,11 @@ func parseExpectedLen(s string) (int64, error) {
 		return 0, fmt.Errorf("len too small (min 1)")
 	}
 	return expectedLen, nil
+}
+
+func (pl *ParsedLayout) PrettyASCIIView(file *os.File) string {
+
+	return "XXX"
 }
 
 // PrettyHexView ...

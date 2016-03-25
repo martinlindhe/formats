@@ -264,7 +264,25 @@ func parseExpectedLen(s string) (int64, error) {
 
 func (pl *ParsedLayout) PrettyASCIIView(file *os.File) string {
 
-	return "XXX"
+	ascii := ""
+	base := HexView.StartingRow * int64(HexView.RowWidth)
+	ceil := base + int64(HexView.VisibleRows*HexView.RowWidth)
+
+	for i := base; i < ceil; i += int64(HexView.RowWidth) {
+
+		ofs, err := file.Seek(i, os.SEEK_SET)
+		if i != ofs {
+			log.Fatalf("err: unexpected offset %04x, expected %04x\n", ofs, i)
+		}
+		line, err := pl.GetASCII(file)
+
+		ascii += line + "\n"
+		if err != nil {
+			fmt.Println("got err", err)
+			break
+		}
+	}
+	return ascii
 }
 
 // PrettyHexView ...
@@ -278,7 +296,6 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 	}
 
 	hex := ""
-
 	base := HexView.StartingRow * int64(HexView.RowWidth)
 	ceil := base + int64(HexView.VisibleRows*HexView.RowWidth)
 
@@ -289,7 +306,6 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 			log.Fatalf("err: unexpected offset %04x, expected %04x\n", ofs, i)
 		}
 		line, err := pl.GetHex(file)
-
 		ofsText := fmt.Sprintf(ofsFmt, i)
 
 		hex += fmt.Sprintf("[[%s]](fg-yellow) %s\n", ofsText, line)
@@ -298,7 +314,6 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File) string {
 			break
 		}
 	}
-
 	return hex
 }
 
@@ -312,8 +327,61 @@ func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
 	return false
 }
 
+func (pl *ParsedLayout) GetASCII(file *os.File) (string, error) {
+
+	layout := pl.Layout[HexView.CurrentField]
+
+	reader := io.Reader(file)
+
+	symbols := []string{}
+
+	base, err := file.Seek(0, os.SEEK_CUR)
+	if err != nil {
+		return "", err
+	}
+
+	formatting := HexFormatting{
+		BetweenSymbols: "",
+		GroupSize:      1,
+	}
+
+	for w := int64(0); w < 16; w++ {
+		var b byte
+		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
+			if err == io.EOF {
+				return combineHexRow(symbols, formatting), nil
+			}
+			return "", err
+		}
+
+		ceil := base + w
+
+		colorName := "fg-white"
+		if !pl.isOffsetKnown(base + w) {
+			colorName = "fg-red"
+		}
+		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
+			colorName = "fg-cyan"
+		}
+		// XXX byte as string
+		tok := "."
+		if b > 31 && b < 128 {
+			tok = fmt.Sprintf("%c", b)
+		}
+		group := fmt.Sprintf("[%s](%s)", tok, colorName)
+		symbols = append(symbols, group)
+	}
+
+	return combineHexRow(symbols, formatting), nil
+}
+
 // GetHex dumps a row of hex from io.Reader
 func (pl *ParsedLayout) GetHex(file *os.File) (string, error) {
+
+	formatting := HexFormatting{
+		BetweenSymbols: " ",
+		GroupSize:      1,
+	}
 
 	layout := pl.Layout[HexView.CurrentField]
 
@@ -330,7 +398,7 @@ func (pl *ParsedLayout) GetHex(file *os.File) (string, error) {
 		var b byte
 		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
-				return combineHexRow(symbols), nil
+				return combineHexRow(symbols, formatting), nil
 			}
 			return "", err
 		}
@@ -342,12 +410,12 @@ func (pl *ParsedLayout) GetHex(file *os.File) (string, error) {
 			colorName = "fg-red"
 		}
 		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
-			colorName = "fg-blue"
+			colorName = "fg-cyan"
 		}
 
 		group := fmt.Sprintf("[%02x](%s)", b, colorName)
 		symbols = append(symbols, group)
 	}
 
-	return combineHexRow(symbols), nil
+	return combineHexRow(symbols, formatting), nil
 }

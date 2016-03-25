@@ -24,10 +24,6 @@ type HexViewState struct {
 
 // ...
 var (
-	formatting = HexFormatting{
-		BetweenSymbols: " ",
-		GroupSize:      1,
-	}
 	HexView = HexViewState{
 		StartingRow:  0,
 		VisibleRows:  11,
@@ -130,10 +126,7 @@ func (f *HexViewState) Prev() {
 	}
 }
 
-// Formatting ...
-func Formatting(fmt HexFormatting) { formatting = fmt }
-
-func combineHexRow(symbols []string) string {
+func combineHexRow(symbols []string, formatting HexFormatting) string {
 
 	group := []string{}
 	row := []string{}

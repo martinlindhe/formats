@@ -15,6 +15,7 @@ var (
 	fileLayout = formats.ParsedLayout{}
 	hexPar     *termui.Par
 	boxPar     *termui.Par
+	asciiPar   *termui.Par
 	helpPar    *termui.Par
 )
 
@@ -23,11 +24,6 @@ func main() {
 	// support -h for --help
 	kingpin.CommandLine.HelpFlag.Short('h')
 	kingpin.Parse()
-
-	formats.Formatting(formats.HexFormatting{
-		BetweenSymbols: " ",
-		GroupSize:      1,
-	})
 
 	file, err := os.Open(*inFile)
 	if err != nil {
@@ -66,10 +62,19 @@ func uiLoop(file *os.File) {
 	hexPar.BorderLabel = "hex"
 	hexPar.BorderFg = termui.ColorCyan
 
+	asciiPar = termui.NewPar("")
+	asciiPar.Height = formats.HexView.VisibleRows + 2
+	asciiPar.Width = 18
+	asciiPar.X = 56
+	asciiPar.Y = 0
+	asciiPar.TextFgColor = termui.ColorWhite
+	asciiPar.BorderLabel = "ascii"
+	asciiPar.BorderFg = termui.ColorCyan
+
 	boxPar = termui.NewPar(formats.HexView.CurrentFieldInfo(file, fileLayout))
 	boxPar.Height = 5
 	boxPar.Width = 28
-	boxPar.X = 72
+	boxPar.X = 74
 	boxPar.TextFgColor = termui.ColorWhite
 	boxPar.BorderLabel = fileLayout.FormatName
 	boxPar.BorderFg = termui.ColorCyan
@@ -77,7 +82,7 @@ func uiLoop(file *os.File) {
 	helpPar = termui.NewPar("navigate with arrow keys,\nquit with q")
 	helpPar.Height = 8
 	helpPar.Width = 28
-	helpPar.X = 72
+	helpPar.X = 74
 	helpPar.Y = 5
 	helpPar.TextFgColor = termui.ColorWhite
 	helpPar.BorderLabel = "help"
@@ -138,6 +143,7 @@ func uiLoop(file *os.File) {
 func refreshUI(file *os.File) {
 
 	hexPar.Text = fileLayout.PrettyHexView(file)
+	asciiPar.Text = fileLayout.PrettyASCIIView(file)
 	boxPar.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
-	termui.Render(helpPar, hexPar, boxPar)
+	termui.Render(hexPar, asciiPar, boxPar, helpPar)
 }

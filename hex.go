@@ -35,6 +35,13 @@ var (
 // CurrentFieldInfo renders info of current field
 func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 
+	if len(pl.Layout) == 0 {
+		fmt.Println("pl.Layout is empty")
+		return ""
+	}
+
+	fmt.Println("XXX", f.CurrentField, "len is", len(pl.Layout))
+	os.Exit(1)
 	field := pl.Layout[f.CurrentField]
 
 	res := "field: " + field.Info

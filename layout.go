@@ -7,17 +7,17 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-// Layout represents a parsed file structure layout as a flat list
+// Layout represents a parsed file structure
 type Layout struct {
 	Offset int64
 	Length byte
 	Type   DataType
 	Info   string
+	Childs []Layout // XXX make use of + display. parent is a layout group
 }
 
 // DataType ...
@@ -64,20 +64,17 @@ const (
 	ASCIIZ
 )
 
-func fileExt(file *os.File) string {
-
-	ext := filepath.Ext(file.Name())
-	if len(ext) > 0 {
-		// strip leading dot
-		ext = ext[1:]
+var (
+	parsers = map[string]func(*os.File) []Layout{
+		"arj": parseARJ,
+		"bmp": parseBMP,
 	}
-	return ext
-}
+)
 
 // ParseLayout returns a ParsedLayout for the file
 func ParseLayout(file *os.File) (*ParsedLayout, error) {
 
-	parsed, err := parseFileByDescription(file, fileExt(file))
+	parsed, err := parseFileByExtension(file)
 	if parsed == nil {
 		fmt.Println(err)
 		panic("XXX if find by extension fails, search all for magic id")
@@ -85,39 +82,39 @@ func ParseLayout(file *os.File) (*ParsedLayout, error) {
 
 	return parsed, err
 }
+func parseARJ(file *os.File) []Layout {
 
-func getFileSize(file *os.File) int64 {
-
-	fi, err := file.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return fi.Size()
+	res := []Layout{}
+	fmt.Println("XXX TODO parse ARJ")
+	return res
 }
 
-func parseFileByDescription(
-	file *os.File, formatName string) (*ParsedLayout, error) {
+func parseBMP(file *os.File) []Layout {
 
-	format, err := ReadFormatDescription(formatName)
-	if err != nil {
-		return nil, err
-	}
+	res := []Layout{}
+	fmt.Println("XXX TODO parse BMP")
+
+	return res
+}
+
+func parseFileByExtension(
+	file *os.File) (*ParsedLayout, error) {
 
 	res := ParsedLayout{
-		FormatName: formatName,
-		FileSize:   getFileSize(file),
+		FileSize: getFileSize(file),
 	}
 
-	for _, step := range format.Details {
+	ext := fileExt(file)
 
-		layout, err := res.intoLayout(file, step)
-		if err != nil {
-			fmt.Println("trouble parsing:", err)
-			continue
-		}
+	res.FormatName = "XXX some name"
 
-		res.Layout = append(res.Layout, *layout)
+	if parser, ok := parsers[ext]; ok {
+		res.Layout = parser(file)
+	} else {
+		fmt.Println("error: no match for", ext)
 	}
+
+	// XXX
 
 	return &res, nil
 }
@@ -139,7 +136,7 @@ func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error)
 
 // transforms a part of file into a Layout, according to `step`
 func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) {
-
+	// XXX unused
 	reader := io.Reader(file)
 
 	// params: name | data type and size | type-dependant
@@ -329,6 +326,10 @@ func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
 
 func (pl *ParsedLayout) GetASCII(file *os.File) (string, error) {
 
+	if len(pl.Layout) == 0 {
+		return "", fmt.Errorf("pl.Layout is empty")
+	}
+
 	layout := pl.Layout[HexView.CurrentField]
 
 	reader := io.Reader(file)
@@ -381,6 +382,10 @@ func (pl *ParsedLayout) GetHex(file *os.File) (string, error) {
 	formatting := HexFormatting{
 		BetweenSymbols: " ",
 		GroupSize:      1,
+	}
+
+	if len(pl.Layout) == 0 {
+		return "", fmt.Errorf("pl.Layout is empty")
 	}
 
 	layout := pl.Layout[HexView.CurrentField]

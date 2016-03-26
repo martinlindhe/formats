@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/martinlindhe/formats/parse"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,6 +16,6 @@ func TestParseBMP(t *testing.T) {
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	b := parse.BMP(file)
+	b := ParseLayout(file)
 	spew.Dump(b)
 }

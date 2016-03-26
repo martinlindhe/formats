@@ -14,35 +14,19 @@ var (
 	}
 )
 
-// ParseLayout returns a ParsedLayout for the file
-func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
-
-	parsed, err := parseFileByExtension(file)
-	if parsed == nil {
-		fmt.Println(err)
-		panic("XXX if find by extension fails, search all for magic id")
+func matchParser(file *os.File) *parse.ParsedLayout {
+	for name, parse := range parsers {
+		x := parse(file)
+		if x != nil {
+			fmt.Println("XXX matched", name)
+			return x
+		}
 	}
-
-	return parsed, err
+	return nil
 }
 
-func parseFileByExtension(
-	file *os.File) (*parse.ParsedLayout, error) {
+// ParseLayout returns a ParsedLayout for the file
+func ParseLayout(file *os.File) *parse.ParsedLayout {
 
-	res := parse.ParsedLayout{}
-
-	ext := fileExt(file)
-
-	res.FormatName = "XXX some name"
-
-	if parser, ok := parsers[ext]; ok {
-		x := parser(file)
-		res = *x
-	} else {
-		fmt.Println("error: no match for", ext)
-	}
-
-	// XXX
-
-	return &res, nil
+	return matchParser(file)
 }

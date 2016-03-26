@@ -1,35 +1,10 @@
-package formats
+package parse
 
 import (
 	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
-	"strings"
-)
-
-// HexFormatting ...
-type HexFormatting struct {
-	BetweenSymbols string
-	GroupSize      byte
-}
-
-// HexViewState ...
-type HexViewState struct {
-	StartingRow  int64
-	VisibleRows  int
-	RowWidth     int
-	CurrentField int
-}
-
-// ...
-var (
-	HexView = HexViewState{
-		StartingRow:  0,
-		VisibleRows:  11,
-		RowWidth:     16,
-		CurrentField: 0,
-	}
 )
 
 // CurrentFieldInfo renders info of current field
@@ -115,38 +90,4 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 	res += " (" + field.Type.String() + ")"
 
 	return res
-}
-
-// Next moves focus to the next field
-func (f *HexViewState) Next(max int) {
-	f.CurrentField++
-	if f.CurrentField >= max {
-		f.CurrentField = max - 1
-	}
-}
-
-// Prev moves focus to the previous field
-func (f *HexViewState) Prev() {
-	f.CurrentField--
-	if f.CurrentField < 0 {
-		f.CurrentField = 0
-	}
-}
-
-func combineHexRow(symbols []string, formatting HexFormatting) string {
-
-	group := []string{}
-	row := []string{}
-	cur := byte(0)
-
-	for _, sym := range symbols {
-		cur++
-		group = append(group, sym)
-		if cur == formatting.GroupSize {
-			row = append(row, strings.Join(group, ""))
-			group = nil
-			cur = 0
-		}
-	}
-	return strings.Join(row, formatting.BetweenSymbols)
 }

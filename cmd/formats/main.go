@@ -7,6 +7,7 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 	"github.com/gizak/termui"
 	"github.com/martinlindhe/formats"
+	"github.com/martinlindhe/formats/parse"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -142,8 +143,15 @@ func uiLoop(file *os.File) {
 
 func refreshUI(file *os.File) {
 
-	hexPar.Text = fileLayout.PrettyHexView(file)
-	asciiPar.Text = fileLayout.PrettyASCIIView(file)
+	hexView := parse.HexViewState{
+		StartingRow:  0,
+		VisibleRows:  11,
+		RowWidth:     16,
+		CurrentField: 0,
+	}
+
+	hexPar.Text = fileLayout.PrettyHexView(file, hexView)
+	asciiPar.Text = fileLayout.PrettyASCIIView(file, hexView)
 	boxPar.Text = formats.HexView.CurrentFieldInfo(file, fileLayout)
 	termui.Render(hexPar, asciiPar, boxPar, helpPar)
 }

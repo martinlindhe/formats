@@ -37,6 +37,7 @@ func (dt DataType) String() string {
 		Uint32le: "uint32-le",
 		ASCII:    "ASCII",
 		ASCIIZ:   "ASCIIZ",
+		Group:    "Group",
 	}
 
 	if val, ok := m[dt]; ok {
@@ -50,7 +51,8 @@ func (dt DataType) String() string {
 
 // ...
 const (
-	Int8 DataType = 1 + iota
+	Group DataType = 1 + iota
+	Int8
 	Uint8
 	Int16le
 	Uint16le

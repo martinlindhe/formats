@@ -7,8 +7,15 @@ import (
 	"strings"
 )
 
+// ParsedLayout ...
+type ParsedLayout struct {
+	FormatName string
+	FileSize   int64
+	Layout     []Layout
+}
+
 // Layout represents a parsed file structure
-type Layout struct {
+type Layout struct { // XXX aka Chunk in cs code
 	Offset int64
 	Length byte
 	Type   DataType
@@ -39,13 +46,6 @@ func (dt DataType) String() string {
 	// NOTE should only be able to panic during dev (as in:
 	// adding a new datatype and forgetting to add it to the map)
 	panic(int(dt))
-}
-
-// ParsedLayout ...
-type ParsedLayout struct {
-	FormatName string
-	FileSize   int64
-	Layout     []Layout
 }
 
 // ...

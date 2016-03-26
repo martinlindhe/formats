@@ -2,11 +2,10 @@ package parse
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"io"
-	"strconv"
-	"strings"
+	"log"
+	"os"
 )
 
 func parseExpectedUint32le(reader io.Reader, param1 string, param2 string) (uint32, error) {
@@ -40,6 +39,7 @@ func parseExpectedByte(reader io.Reader, param1 string, param2 string) (byte, er
 	return b, err
 }
 
+/*
 func parseExpectedBytes(layout *Layout, reader io.Reader, param1 string, param2 string) ([]byte, error) {
 
 	p1 := strings.Split(param1, ":")
@@ -92,6 +92,7 @@ func parseExpectedLen(s string) (int64, error) {
 	}
 	return expectedLen, nil
 }
+*/
 
 func byteSliceEquals(a []byte, b []byte) bool {
 
@@ -107,4 +108,13 @@ func byteSliceEquals(a []byte, b []byte) bool {
 		}
 	}
 	return true
+}
+
+func getFileSize(file *os.File) int64 {
+
+	fi, err := file.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fi.Size()
 }

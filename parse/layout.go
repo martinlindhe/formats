@@ -1,10 +1,10 @@
 package parse
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 // ParsedLayout ...
@@ -17,7 +17,7 @@ type ParsedLayout struct {
 // Layout represents a parsed file structure
 type Layout struct { // XXX aka Chunk in cs code
 	Offset int64
-	Length byte
+	Length int64
 	Type   DataType
 	Info   string
 	Childs []Layout // XXX make use of + display. parent is a layout group
@@ -77,47 +77,6 @@ func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error)
 	return buf, nil
 }
 
-// transforms a part of file into a Layout, according to `step`
-func (pl *ParsedLayout) intoLayout(file *os.File, step string) (*Layout, error) {
-	// XXX unused
-	reader := io.Reader(file)
-
-	// params: name | data type and size | type-dependant
-	params := strings.Split(step, "|")
-
-	layout := Layout{}
-
-	layout.Offset, _ = file.Seek(0, os.SEEK_CUR)
-	layout.Info = params[0]
-
-	param1 := ""
-	param2 := ""
-	if len(params) > 1 {
-		param1 = params[1]
-	}
-	if len(params) > 2 {
-		param2 = params[2]
-	}
-
-	if b, err := parseExpectedBytes(&layout, reader, param1, param2); err == nil {
-		layout.Length = byte(len(b))
-		layout.Type = ASCII
-	} else if _, err := parseExpectedByte(reader, param1, param2); err == nil {
-		layout.Length = 1
-		layout.Type = Uint8
-	} else if _, err := parseExpectedUint16le(reader, param1, param2); err == nil {
-		layout.Length = 2
-		layout.Type = Uint16le
-	} else if _, err := parseExpectedUint32le(reader, param1, param2); err == nil {
-		layout.Length = 4
-		layout.Type = Uint32le
-	} else {
-		return nil, fmt.Errorf("dunno how to handle %s, %s, %s", params[0], param1, param2)
-	}
-
-	return &layout, nil
-}
-
 func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
 
 	for _, layout := range pl.Layout {
@@ -126,4 +85,35 @@ func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
 		}
 	}
 	return false
+}
+
+func (pl *ParsedLayout) findInfoField(info string) *Layout {
+
+	for _, layout := range pl.Layout {
+		if layout.Info == info {
+			return &layout
+		}
+
+		for _, childLayout := range layout.Childs {
+			if childLayout.Info == info {
+				return &childLayout
+			}
+		}
+	}
+	return nil
+}
+
+func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) uint32 {
+
+	layout := pl.findInfoField(info)
+	if layout == nil {
+		fmt.Println("ERROR didnt find field", info)
+		return 0
+	}
+
+	file.Seek(layout.Offset, os.SEEK_SET)
+
+	var b uint32
+	binary.Read(file, binary.LittleEndian, &b)
+	return b
 }

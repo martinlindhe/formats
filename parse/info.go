@@ -15,15 +15,10 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 		return ""
 	}
 
-	fmt.Println("XXX", f.CurrentField, "len is", len(pl.Layout))
-	os.Exit(1)
+	// fmt.Println("XXX", f.CurrentField, "len is", len(pl.Layout))
 	field := pl.Layout[f.CurrentField]
 
 	res := "field: " + field.Info
-
-	if field.Length > 4 {
-		res += fmt.Sprintf(" (%d bytes)", field.Length)
-	}
 
 	res += "\nvalue: "
 

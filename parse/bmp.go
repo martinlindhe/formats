@@ -20,25 +20,41 @@ func parseBMP(file *os.File) *ParsedLayout {
 
 	res := ParsedLayout{}
 
-	res.Layout = append(res.Layout, Layout{
+	fileHeader := Layout{
+		Offset: 0,
 		Length: 14,
 		Info:   "bitmap file header",
 		Type:   Group,
 		Childs: []Layout{
 			Layout{Offset: 0, Length: 2, Info: "magic (BMP image)", Type: ASCII},
 			Layout{Offset: 2, Length: 4, Info: "file size", Type: Uint32le},
-			Layout{Offset: 6, Length: 2, Info: "reserved 1", Type: Uint16le},
-			Layout{Offset: 8, Length: 2, Info: "reserved 2", Type: Uint16le},
-			Layout{Offset: 10, Length: 4, Info: "offset to pixel data", Type: Uint32le},
+			Layout{Offset: 6, Length: 4, Info: "reserved", Type: Uint32le},
+			Layout{Offset: 10, Length: 4, Info: "offset to image data", Type: Uint32le},
 		},
-	})
+	}
 
-	layout, err := parseBMPInfoHeader(file)
+	res.Layout = append(res.Layout, fileHeader)
+
+	infoHeader, err := parseBMPInfoHeader(file)
 	if err != nil {
 		fmt.Println("ERROR", err)
 	}
 
-	res.Layout = append(res.Layout, layout)
+	res.Layout = append(res.Layout, infoHeader)
+
+	imageDataOffset := res.readUint32leFromInfo(file, "offset to image data")
+
+	// body
+	headerLen := fileHeader.Length + infoHeader.Length
+
+	dataLayout := Layout{
+		Offset: int64(imageDataOffset),
+		Type:   Uint8,
+		Info:   "image data",
+		Length: getFileSize(file) - headerLen,
+	}
+
+	res.Layout = append(res.Layout, dataLayout)
 
 	return &res
 }
@@ -52,22 +68,20 @@ func readUint32le(reader io.Reader) (uint32, error) {
 
 func parseBMPInfoHeader(file *os.File) (Layout, error) {
 
+	infoHeaderBase := int64(14)
 	layout := Layout{
-		Length: 14,
-		Info:   "",
+		Offset: infoHeaderBase,
 		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 14, Length: 4, Info: "info header size", Type: Uint32le},
-			// XXX rest is dependant of value of previous field
-		},
 	}
 
-	file.Seek(14, os.SEEK_SET)
+	file.Seek(infoHeaderBase, os.SEEK_SET)
 
 	infoHdrSize, err := readUint32le(file)
 	if err != nil {
 		return layout, err
 	}
+
+	layout.Length = int64(infoHdrSize)
 
 	switch infoHdrSize {
 	/*
@@ -76,7 +90,7 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 			header.Nodes.Add(ParseOS2Version1Header(headerLen.offset + headerLen.length))
 	*/
 	case 40: // Windows V3 BITMAPINFOHEADER
-		layout.Info = "bitmap info header, Windows V3"
+		layout.Info = "bmp info header V3 Win"
 		layout.Childs = parseBMPVersion3Header(file, 40)
 		/*
 			case 64: //OS/2 V2
@@ -113,7 +127,7 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 func parseBMPVersion3Header(file *os.File, baseOffset int64) []Layout {
 
 	return []Layout{
-		//Layout{Offset: baseOffset, Length: 40-4, Info: "Windows V3 BITMAPINFOHEADER"},
+		Layout{Offset: baseOffset, Length: 4, Type: Uint32le, Info: "info header size V3"},
 		Layout{Offset: baseOffset + 4, Length: 4, Type: Uint32le, Info: "width"},
 		Layout{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "height"},
 		Layout{Offset: baseOffset + 12, Length: 2, Type: Uint16le, Info: "planes"},

@@ -16,15 +16,6 @@ func exists(name string) bool {
 	return true
 }
 
-func getFileSize(file *os.File) int64 {
-
-	fi, err := file.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return fi.Size()
-}
-
 // return file extension, without leading dot
 func fileExt(file *os.File) string {
 
@@ -33,4 +24,13 @@ func fileExt(file *os.File) string {
 		ext = ext[1:]
 	}
 	return ext
+}
+
+func getFileSize(file *os.File) int64 {
+
+	fi, err := file.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fi.Size()
 }

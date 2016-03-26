@@ -1,7 +1,6 @@
 package formats
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -16,10 +15,11 @@ var (
 
 func matchParser(file *os.File) *parse.ParsedLayout {
 	for name, parse := range parsers {
-		x := parse(file)
-		if x != nil {
-			fmt.Println("XXX matched", name)
-			return x
+		parsed := parse(file)
+		if parsed != nil {
+			parsed.FormatName = name
+			parsed.FileSize = getFileSize(file)
+			return parsed
 		}
 	}
 	return nil

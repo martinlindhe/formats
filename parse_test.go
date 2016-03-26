@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/martinlindhe/formats/parse"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,6 +16,23 @@ func TestParseBMP(t *testing.T) {
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	b := ParseLayout(file)
-	spew.Dump(b)
+	layout := ParseLayout(file)
+
+	assert.Equal(t, &parse.ParsedLayout{
+		FormatName: "bmp",
+		FileSize:   70,
+		Layout: []parse.Layout{
+			parse.Layout{
+				Length: 14,
+				Info:   "bitmap file header",
+				Childs: []parse.Layout{
+					parse.Layout{Offset: 0, Length: 2, Type: parse.ASCII, Info: "magic (BMP image)"},
+					parse.Layout{Offset: 2, Length: 4, Type: parse.Uint32le, Info: "file size"},
+					parse.Layout{Offset: 6, Length: 2, Type: parse.Uint16le, Info: "reserved 1"},
+					parse.Layout{Offset: 8, Length: 2, Type: parse.Uint16le, Info: "reserved 2"},
+					parse.Layout{Offset: 10, Length: 4, Type: parse.Uint32le, Info: "offset to pixel data"},
+				},
+			},
+		},
+	}, layout)
 }

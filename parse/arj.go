@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-func ARJ(file *os.File) []Layout {
+func ARJ(file *os.File) *ParsedLayout {
 
-	res := []Layout{}
+	res := ParsedLayout{}
 	fmt.Println("XXX TODO parse ARJ")
-	return res
+	return &res
 }

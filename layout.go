@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	parsers = map[string]func(*os.File) []parse.Layout{
+	parsers = map[string]func(*os.File) *parse.ParsedLayout{
 		"arj": parse.ARJ,
 		"bmp": parse.BMP,
 	}
@@ -29,16 +29,15 @@ func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
 func parseFileByExtension(
 	file *os.File) (*parse.ParsedLayout, error) {
 
-	res := parse.ParsedLayout{
-		FileSize: getFileSize(file),
-	}
+	res := parse.ParsedLayout{}
 
 	ext := fileExt(file)
 
 	res.FormatName = "XXX some name"
 
 	if parser, ok := parsers[ext]; ok {
-		res.Layout = parser(file)
+		x := parser(file)
+		res = *x
 	} else {
 		fmt.Println("error: no match for", ext)
 	}

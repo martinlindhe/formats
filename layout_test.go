@@ -15,8 +15,7 @@ func TestParseGif87a(t *testing.T) {
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	layout, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	layout := ParseLayout(file)
 	assert.Equal(t, true, layout != nil)
 	/*
 		assert.Equal(t, &ParsedLayout{
@@ -41,8 +40,7 @@ func TestParseGif89a(t *testing.T) {
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	layout, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	layout := ParseLayout(file)
 	assert.Equal(t, true, layout != nil)
 	/*
 		assert.Equal(t, &ParsedLayout{

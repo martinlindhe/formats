@@ -70,6 +70,7 @@ func uiLoop(file *os.File) {
 	asciiPar.Width = 18
 	asciiPar.X = 55
 	asciiPar.Y = 0
+	asciiPar.BorderRight = false
 	asciiPar.TextFgColor = termui.ColorWhite
 	asciiPar.BorderLabel = "ascii"
 	asciiPar.BorderFg = termui.ColorCyan
@@ -163,5 +164,5 @@ func refreshUI(file *os.File) {
 func prettyStatString() string {
 
 	field := fileLayout.Layout[hexView.CurrentField]
-	return fmt.Sprintf("selected: %d bytes", field.Length)
+	return fmt.Sprintf("selected: %d bytes, offset %04x", field.Length, field.Offset)
 }

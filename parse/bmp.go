@@ -1,5 +1,7 @@
 package parse
 
+// STATUS xxx
+
 import (
 	"encoding/binary"
 	"fmt"

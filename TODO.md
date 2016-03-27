@@ -4,6 +4,8 @@
         porta det istället
 
 
+    scroll to focus
+        - when toggling to a group thats out of view, scroll view so it's in view
 
 
 

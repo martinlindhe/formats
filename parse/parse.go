@@ -118,3 +118,19 @@ func getFileSize(file *os.File) int64 {
 	}
 	return fi.Size()
 }
+
+func zeroTerminatedASCII(r io.Reader) (string, error) {
+
+	var c byte
+	s := ""
+	for {
+		if err := binary.Read(r, binary.LittleEndian, &c); err != nil {
+			return "", err
+		}
+		if c == 0 {
+			break
+		}
+		s += string(c)
+	}
+	return s, nil
+}

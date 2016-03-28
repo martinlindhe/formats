@@ -43,8 +43,6 @@ func main() {
 	layout := formats.ParseLayout(file)
 	fileLayout = *layout
 
-	// XXX get console screen height
-
 	uiLoop(file)
 }
 
@@ -57,6 +55,8 @@ func uiLoop(file *os.File) {
 		panic(err)
 	}
 	defer termui.Close()
+
+	hexView.VisibleRows = termui.TermHeight() - 3
 
 	hexPar = termui.NewPar("")
 	hexPar.Height = hexView.VisibleRows + 2

@@ -7,27 +7,6 @@ import (
 	"os"
 )
 
-type arjMainHeader struct {
-	Magic                  uint16 `note:"header id"`
-	HdrSize                uint16 `note:"basic header size"` // excl. Magic+HdrSize
-	SizeWithExtraData      byte   `note:"size up to and including 'extra data'"`
-	Version                byte   `note:"archiver version number"`
-	ExtractVersion         byte   `note:"minimum archiver version to extract"`
-	HostOS                 byte   `note:"host OS",map:"hostOSes"` // XXX map
-	Flags                  byte   `note:"arj flags"`
-	SecurityVersion        byte   `note:"security version"`
-	FileType               byte   `note:"file type",map:"fileTypes"` // XXX map
-	Reserved               byte   `note:"reserved"`
-	FileCTime              uint32 `note:"created time"`  // XXX time in "msdos-format"
-	FileMTime              uint32 `note:"modified time"` // XXX time in "msdos-format"
-	ArchiveSize            uint32 `note:"archive size for secured archive"`
-	SecurityEnvelopePos    uint32 `note:"security envelope file position"`
-	FilespecOffset         uint16 `note:"filespec position in filename"`
-	SecurityEnvelopeLength uint16 `note:"length in bytes of security envelope data"`
-	EncryptionVersion      byte   `note:"encryption version"`
-	LastChapter            byte   `note:"last chapter"` // XXX
-}
-
 const (
 	arjHeaderSize    = 0x22 // XXX what is size?1
 	arjBlockSizeMin  = 30
@@ -70,16 +49,9 @@ func parseARJMainHeader(f *os.File) ([]Layout, error) {
 		return nil, err
 	}
 
-	h := arjMainHeader{}
+	mainHeaderLen := int64(35) // XXX hdr len?!
 
-	reader := io.Reader(f)
-
-	if err := binary.Read(reader, binary.LittleEndian, &h); err != nil {
-		return nil, err
-	}
-	if h.Magic != 60000 {
-		return nil, fmt.Errorf("wrong magic word %04x", h.Magic)
-	}
+	f.Seek(mainHeaderLen, os.SEEK_SET)
 
 	archiveName := ""
 	comment := ""
@@ -94,11 +66,28 @@ func parseARJMainHeader(f *os.File) ([]Layout, error) {
 	return []Layout{
 		Layout{
 			Offset: offset,
-			Length: int64(h.SizeWithExtraData) + 4,
+			Length: mainHeaderLen,
 			Type:   Group,
 			Info:   "arj main header",
 			Childs: []Layout{
 				// XXX convert arjMainHeader into []Layout and add to Childs in return
+				Layout{Offset: offset, Length: 2, Type: Uint16le, Info: "magic (ARJ archive)"},
+				Layout{Offset: offset + 2, Length: 2, Type: Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
+				Layout{Offset: offset + 4, Length: 1, Type: Uint8, Info: "size up to and including 'extra data'"},
+				Layout{Offset: offset + 5, Length: 1, Type: Uint8, Info: "archiver version number"},
+				Layout{Offset: offset + 6, Length: 1, Type: Uint8, Info: "minimum archiver version to extract"},
+				Layout{Offset: offset + 7, Length: 1, Type: Uint8, Info: "host OS"},   // XXX map hostOSes
+				Layout{Offset: offset + 8, Length: 1, Type: Uint8, Info: "arj flags"}, // XXX show bitfield
+				Layout{Offset: offset + 9, Length: 1, Type: Uint8, Info: "security version"},
+				Layout{Offset: offset + 10, Length: 1, Type: Uint8, Info: "file type"},        // XXX map fileTypes
+				Layout{Offset: offset + 11, Length: 4, Type: Uint32le, Info: "created time"},  // XXX time in "msdos-format"
+				Layout{Offset: offset + 15, Length: 4, Type: Uint32le, Info: "modified time"}, // XXX time in "msdos-format"
+				Layout{Offset: offset + 19, Length: 4, Type: Uint32le, Info: "archive size for secured archive"},
+				Layout{Offset: offset + 23, Length: 4, Type: Uint32le, Info: "security envelope file position"},
+				Layout{Offset: offset + 27, Length: 4, Type: Uint32le, Info: "filespec position in filename"},
+				Layout{Offset: offset + 31, Length: 2, Type: Uint16le, Info: "length in bytes of security envelope data"},
+				Layout{Offset: offset + 33, Length: 1, Type: Uint8, Info: "encryption version"},
+				Layout{Offset: offset + 34, Length: 1, Type: Uint8, Info: "last chapter"}, // XXX
 
 				Layout{Offset: offset, Length: int64(len(archiveName)), Type: ASCIIZ, Info: "archive name"},
 				Layout{Offset: offset + int64(len(archiveName)), Length: int64(len(comment)), Type: ASCIIZ, Info: "comment"},

@@ -64,7 +64,7 @@ func parseBMP(file *os.File) *ParsedLayout {
 		Offset: int64(imageDataOffset),
 		Type:   Uint8,
 		Info:   "image data",
-		Length: getFileSize(file) - headerLen,
+		Length: fileSize(file) - headerLen,
 	}
 
 	res.Layout = append(res.Layout, dataLayout)

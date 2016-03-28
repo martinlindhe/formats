@@ -26,7 +26,7 @@ func fileExt(file *os.File) string {
 	return ext
 }
 
-func getFileSize(file *os.File) int64 {
+func fileSize(file *os.File) int64 {
 
 	fi, err := file.Stat()
 	if err != nil {

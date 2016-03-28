@@ -18,7 +18,7 @@ func matchParser(file *os.File) *parse.ParsedLayout {
 		parsed := parse(file)
 		if parsed != nil {
 			parsed.FormatName = name
-			parsed.FileSize = getFileSize(file)
+			parsed.FileSize = fileSize(file)
 			return parsed
 		}
 	}

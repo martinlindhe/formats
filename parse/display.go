@@ -62,15 +62,33 @@ func (pl *ParsedLayout) PrettyASCIIView(file *os.File, hexView HexViewState) str
 	return ascii
 }
 
-// PrettyHexView ...
-func (pl *ParsedLayout) PrettyHexView(file *os.File, hexView HexViewState) string {
+// PrettyOffsetView ...
+func (pl *ParsedLayout) PrettyOffsetView(file *os.File, hexView HexViewState) string {
 
 	ofsFmt := "%08x"
+	padding := 0
 	if pl.FileSize <= 0xffff {
 		ofsFmt = "%04x"
+		padding = 3
 	} else if pl.FileSize <= 0xffffff {
 		ofsFmt = "%06x"
+		padding = 1
 	}
+
+	base := hexView.StartingRow * int64(hexView.RowWidth)
+	ceil := base + int64(hexView.VisibleRows*hexView.RowWidth)
+
+	pad := strings.Repeat(" ", padding)
+
+	res := ""
+	for i := base; i < ceil; i += int64(hexView.RowWidth) {
+		res += pad + fmt.Sprintf(ofsFmt, i) + "\n"
+	}
+	return res
+}
+
+// PrettyHexView ...
+func (pl *ParsedLayout) PrettyHexView(file *os.File, hexView HexViewState) string {
 
 	hex := ""
 	base := hexView.StartingRow * int64(hexView.RowWidth)
@@ -83,11 +101,8 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File, hexView HexViewState) strin
 			log.Fatalf("err: unexpected offset %04x, expected %04x\n", ofs, i)
 		}
 		line, err := pl.GetHex(file, hexView)
-		ofsText := fmt.Sprintf(ofsFmt, i)
-
-		hex += fmt.Sprintf("[[%s]](fg-yellow) %s\n", ofsText, line)
+		hex += line + "\n"
 		if err != nil {
-			fmt.Println("got err", err)
 			break
 		}
 	}

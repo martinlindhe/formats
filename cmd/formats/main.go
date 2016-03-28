@@ -14,10 +14,10 @@ import (
 var (
 	inFile     = kingpin.Arg("file", "Input file").Required().String()
 	fileLayout = parse.ParsedLayout{}
+	offsetsPar *termui.Par
 	hexPar     *termui.Par
 	boxPar     *termui.Par
 	asciiPar   *termui.Par
-	helpPar    *termui.Par
 	statsPar   *termui.Par
 	hexView    = parse.HexViewState{
 		StartingRow:  0,
@@ -58,9 +58,16 @@ func uiLoop(file *os.File) {
 
 	hexView.VisibleRows = termui.TermHeight() - 3
 
+	offsetsPar = termui.NewPar("")
+	offsetsPar.BorderLeft = false
+	offsetsPar.Width = 10
+	offsetsPar.Height = hexView.VisibleRows + 2
+	offsetsPar.BorderLabel = "offset"
+
 	hexPar = termui.NewPar("")
 	hexPar.Height = hexView.VisibleRows + 2
-	hexPar.Width = 56
+	hexPar.Width = 49
+	hexPar.X = 8
 	hexPar.Y = 0
 	hexPar.BorderLabel = "hex"
 	hexPar.BorderFg = termui.ColorCyan
@@ -68,28 +75,20 @@ func uiLoop(file *os.File) {
 	asciiPar = termui.NewPar("")
 	asciiPar.Height = hexView.VisibleRows + 2
 	asciiPar.Width = 18
-	asciiPar.X = 55
+	asciiPar.X = 56
 	asciiPar.Y = 0
 	asciiPar.BorderRight = false
 	asciiPar.TextFgColor = termui.ColorWhite
 	asciiPar.BorderLabel = "ascii"
 	asciiPar.BorderFg = termui.ColorCyan
 
-	boxPar = termui.NewPar(hexView.CurrentFieldInfo(file, fileLayout))
+	boxPar = termui.NewPar("")
 	boxPar.Height = 6
 	boxPar.Width = 28
-	boxPar.X = 72
+	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite
 	boxPar.BorderLabel = fileLayout.FormatName
 	boxPar.BorderFg = termui.ColorCyan
-
-	helpPar = termui.NewPar("navigate with arrow keys,\nquit with q")
-	helpPar.Height = 8
-	helpPar.Width = 28
-	helpPar.X = 72
-	helpPar.Y = 5
-	helpPar.TextFgColor = termui.ColorWhite
-	helpPar.BorderLabel = "help"
 
 	statsPar = termui.NewPar("")
 	statsPar.Border = false
@@ -153,12 +152,16 @@ func uiLoop(file *os.File) {
 
 func refreshUI(file *os.File) {
 
+	// recalc, to work with resizing of terminal window
+	hexView.VisibleRows = termui.TermHeight() - 3
+
+	offsetsPar.Text = fileLayout.PrettyOffsetView(file, hexView)
 	hexPar.Text = fileLayout.PrettyHexView(file, hexView)
 	asciiPar.Text = fileLayout.PrettyASCIIView(file, hexView)
 	boxPar.Text = hexView.CurrentFieldInfo(file, fileLayout)
 	statsPar.Text = prettyStatString()
 
-	termui.Render(statsPar, hexPar, asciiPar, boxPar, helpPar)
+	termui.Render(offsetsPar, statsPar, hexPar, asciiPar, boxPar)
 }
 
 func prettyStatString() string {

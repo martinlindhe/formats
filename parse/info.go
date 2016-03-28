@@ -15,8 +15,7 @@ func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
 		return ""
 	}
 
-	// fmt.Println("XXX", f.CurrentField, "len is", len(pl.Layout))
-	field := pl.Layout[f.CurrentField]
+	field := pl.Layout[f.CurrentGroup]
 
 	res := "field: " + field.Info
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	//"github.com/davecgh/go-spew/spew"
 	"github.com/gizak/termui"
 	"github.com/martinlindhe/formats"
 	"github.com/martinlindhe/formats/parse"
@@ -20,10 +19,12 @@ var (
 	asciiPar   *termui.Par
 	statsPar   *termui.Par
 	hexView    = parse.HexViewState{
-		StartingRow:  0,
-		VisibleRows:  11,
-		RowWidth:     16,
-		CurrentField: 0,
+		BrowseMode:     parse.ByGroup,
+		StartingRow:    0,
+		VisibleRows:    11,
+		RowWidth:       16,
+		CurrentGroup:   0,
+		CurrentElement: 0,
 	}
 )
 
@@ -102,13 +103,35 @@ func uiLoop(file *os.File) {
 		termui.StopLoop()
 	})
 
+	termui.Handle("/sys/kbd/<enter>", func(termui.Event) {
+		hexView.BrowseMode = parse.ByElementInGroup
+		refreshUI(file)
+	})
+
+	termui.Handle("/sys/kbd/<escape>", func(termui.Event) {
+		hexView.BrowseMode = parse.ByGroup
+		refreshUI(file)
+	})
+
 	termui.Handle("/sys/kbd/<right>", func(termui.Event) {
-		hexView.Next(len(fileLayout.Layout))
+		switch hexView.BrowseMode {
+		case parse.ByGroup:
+			hexView.NextGroup(fileLayout.Layout)
+
+		case parse.ByElementInGroup:
+			hexView.NextElementInGroup(fileLayout.Layout)
+		}
 		refreshUI(file)
 	})
 
 	termui.Handle("/sys/kbd/<left>", func(termui.Event) {
-		hexView.Prev()
+		switch hexView.BrowseMode {
+		case parse.ByGroup:
+			hexView.PrevGroup()
+
+		case parse.ByElementInGroup:
+			hexView.PrevElementInGroup()
+		}
 		refreshUI(file)
 	})
 
@@ -166,6 +189,6 @@ func refreshUI(file *os.File) {
 
 func prettyStatString() string {
 
-	field := fileLayout.Layout[hexView.CurrentField]
-	return fmt.Sprintf("selected: %d bytes, offset %04x", field.Length, field.Offset)
+	group := fileLayout.Layout[hexView.CurrentGroup]
+	return fmt.Sprintf("selected: %d bytes, offset %04x", group.Length, group.Offset)
 }

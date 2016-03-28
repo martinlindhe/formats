@@ -9,6 +9,13 @@ import (
 	"strings"
 )
 
+type BrowseMode int
+
+const (
+	ByGroup BrowseMode = 1 + iota
+	ByElementInGroup
+)
+
 // HexFormatting ...
 type HexFormatting struct {
 	BetweenSymbols string
@@ -17,25 +24,49 @@ type HexFormatting struct {
 
 // HexViewState ...
 type HexViewState struct {
-	StartingRow  int64
-	VisibleRows  int
-	RowWidth     int
-	CurrentField int
+	BrowseMode     BrowseMode
+	StartingRow    int64
+	VisibleRows    int
+	RowWidth       int
+	CurrentGroup   int
+	CurrentElement int
 }
 
-// Next moves focus to the next field
-func (f *HexViewState) Next(max int) {
-	f.CurrentField++
-	if f.CurrentField >= max {
-		f.CurrentField = max - 1
+// Next moves focus to the next group
+func (f *HexViewState) NextGroup(layout []Layout) {
+
+	max := len(layout)
+
+	f.CurrentGroup++
+	f.CurrentElement = 0
+	if f.CurrentGroup >= max {
+		f.CurrentGroup = max - 1
 	}
 }
 
-// Prev moves focus to the previous field
-func (f *HexViewState) Prev() {
-	f.CurrentField--
-	if f.CurrentField < 0 {
-		f.CurrentField = 0
+func (f *HexViewState) NextElementInGroup(layout []Layout) {
+
+	max := len(layout[f.CurrentGroup].Childs)
+	fmt.Println("num", max)
+	f.CurrentElement++
+	if f.CurrentElement >= max {
+		f.CurrentElement = max - 1
+	}
+}
+
+func (f *HexViewState) PrevElementInGroup() {
+	f.CurrentElement--
+	if f.CurrentElement < 0 {
+		f.CurrentElement = 0
+	}
+}
+
+// Prev moves focus to the previous group
+func (f *HexViewState) PrevGroup() {
+	f.CurrentGroup--
+	f.CurrentElement = 0
+	if f.CurrentGroup < 0 {
+		f.CurrentGroup = 0
 	}
 }
 
@@ -115,7 +146,7 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 		return "", fmt.Errorf("pl.Layout is empty")
 	}
 
-	layout := pl.Layout[hexView.CurrentField]
+	layout := pl.Layout[hexView.CurrentGroup]
 
 	reader := io.Reader(file)
 
@@ -162,7 +193,7 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 	return combineHexRow(symbols, formatting), nil
 }
 
-// GetHex dumps a row of hex from io.Reader
+// GetHex dumps a row of hex
 func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, error) {
 
 	formatting := HexFormatting{
@@ -174,7 +205,12 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 		return "", fmt.Errorf("pl.Layout is empty")
 	}
 
-	layout := pl.Layout[hexView.CurrentField]
+	groupLayout := pl.Layout[hexView.CurrentGroup]
+
+	var elementInfo Layout
+	if hexView.BrowseMode == ByElementInGroup {
+		elementInfo = groupLayout.Childs[hexView.CurrentElement]
+	}
 
 	reader := io.Reader(file)
 
@@ -200,8 +236,12 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 		if !pl.isOffsetKnown(base + w) {
 			colorName = "fg-red"
 		}
-		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
+		if ceil >= groupLayout.Offset && ceil < groupLayout.Offset+int64(groupLayout.Length) {
 			colorName = "fg-cyan"
+		}
+
+		if hexView.BrowseMode == ByElementInGroup && ceil >= elementInfo.Offset && ceil < elementInfo.Offset+int64(elementInfo.Length) {
+			colorName = "fg-yellow"
 		}
 
 		group := fmt.Sprintf("[%02x](%s)", b, colorName)

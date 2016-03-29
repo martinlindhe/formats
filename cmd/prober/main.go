@@ -7,7 +7,6 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/martinlindhe/formats"
-	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -29,19 +28,5 @@ func main() {
 
 	layout := formats.ParseLayout(f)
 
-	fmt.Println(prettyLayout(layout))
-}
-
-func prettyLayout(parsedLayout *parse.ParsedLayout) string { // XXX move
-
-	res := ""
-	for _, layout := range parsedLayout.Layout {
-		res += layout.Info + fmt.Sprintf(" (%04x)", layout.Offset) + ", " + layout.Type.String() + "\n"
-		// XXX childs
-		for _, child := range layout.Childs {
-			res += "  " + child.Info + fmt.Sprintf(" (%04x)", child.Offset) + ", " + child.Type.String() + "\n"
-		}
-	}
-
-	return res
+	fmt.Println(layout.PrettyPrint())
 }

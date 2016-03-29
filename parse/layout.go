@@ -103,6 +103,21 @@ func (pl *ParsedLayout) findInfoField(info string) *Layout {
 	return nil
 }
 
+// the output of cmd/prober
+func (parsedLayout *ParsedLayout) PrettyPrint() string {
+
+	res := ""
+	for _, layout := range parsedLayout.Layout {
+		res += layout.Info + fmt.Sprintf(" (%04x)", layout.Offset) + ", " + layout.Type.String() + "\n"
+
+		for _, child := range layout.Childs {
+			res += "  " + child.Info + fmt.Sprintf(" (%04x)", child.Offset) + ", " + child.Type.String() + "\n"
+		}
+	}
+
+	return res
+}
+
 func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) uint32 {
 
 	layout := pl.findInfoField(info)

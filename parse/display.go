@@ -13,7 +13,7 @@ type BrowseMode int
 
 const (
 	ByGroup BrowseMode = 1 + iota
-	ByElementInGroup
+	ByFieldInGroup
 )
 
 // HexFormatting ...
@@ -24,12 +24,12 @@ type HexFormatting struct {
 
 // HexViewState ...
 type HexViewState struct {
-	BrowseMode     BrowseMode
-	StartingRow    int64
-	VisibleRows    int
-	RowWidth       int
-	CurrentGroup   int
-	CurrentElement int
+	BrowseMode   BrowseMode
+	StartingRow  int64
+	VisibleRows  int
+	RowWidth     int
+	CurrentGroup int
+	CurrentField int
 }
 
 // Next moves focus to the next group
@@ -38,33 +38,33 @@ func (f *HexViewState) NextGroup(layout []Layout) {
 	max := len(layout)
 
 	f.CurrentGroup++
-	f.CurrentElement = 0
+	f.CurrentField = 0
 	if f.CurrentGroup >= max {
 		f.CurrentGroup = max - 1
 	}
 }
 
-func (f *HexViewState) NextElementInGroup(layout []Layout) {
+func (f *HexViewState) NextFieldInGroup(layout []Layout) {
 
 	max := len(layout[f.CurrentGroup].Childs)
 	fmt.Println("num", max)
-	f.CurrentElement++
-	if f.CurrentElement >= max {
-		f.CurrentElement = max - 1
+	f.CurrentField++
+	if f.CurrentField >= max {
+		f.CurrentField = max - 1
 	}
 }
 
-func (f *HexViewState) PrevElementInGroup() {
-	f.CurrentElement--
-	if f.CurrentElement < 0 {
-		f.CurrentElement = 0
+func (f *HexViewState) PrevFieldInGroup() {
+	f.CurrentField--
+	if f.CurrentField < 0 {
+		f.CurrentField = 0
 	}
 }
 
 // Prev moves focus to the previous group
 func (f *HexViewState) PrevGroup() {
 	f.CurrentGroup--
-	f.CurrentElement = 0
+	f.CurrentField = 0
 	if f.CurrentGroup < 0 {
 		f.CurrentGroup = 0
 	}
@@ -207,9 +207,9 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 
 	groupLayout := pl.Layout[hexView.CurrentGroup]
 
-	var elementInfo Layout
-	if hexView.BrowseMode == ByElementInGroup {
-		elementInfo = groupLayout.Childs[hexView.CurrentElement]
+	var fieldInfo Layout
+	if hexView.BrowseMode == ByFieldInGroup {
+		fieldInfo = groupLayout.Childs[hexView.CurrentField]
 	}
 
 	reader := io.Reader(file)
@@ -240,7 +240,7 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 			colorName = "fg-cyan"
 		}
 
-		if hexView.BrowseMode == ByElementInGroup && ceil >= elementInfo.Offset && ceil < elementInfo.Offset+int64(elementInfo.Length) {
+		if hexView.BrowseMode == ByFieldInGroup && ceil >= fieldInfo.Offset && ceil < fieldInfo.Offset+int64(fieldInfo.Length) {
 			colorName = "fg-yellow"
 		}
 

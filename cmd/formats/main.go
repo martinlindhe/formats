@@ -19,12 +19,12 @@ var (
 	asciiPar   *termui.Par
 	statsPar   *termui.Par
 	hexView    = parse.HexViewState{
-		BrowseMode:     parse.ByGroup,
-		StartingRow:    0,
-		VisibleRows:    11,
-		RowWidth:       16,
-		CurrentGroup:   0,
-		CurrentElement: 0,
+		BrowseMode:   parse.ByGroup,
+		StartingRow:  0,
+		VisibleRows:  11,
+		RowWidth:     16,
+		CurrentGroup: 0,
+		CurrentField: 0,
 	}
 )
 
@@ -104,7 +104,7 @@ func uiLoop(file *os.File) {
 	})
 
 	termui.Handle("/sys/kbd/<enter>", func(termui.Event) {
-		hexView.BrowseMode = parse.ByElementInGroup
+		hexView.BrowseMode = parse.ByFieldInGroup
 		refreshUI(file)
 	})
 
@@ -118,8 +118,8 @@ func uiLoop(file *os.File) {
 		case parse.ByGroup:
 			hexView.NextGroup(fileLayout.Layout)
 
-		case parse.ByElementInGroup:
-			hexView.NextElementInGroup(fileLayout.Layout)
+		case parse.ByFieldInGroup:
+			hexView.NextFieldInGroup(fileLayout.Layout)
 		}
 		refreshUI(file)
 	})
@@ -129,8 +129,8 @@ func uiLoop(file *os.File) {
 		case parse.ByGroup:
 			hexView.PrevGroup()
 
-		case parse.ByElementInGroup:
-			hexView.PrevElementInGroup()
+		case parse.ByFieldInGroup:
+			hexView.PrevFieldInGroup()
 		}
 		refreshUI(file)
 	})

@@ -8,80 +8,90 @@ import (
 )
 
 // CurrentFieldInfo renders info of current field
-func (f *HexViewState) CurrentFieldInfo(file *os.File, pl ParsedLayout) string {
+func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string {
 
 	if len(pl.Layout) == 0 {
 		fmt.Println("pl.Layout is empty")
 		return ""
 	}
 
-	field := pl.Layout[f.CurrentGroup]
+	group := pl.Layout[state.CurrentGroup]
 
-	res := "field: " + field.Info
+	res := "group: " + group.Info
 
-	res += "\nvalue: "
+	if state.BrowseMode == ByGroup {
+		return res
+	}
 
-	file.Seek(field.Offset, os.SEEK_SET)
+	field := group.Childs[state.CurrentField]
+
+	res += "\n" + field.fieldInfoByType(f)
+	res += " (" + field.Type.String() + ")"
+
+	return res
+}
+
+func (field *Layout) fieldInfoByType(f *os.File) string {
+
+	f.Seek(field.Offset, os.SEEK_SET)
+
+	res := "field: " + field.Info + "\n"
 
 	// decode data based on type and show
-	r := io.Reader(file)
 
 	switch field.Type {
 	case Int8:
 		var i int8
-		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Uint8:
 		var i uint8
-		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Int16le:
 		var i int16
-		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Uint16le:
 		var i uint16
-		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Int32le:
 		var i int32
-		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Uint32le:
 		var i uint32
-		if err := binary.Read(r, binary.LittleEndian, &i); err != nil {
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
 			panic(err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case ASCII, ASCIIZ:
 		buf := make([]byte, field.Length)
-		_, err := file.Read(buf)
+		_, err := f.Read(buf)
 		if err != nil && err != io.EOF {
 			panic(err)
 		}
 		res += string(buf)
-
 	default:
 		res += "XXX unhandled " + field.Type.String()
 	}
-
-	res += " (" + field.Type.String() + ")"
 
 	return res
 }

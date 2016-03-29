@@ -84,7 +84,7 @@ func uiLoop(file *os.File) {
 	asciiPar.BorderFg = termui.ColorCyan
 
 	boxPar = termui.NewPar("")
-	boxPar.Height = 6
+	boxPar.Height = 8
 	boxPar.Width = 28
 	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite
@@ -105,6 +105,7 @@ func uiLoop(file *os.File) {
 
 	termui.Handle("/sys/kbd/<enter>", func(termui.Event) {
 		hexView.BrowseMode = parse.ByFieldInGroup
+		//		hexView.CurrentField = 0
 		refreshUI(file)
 	})
 

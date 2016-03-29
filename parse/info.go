@@ -23,6 +23,10 @@ func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string 
 		return res
 	}
 
+	if state.CurrentField >= len(group.Childs) {
+		return "CHILD OUT OF RANGE"
+	}
+
 	field := group.Childs[state.CurrentField]
 
 	res += "\n" + field.fieldInfoByType(f)
@@ -42,43 +46,43 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	switch field.Type {
 	case Int8:
 		var i int8
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
-			panic(err)
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Uint8:
 		var i uint8
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
-			panic(err)
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Int16le:
 		var i int16
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
-			panic(err)
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Uint16le:
 		var i uint16
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
-			panic(err)
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Int32le:
 		var i int32
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
-			panic(err)
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d", i)
 
 	case Uint32le:
 		var i uint32
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil {
-			panic(err)
+		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d", i)
 
@@ -86,7 +90,7 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		buf := make([]byte, field.Length)
 		_, err := f.Read(buf)
 		if err != nil && err != io.EOF {
-			panic(err)
+			return fmt.Sprintf("%v", err)
 		}
 		res += string(buf)
 	default:

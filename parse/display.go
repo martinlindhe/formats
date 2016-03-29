@@ -209,6 +209,9 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 
 	var fieldInfo Layout
 	if hexView.BrowseMode == ByFieldInGroup {
+		if hexView.CurrentField >= len(groupLayout.Childs) {
+			return "", fmt.Errorf("CHILD OUT OF RANGE")
+		}
 		fieldInfo = groupLayout.Childs[hexView.CurrentField]
 	}
 

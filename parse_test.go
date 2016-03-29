@@ -4,11 +4,22 @@ import (
 	"os"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/martinlindhe/formats/parse"
 	"github.com/stretchr/testify/assert"
 )
 
 // tests for the parse-folder
+
+func TestParseARJ(t *testing.T) {
+
+	file, err := os.Open("samples/arj/tiny.arj")
+	defer file.Close()
+	assert.Equal(t, nil, err)
+
+	layout := ParseLayout(file)
+	spew.Dump(layout)
+}
 
 func TestParseBMP(t *testing.T) {
 

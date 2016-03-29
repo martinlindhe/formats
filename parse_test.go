@@ -1,13 +1,62 @@
 package formats
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/martinlindhe/formats/parse"
 	"github.com/stretchr/testify/assert"
 )
 
-// tests for the parse-folder
+// some tests to see that parsed files look ok
+func TestParsedLayout(t *testing.T) {
+
+	searchDir := "./samples"
+
+	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
+
+		if fi.IsDir() {
+			return nil
+		}
+
+		fmt.Println("OPEN", path)
+		f, err := os.Open(path)
+		defer f.Close()
+		if err != nil {
+			return err
+		}
+
+		layout := ParseLayout(f)
+		if layout == nil {
+			// NOTE since not all samples is currently supported
+			fmt.Println("FAIL to parse layout from", path)
+			return nil
+		}
+
+		for _, l := range layout.Layout {
+			if l.Type != parse.Group {
+				t.Fatalf("root level must be group %v, %s", l, path)
+			}
+
+			// XXX sum child items and check group length, error
+
+			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
+				t.Fatalf("child 0 offset should be same as parent %04x, but is %04x", l.Offset, l.Childs[0].Offset)
+			}
+
+			for _, child := range l.Childs {
+				if child.Type == parse.Group {
+					t.Fatalf("child level cant be group %v, %s", l, path)
+				}
+			}
+		}
+
+		return nil
+	})
+	assert.Equal(t, nil, err)
+}
 
 /*
 func TestParseGIF87a(t *testing.T) {
@@ -90,6 +139,7 @@ bmp info header V3 Win (000e), Group
   vertical resolution (0044), uint32-le
   number of used colors (0048), uint32-le
   number of important colors (004c), uint32-le
-image data (0036), uint8
+image data (0036), Group
+  image data (0036), uint8
 `, layout.PrettyPrint())
 }

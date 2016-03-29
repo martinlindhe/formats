@@ -62,9 +62,12 @@ func parseBMP(file *os.File) *ParsedLayout {
 
 	dataLayout := Layout{
 		Offset: int64(imageDataOffset),
-		Type:   Uint8,
+		Type:   Group,
 		Info:   "image data",
 		Length: fileSize(file) - headerLen,
+		Childs: []Layout{
+			Layout{Offset: int64(imageDataOffset), Length: fileSize(file) - headerLen, Type: Uint8, Info: "image data"},
+		},
 	}
 
 	res.Layout = append(res.Layout, dataLayout)

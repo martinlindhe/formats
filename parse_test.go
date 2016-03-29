@@ -30,16 +30,16 @@ func TestParseBMP(t *testing.T) {
 					parse.Layout{Offset: 0, Length: 2, Type: parse.ASCII, Info: "magic (BMP image)"},
 					parse.Layout{Offset: 2, Length: 4, Type: parse.Uint32le, Info: "file size"},
 					parse.Layout{Offset: 6, Length: 4, Type: parse.Uint32le, Info: "reserved"},
-					parse.Layout{Offset: 10, Length: 4, Type: parse.Uint32le, Info: "offset to pixel data"},
+					parse.Layout{Offset: 10, Length: 4, Type: parse.Uint32le, Info: "offset to image data"},
 				},
 			},
 			parse.Layout{
+				Offset: 14,
 				Length: 40,
-				Info:   "bitmap info header, Windows V3",
+				Info:   "bmp info header V3 Win",
 				Type:   parse.Group,
 				Childs: []parse.Layout{
-					// parse.Layout{Offset: 14, Length: 4, Type: parse.Uint32le, Info: "info header size"},
-
+					parse.Layout{Offset: 40, Length: 4, Type: parse.Uint32le, Info: "info header size"},
 					parse.Layout{Offset: 44, Length: 4, Type: parse.Uint32le, Info: "width"},
 					parse.Layout{Offset: 48, Length: 4, Type: parse.Uint32le, Info: "height"},
 					parse.Layout{Offset: 52, Length: 2, Type: parse.Uint16le, Info: "planes"},

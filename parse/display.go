@@ -147,8 +147,13 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 	}
 
 	layout := pl.Layout[hexView.CurrentGroup]
-
-	reader := io.Reader(file)
+	var fieldInfo Layout
+	if hexView.BrowseMode == ByFieldInGroup {
+		if hexView.CurrentField >= len(layout.Childs) {
+			return "", fmt.Errorf("CHILD OUT OF RANGE")
+		}
+		fieldInfo = layout.Childs[hexView.CurrentField]
+	}
 
 	symbols := []string{}
 
@@ -164,7 +169,7 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 
 	for w := int64(0); w < 16; w++ {
 		var b byte
-		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
+		if err = binary.Read(file, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
 				return combineHexRow(symbols, formatting), nil
 			}
@@ -179,6 +184,9 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 		}
 		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
 			colorName = "fg-cyan"
+		}
+		if hexView.BrowseMode == ByFieldInGroup && ceil >= fieldInfo.Offset && ceil < fieldInfo.Offset+int64(fieldInfo.Length) {
+			colorName = "fg-yellow"
 		}
 
 		tok := "."
@@ -205,17 +213,15 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 		return "", fmt.Errorf("pl.Layout is empty")
 	}
 
-	groupLayout := pl.Layout[hexView.CurrentGroup]
+	layout := pl.Layout[hexView.CurrentGroup]
 
 	var fieldInfo Layout
 	if hexView.BrowseMode == ByFieldInGroup {
-		if hexView.CurrentField >= len(groupLayout.Childs) {
+		if hexView.CurrentField >= len(layout.Childs) {
 			return "", fmt.Errorf("CHILD OUT OF RANGE")
 		}
-		fieldInfo = groupLayout.Childs[hexView.CurrentField]
+		fieldInfo = layout.Childs[hexView.CurrentField]
 	}
-
-	reader := io.Reader(file)
 
 	symbols := []string{}
 
@@ -226,7 +232,7 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 
 	for w := int64(0); w < 16; w++ {
 		var b byte
-		if err = binary.Read(reader, binary.LittleEndian, &b); err != nil {
+		if err = binary.Read(file, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
 				return combineHexRow(symbols, formatting), nil
 			}
@@ -239,10 +245,9 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 		if !pl.isOffsetKnown(base + w) {
 			colorName = "fg-red"
 		}
-		if ceil >= groupLayout.Offset && ceil < groupLayout.Offset+int64(groupLayout.Length) {
+		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
 			colorName = "fg-cyan"
 		}
-
 		if hexView.BrowseMode == ByFieldInGroup && ceil >= fieldInfo.Offset && ceil < fieldInfo.Offset+int64(fieldInfo.Length) {
 			colorName = "fg-yellow"
 		}

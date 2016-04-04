@@ -122,6 +122,7 @@ func uiLoop(file *os.File) {
 		case parse.ByFieldInGroup:
 			hexView.NextFieldInGroup(fileLayout.Layout)
 		}
+		focusAtCurrentField()
 		refreshUI(file)
 	})
 
@@ -133,6 +134,7 @@ func uiLoop(file *os.File) {
 		case parse.ByFieldInGroup:
 			hexView.PrevFieldInGroup()
 		}
+		focusAtCurrentField()
 		refreshUI(file)
 	})
 
@@ -174,6 +176,23 @@ func uiLoop(file *os.File) {
 	termui.Loop() // block until StopLoop is called
 }
 
+func focusAtCurrentField() {
+
+	// get current field offset
+	offset := fileLayout.Layout[hexView.CurrentGroup].Offset
+
+	base := hexView.StartingRow * int64(hexView.RowWidth)
+	ceil := base + int64(hexView.VisibleRows*hexView.RowWidth)
+
+	// see if it is view with current row selection
+	if base >= offset && ceil <= offset {
+		return
+	}
+
+	// if not, change current row
+	hexView.StartingRow = int64(offset / 16)
+}
+
 func refreshUI(file *os.File) {
 
 	// recalc, to work with resizing of terminal window
@@ -191,5 +210,5 @@ func refreshUI(file *os.File) {
 func prettyStatString() string {
 
 	group := fileLayout.Layout[hexView.CurrentGroup]
-	return fmt.Sprintf("selected: %d bytes, offset %04x", group.Length, group.Offset)
+	return fmt.Sprintf("selected: %d bytes (0x%x), offset %04x", group.Length, group.Length, group.Offset)
 }

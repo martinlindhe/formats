@@ -40,16 +40,19 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("root level must be group %v, %s", l, path)
 			}
 
-			// XXX sum child items and check group length, error
-
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
-				t.Fatalf("child 0 offset should be same as parent %04x, but is %04x", l.Offset, l.Childs[0].Offset)
+				// t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
 			}
 
+			sum := int64(0)
 			for _, child := range l.Childs {
+				sum += child.Length
 				if child.Type == parse.Group {
 					t.Fatalf("child level cant be group %v, %s", l, path)
 				}
+			}
+			if sum != l.Length {
+				t.Fatalf("child sum is %d, but group length is %d, %v, %s", sum, l.Length, l, path)
 			}
 		}
 

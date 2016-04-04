@@ -1,6 +1,6 @@
 package parse
 
-// STATUS xxx
+// STATUS v1 and v2 dont map 100% of the files. v3,v4 and v5 seems mostly done
 
 import (
 	"encoding/binary"
@@ -18,7 +18,9 @@ var (
 		4: "jpeg",
 		5: "png",
 	}
+	v2len = 64
 	v3len = 40
+	v4len = 68
 )
 
 func BMP(file *os.File) *ParsedLayout {
@@ -36,7 +38,7 @@ func parseBMP(file *os.File) *ParsedLayout {
 	fileHeader := Layout{
 		Offset: 0,
 		Length: 14,
-		Info:   "bitmap file header",
+		Info:   "bmp file header",
 		Type:   Group,
 		Childs: []Layout{
 			Layout{Offset: 0, Length: 2, Info: "magic (BMP image)", Type: ASCII},
@@ -98,34 +100,35 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 	}
 
 	layout.Length = int64(infoHdrSize)
+	fmt.Println(layout.Length, "length")
 
 	switch infoHdrSize {
 
 	case 12: // OS/2 V1 - BITMAPCOREHEADER
 		layout.Info = "bmp info header V1 OS/2"
-		layout.Childs = parseBMPVersion1Header(file, int64(infoHdrSize))
+		layout.Childs = parseBMPVersion1Header(file, infoHeaderBase)
 
 	case 40: // Windows V3 - BITMAPINFOHEADER
 		layout.Info = "bmp info header V3 Win"
-		layout.Childs = parseBMPVersion3Header(file, int64(infoHdrSize))
+		layout.Childs = parseBMPVersion3Header(file, infoHeaderBase)
 
 	case 64: //OS/2 V2
 		layout.Info = "bmp info header V2 OS/2"
-		v3 := parseBMPVersion3Header(file, int64(infoHdrSize))
-		v2 := parseBMPVersion2Header(file, int64(infoHdrSize)+int64(v3len))
+		v3 := parseBMPVersion3Header(file, infoHeaderBase)
+		v2 := parseBMPVersion2Header(file, infoHeaderBase+int64(v3len))
 		layout.Childs = append(v3, v2...)
 
 	case 108: //Windows V4 - BITMAPV4HEADER
 		layout.Info = "bmp info header V4 Win"
-		v3 := parseBMPVersion3Header(file, int64(infoHdrSize))
-		v4 := parseBMPVersion4Header(file, 60) // XXX what is base of v4 hdr
+		v3 := parseBMPVersion3Header(file, infoHeaderBase)
+		v4 := parseBMPVersion4Header(file, infoHeaderBase+int64(v3len))
 		layout.Childs = append(v3, v4...)
 
 	case 124: //Windows V5 - BITMAPV5HEADER
 		layout.Info = "bmp info header V5 Win"
-		v3 := parseBMPVersion3Header(file, int64(infoHdrSize))
-		v4 := parseBMPVersion4Header(file, 60) // XXX what is base of v4 hdr
-		v5 := parseBMPVersion5Header(file, 80) // XXX what is base of v5 hdr
+		v3 := parseBMPVersion3Header(file, infoHeaderBase)
+		v4 := parseBMPVersion4Header(file, infoHeaderBase+int64(v3len))
+		v5 := parseBMPVersion5Header(file, infoHeaderBase+int64(v3len)+int64(v4len))
 		layout.Childs = append(v3, v4...)
 		layout.Childs = append(layout.Childs, v5...)
 
@@ -136,7 +139,6 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 	return layout, nil
 }
 
-// v1 = 12 byte header
 func parseBMPVersion1Header(file *os.File, baseOffset int64) []Layout {
 
 	return []Layout{
@@ -148,8 +150,8 @@ func parseBMPVersion1Header(file *os.File, baseOffset int64) []Layout {
 	}
 }
 
-// v2 = 24 byte header
 func parseBMPVersion2Header(file *os.File, baseOffset int64) []Layout {
+	fmt.Printf(" base offset is %x\n", baseOffset)
 
 	return []Layout{
 		Layout{Offset: baseOffset, Length: 2, Type: Uint16le, Info: "units"},
@@ -163,7 +165,6 @@ func parseBMPVersion2Header(file *os.File, baseOffset int64) []Layout {
 	}
 }
 
-// v3 = 40 byte header
 func parseBMPVersion3Header(file *os.File, baseOffset int64) []Layout {
 
 	return []Layout{
@@ -181,7 +182,6 @@ func parseBMPVersion3Header(file *os.File, baseOffset int64) []Layout {
 	}
 }
 
-// v4 = 68 byte header
 func parseBMPVersion4Header(file *os.File, baseOffset int64) []Layout {
 
 	return []Layout{
@@ -201,7 +201,6 @@ func parseBMPVersion4Header(file *os.File, baseOffset int64) []Layout {
 	}
 }
 
-// v5 = 16 byte header
 func parseBMPVersion5Header(file *os.File, baseOffset int64) []Layout {
 
 	return []Layout{

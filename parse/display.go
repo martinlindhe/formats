@@ -180,7 +180,7 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {
 			colorName = "fg-cyan"
 		}
-		// XXX byte as string
+
 		tok := "."
 		if b > 31 && b < 128 && b != '[' && b != ']' {
 			// [] is used by termui, so we cant display them + colors :P

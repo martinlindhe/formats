@@ -7,28 +7,8 @@ import (
 	"os"
 )
 
-// ParsedLayout ...
-type ParsedLayout struct {
-	FormatName string
-	FileSize   int64
-	Layout     []Layout
-}
-
-// Layout represents a parsed file structure
-type Layout struct { // XXX aka Chunk in cs code
-	Offset int64
-	Length int64
-	Type   DataType
-	Info   string
-	Childs []Layout // XXX make use of + display. parent is a layout group
-}
-
-// DataType ...
-type DataType int
-
-func (dt DataType) String() string {
-
-	m := map[DataType]string{
+var (
+	dataTypes = map[DataType]string{
 		Int8:     "int8",
 		Uint8:    "uint8",
 		Int16le:  "int16-le",
@@ -39,8 +19,30 @@ func (dt DataType) String() string {
 		ASCIIZ:   "ASCIIZ",
 		Group:    "Group",
 	}
+)
 
-	if val, ok := m[dt]; ok {
+// ParsedLayout ...
+type ParsedLayout struct {
+	FormatName string
+	FileSize   int64
+	Layout     []Layout
+}
+
+// Layout represents a parsed file structure
+type Layout struct {
+	Offset int64
+	Length int64
+	Type   DataType
+	Info   string
+	Childs []Layout
+}
+
+// DataType ...
+type DataType int
+
+func (dt DataType) String() string {
+
+	if val, ok := dataTypes[dt]; ok {
 		return val
 	}
 

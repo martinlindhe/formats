@@ -68,10 +68,10 @@ func parseARJMainHeader(f *os.File) ([]Layout, error) {
 			Offset: offset,
 			Length: mainHeaderLen,
 			Type:   Group,
-			Info:   "arj main header",
+			Info:   "main header",
 			Childs: []Layout{
 				// XXX convert arjMainHeader into []Layout and add to Childs in return
-				Layout{Offset: offset, Length: 2, Type: Uint16le, Info: "magic (ARJ archive)"},
+				Layout{Offset: offset, Length: 2, Type: Uint16le, Info: "magic"},
 				Layout{Offset: offset + 2, Length: 2, Type: Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
 				Layout{Offset: offset + 4, Length: 1, Type: Uint8, Info: "size up to and including 'extra data'"},
 				Layout{Offset: offset + 5, Length: 1, Type: Uint8, Info: "archiver version number"},

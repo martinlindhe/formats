@@ -31,6 +31,17 @@ func BMP(file *os.File) *ParsedLayout {
 	return parseBMP(file)
 }
 
+func isBMP(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	r := io.Reader(file)
+	var b [2]byte
+	if err := binary.Read(r, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+	return b[0] == 'B' && b[1] == 'M'
+}
+
 func parseBMP(file *os.File) *ParsedLayout {
 
 	res := ParsedLayout{}
@@ -41,7 +52,7 @@ func parseBMP(file *os.File) *ParsedLayout {
 		Info:   "bmp file header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: 0, Length: 2, Info: "magic (BMP image)", Type: ASCII},
+			Layout{Offset: 0, Length: 2, Info: "magic", Type: ASCII},
 			Layout{Offset: 2, Length: 4, Info: "file size", Type: Uint32le},
 			Layout{Offset: 6, Length: 4, Info: "reserved", Type: Uint32le},
 			Layout{Offset: 10, Length: 4, Info: "offset to image data", Type: Uint32le},
@@ -209,15 +220,4 @@ func parseBMPVersion5Header(file *os.File, baseOffset int64) []Layout {
 		Layout{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "profile size"},
 		Layout{Offset: baseOffset + 12, Length: 4, Type: Uint32le, Info: "reserved"},
 	}
-}
-
-func isBMP(file *os.File) bool {
-
-	file.Seek(0, os.SEEK_SET)
-	r := io.Reader(file)
-	var b [2]byte
-	if err := binary.Read(r, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	return b[0] == 'B' && b[1] == 'M'
 }

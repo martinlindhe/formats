@@ -17,7 +17,7 @@ func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string 
 
 	group := pl.Layout[state.CurrentGroup]
 
-	res := group.Info + "\n"
+	res := group.Info
 
 	if state.BrowseMode == ByGroup {
 		return res
@@ -29,8 +29,7 @@ func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string 
 
 	field := group.Childs[state.CurrentField]
 
-	res += "\n" + field.fieldInfoByType(f)
-	res += " (" + field.Type.String() + ")"
+	res += ": " + field.fieldInfoByType(f) + " (" + field.Type.String() + ")"
 
 	return res
 }
@@ -49,7 +48,7 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 
 	f.Seek(field.Offset, os.SEEK_SET)
 
-	res := "field: " + field.Info + "\n"
+	res := field.Info + "\n\n"
 
 	// decode data based on type and show
 

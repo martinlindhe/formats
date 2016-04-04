@@ -42,6 +42,11 @@ func main() {
 	defer file.Close()
 
 	layout := formats.ParseLayout(file)
+	if layout == nil {
+		fmt.Println("error: file not recognized")
+		os.Exit(1)
+	}
+
 	fileLayout = *layout
 
 	uiLoop(file)

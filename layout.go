@@ -10,6 +10,7 @@ var (
 	parsers = map[string]func(*os.File) *parse.ParsedLayout{
 		"arj": parse.ARJ,
 		"bmp": parse.BMP,
+		"gif": parse.GIF,
 	}
 )
 

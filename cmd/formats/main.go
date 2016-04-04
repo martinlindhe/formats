@@ -185,7 +185,7 @@ func focusAtCurrentField() {
 	ceil := base + int64(hexView.VisibleRows*hexView.RowWidth)
 
 	// see if it is view with current row selection
-	if base >= offset && ceil <= offset {
+	if offset >= base && offset <= ceil {
 		return
 	}
 
@@ -210,5 +210,5 @@ func refreshUI(file *os.File) {
 func prettyStatString() string {
 
 	group := fileLayout.Layout[hexView.CurrentGroup]
-	return fmt.Sprintf("selected: %d bytes (0x%x), offset %04x", group.Length, group.Length, group.Offset)
+	return fmt.Sprintf("selected: %d bytes (%x), offset %04x", group.Length, group.Length, group.Offset)
 }

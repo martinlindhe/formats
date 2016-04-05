@@ -106,10 +106,10 @@ func (pl *ParsedLayout) findInfoField(info string) *Layout {
 }
 
 // the output of cmd/prober
-func (parsedLayout *ParsedLayout) PrettyPrint() string {
+func (pl *ParsedLayout) PrettyPrint() string {
 
 	res := ""
-	for _, layout := range parsedLayout.Layout {
+	for _, layout := range pl.Layout {
 		res += layout.Info + fmt.Sprintf(" (%04x)", layout.Offset) + ", " + layout.Type.String() + "\n"
 
 		for _, child := range layout.Childs {
@@ -118,6 +118,24 @@ func (parsedLayout *ParsedLayout) PrettyPrint() string {
 	}
 
 	return res
+}
+
+func (pl *ParsedLayout) updateLabel(label string, newLabel string) {
+
+	for layoutIdx, layout := range pl.Layout {
+		if layout.Info == label {
+			pl.Layout[layoutIdx].Info = newLabel
+			return
+		}
+		for childIdx, child := range layout.Childs {
+			if child.Info == label {
+				pl.Layout[layoutIdx].Childs[childIdx].Info = newLabel
+				return
+			}
+		}
+	}
+
+	panic("label not found: " + label)
 }
 
 func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) uint32 {

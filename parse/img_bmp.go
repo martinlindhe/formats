@@ -1,6 +1,9 @@
 package parse
 
-// STATUS v1 and v2 dont map 100% of the files. v3,v4 and v5 seems mostly done
+// STATUS FIXME v1 and v2 (OS/2) dont map 100% of the files. v3, v4 and v5 seems mostly done
+
+//TODO: parse & display CIEXYZTRIPLE endpoint data: FXPT2DOT30  X, Y, Z
+// XXX TODO samples using png / jpeg compression , and properly decode/extract to file that part as a sub-resource or sth....
 
 import (
 	"encoding/binary"
@@ -49,7 +52,7 @@ func parseBMP(file *os.File) *ParsedLayout {
 	fileHeader := Layout{
 		Offset: 0,
 		Length: 14,
-		Info:   "bmp file header",
+		Info:   "file header",
 		Type:   Group,
 		Childs: []Layout{
 			Layout{Offset: 0, Length: 2, Info: "magic", Type: ASCII},
@@ -85,6 +88,12 @@ func parseBMP(file *os.File) *ParsedLayout {
 
 	res.Layout = append(res.Layout, dataLayout)
 
+	compression := res.readUint32leFromInfo(file, "compression")
+
+	if val, ok := bmpCompressions[compression]; ok {
+		res.updateLabel("compression", "compression = "+val)
+	}
+
 	return &res
 }
 
@@ -111,32 +120,31 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 	}
 
 	layout.Length = int64(infoHdrSize)
-	fmt.Println(layout.Length, "length")
 
 	switch infoHdrSize {
 
 	case 12: // OS/2 V1 - BITMAPCOREHEADER
-		layout.Info = "bmp info header V1 OS/2"
+		layout.Info = "info header V1"
 		layout.Childs = parseBMPVersion1Header(file, infoHeaderBase)
 
-	case 40: // Windows V3 - BITMAPINFOHEADER
-		layout.Info = "bmp info header V3 Win"
-		layout.Childs = parseBMPVersion3Header(file, infoHeaderBase)
-
 	case 64: //OS/2 V2
-		layout.Info = "bmp info header V2 OS/2"
+		layout.Info = "info header V2"
 		v3 := parseBMPVersion3Header(file, infoHeaderBase)
 		v2 := parseBMPVersion2Header(file, infoHeaderBase+int64(v3len))
 		layout.Childs = append(v3, v2...)
 
+	case 40: // Windows V3 - BITMAPINFOHEADER
+		layout.Info = "info header V3"
+		layout.Childs = parseBMPVersion3Header(file, infoHeaderBase)
+
 	case 108: //Windows V4 - BITMAPV4HEADER
-		layout.Info = "bmp info header V4 Win"
+		layout.Info = "info header V4"
 		v3 := parseBMPVersion3Header(file, infoHeaderBase)
 		v4 := parseBMPVersion4Header(file, infoHeaderBase+int64(v3len))
 		layout.Childs = append(v3, v4...)
 
 	case 124: //Windows V5 - BITMAPV5HEADER
-		layout.Info = "bmp info header V5 Win"
+		layout.Info = "info header V5"
 		v3 := parseBMPVersion3Header(file, infoHeaderBase)
 		v4 := parseBMPVersion4Header(file, infoHeaderBase+int64(v3len))
 		v5 := parseBMPVersion5Header(file, infoHeaderBase+int64(v3len)+int64(v4len))
@@ -162,7 +170,6 @@ func parseBMPVersion1Header(file *os.File, baseOffset int64) []Layout {
 }
 
 func parseBMPVersion2Header(file *os.File, baseOffset int64) []Layout {
-	fmt.Printf(" base offset is %x\n", baseOffset)
 
 	return []Layout{
 		Layout{Offset: baseOffset, Length: 2, Type: Uint16le, Info: "units"},
@@ -184,7 +191,7 @@ func parseBMPVersion3Header(file *os.File, baseOffset int64) []Layout {
 		Layout{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "height"},
 		Layout{Offset: baseOffset + 12, Length: 2, Type: Uint16le, Info: "planes"},
 		Layout{Offset: baseOffset + 14, Length: 2, Type: Uint16le, Info: "bpp"},
-		Layout{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "compression"}, // XXX decode value
+		Layout{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "compression"},
 		Layout{Offset: baseOffset + 20, Length: 4, Type: Uint32le, Info: "size of picture"},
 		Layout{Offset: baseOffset + 24, Length: 4, Type: Uint32le, Info: "horizontal resolution"},
 		Layout{Offset: baseOffset + 28, Length: 4, Type: Uint32le, Info: "vertical resolution"},
@@ -200,15 +207,17 @@ func parseBMPVersion4Header(file *os.File, baseOffset int64) []Layout {
 		Layout{Offset: baseOffset + 4, Length: 4, Type: Uint32le, Info: "green mask"},
 		Layout{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "blue mask"},
 		Layout{Offset: baseOffset + 12, Length: 4, Type: Uint32le, Info: "alpha mask"},
-		Layout{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "cs type"}, // XXX "BGRs" ???
 
-		//TODO: parse & display CIEXYZTRIPLE endpoint data: FXPT2DOT30  X, Y, Z
-		Layout{Offset: baseOffset + 20, Length: 3 * 4, Type: Uint8, Info: "ciexyz red"},
-		Layout{Offset: baseOffset + 20 + (3 * 4), Length: 3 * 4, Type: Uint8, Info: "ciexyz green"},
-		Layout{Offset: baseOffset + 20 + (3 * 4) + (3 * 4), Length: 3 * 4, Type: Uint8, Info: "ciexyz blue"},
-		Layout{Offset: baseOffset + 20 + (3 * 4) + (3 * 4) + (3 * 4), Length: 4, Type: Uint32le, Info: "gamma red"},
-		Layout{Offset: baseOffset + 20 + (3 * 4) + (3 * 4) + (3 * 4) + 4, Length: 4, Type: Uint32le, Info: "gamma green"},
-		Layout{Offset: baseOffset + 20 + (3 * 4) + (3 * 4) + (3 * 4) + 8, Length: 4, Type: Uint32le, Info: "gamma blue"},
+		// NOTE: v5 file use "BGRs", while v4 use 0x1
+		Layout{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "cs type"},
+
+		Layout{Offset: baseOffset + 20, Length: 12, Type: Uint8, Info: "ciexyz red"},
+		Layout{Offset: baseOffset + 32, Length: 12, Type: Uint8, Info: "ciexyz green"},
+		Layout{Offset: baseOffset + 44, Length: 12, Type: Uint8, Info: "ciexyz blue"},
+
+		Layout{Offset: baseOffset + 56, Length: 4, Type: Uint32le, Info: "gamma red"},
+		Layout{Offset: baseOffset + 60, Length: 4, Type: Uint32le, Info: "gamma green"},
+		Layout{Offset: baseOffset + 64, Length: 4, Type: Uint32le, Info: "gamma blue"},
 	}
 }
 

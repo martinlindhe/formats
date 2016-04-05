@@ -1,6 +1,6 @@
 package parse
 
-// STATUS FIXME v1 and v2 (OS/2) dont map 100% of the files. v3, v4 and v5 seems mostly done
+// STATUS FIXME v1 and v2 (OS/2) dont map 100% of the files. v3, v4 and v5 done-ish
 
 //TODO: parse & display CIEXYZTRIPLE endpoint data: FXPT2DOT30  X, Y, Z
 // XXX TODO samples using png / jpeg compression , and properly decode/extract to file that part as a sub-resource or sth....

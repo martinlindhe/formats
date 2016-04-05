@@ -40,6 +40,8 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("root level must be group %v, %s", l, path)
 			}
 
+			// XXX TODO check 		if type is RGB and field.Length != 3
+
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
 				// t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
 			}

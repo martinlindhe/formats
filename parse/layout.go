@@ -7,8 +7,23 @@ import (
 	"os"
 )
 
+// ...
+const (
+	Group DataType = 1 + iota
+	Int8
+	Uint8
+	Int16le
+	Uint16le
+	Int32le
+	Uint32le
+	ASCII
+	ASCIIZ
+	RGB
+)
+
 var (
 	dataTypes = map[DataType]string{
+		Group:    "Group",
 		Int8:     "int8",
 		Uint8:    "uint8",
 		Int16le:  "int16-le",
@@ -17,7 +32,7 @@ var (
 		Uint32le: "uint32-le",
 		ASCII:    "ASCII",
 		ASCIIZ:   "ASCIIZ",
-		Group:    "Group",
+		RGB:      "RGB",
 	}
 )
 
@@ -50,19 +65,6 @@ func (dt DataType) String() string {
 	// adding a new datatype and forgetting to add it to the map)
 	panic(int(dt))
 }
-
-// ...
-const (
-	Group DataType = 1 + iota
-	Int8
-	Uint8
-	Int16le
-	Uint16le
-	Int32le
-	Uint32le
-	ASCII
-	ASCIIZ
-)
 
 func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error) {
 

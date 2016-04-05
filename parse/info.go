@@ -107,6 +107,16 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		}
 		res += string(buf)
 
+	case RGB:
+		buf := make([]byte, field.Length)
+		_, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += fmt.Sprintf("%d, %d, %d", buf[0], buf[1], buf[2])
+		//val := uint64(buf[0])<<16 | uint64(buf[1])<<8 | uint64(buf[2])
+		//res += fmt.Sprintf("%06x", val)
+
 	default:
 		res += "XXX unhandled " + field.Type.String()
 	}

@@ -2,11 +2,12 @@ package parse
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 )
 
-// STATUS xxx, incompelete. dont map the image data
+// STATUS xxx, incompelete. need to redo the  parseGIF logic to detect optional chunks, and have a loop
 
 func GIF(file *os.File) *ParsedLayout {
 
@@ -27,10 +28,10 @@ func isGIF(file *os.File) bool {
 	if b[0] != 'G' || b[1] != 'I' || b[2] != 'F' || b[3] != '8' {
 		return false
 	}
-	if b[4] == '7' || b[4] == '9' {
-		return true
+	if b[4] != '7' && b[4] != '9' {
+		return false
 	}
-	return false
+	return true
 }
 
 func parseGIF(file *os.File) *ParsedLayout {
@@ -38,30 +39,62 @@ func parseGIF(file *os.File) *ParsedLayout {
 	res := ParsedLayout{}
 
 	res.Layout = append(res.Layout, gifHeader(file))
-	res.Layout = append(res.Layout, gifGlobalColorTable(file))
+	res.Layout = append(res.Layout, gifLogicalDescriptor(file))
 
-	gfxExt := gifGraphicsControlExtension(file)
+	// XXX extract to a var
+	sizeOfGCT := res.decodeBitfieldFromInfo(file, "size of the global color table")
+	fmt.Println(sizeOfGCT)
+
+	gctToLengthMap := map[byte]int64{
+		0: 2 * 3,
+		1: 4 * 3,
+		2: 8 * 3,
+		3: 16 * 3,
+		4: 32 * 3,
+		5: 64 * 3,
+		6: 128 * 3,
+		7: 256 * 3,
+	}
+
+	if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
+
+		res.Layout = append(res.Layout, gifGlobalColorTable(file, gctByteLen))
+	}
+
+	gfxExt := gifGraphicsControlExtension(file) // // XXX "first byte is extension introducer. All extension blocks begin with 21"
 	if gfxExt != nil {
 		res.Layout = append(res.Layout, *gfxExt)
 	}
 
-	imgDescriptor := gifImageDescriptor(file)
+	imgDescriptor := gifImageDescriptor(file) // XXX  The first byte is the image separator. Every image descriptor begins with the value 2C.
 	if imgDescriptor != nil {
 		res.Layout = append(res.Layout, *imgDescriptor)
 	}
 
-	// 0x2b för nästa
-
-	localColorTbl := gifLocalColorTable(file)
+	localColorTbl := gifLocalColorTable(file) // XXX directly after image descriptor, depending on some flag ???
 	if localColorTbl != nil {
 		res.Layout = append(res.Layout, *localColorTbl)
 	}
 
-	res.Layout = append(res.Layout, gifImageData(file))
+	res.Layout = append(res.Layout, gifImageData(file)) // XXX ?
 
-	res.Layout = append(res.Layout, gifTrailer(file))
+	res.Layout = append(res.Layout, gifTrailer(file)) // XXX value 0x3b
 
 	return &res
+}
+
+func gifHeader(file *os.File) Layout {
+
+	return Layout{
+		Offset: 0,
+		Length: 6,
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 3, Info: "signature", Type: ASCII},
+			Layout{Offset: 3, Length: 3, Info: "version", Type: ASCII},
+		},
+	}
 }
 
 func gifTrailer(file *os.File) Layout {
@@ -96,14 +129,6 @@ func gifImageData(file *os.File) Layout {
 	return res
 }
 
-func gifLocalColorTable(file *os.File) *Layout {
-	// XXX The local color table would always immediately follow an
-	// image descriptor but will only be there if the local color table flag is set to 1
-
-	// XXX not present in sample
-	return nil
-}
-
 func gifImageDescriptor(file *os.File) *Layout {
 
 	baseOffset := int64(0x21) // XXX base is unknown ...
@@ -123,6 +148,35 @@ func gifImageDescriptor(file *os.File) *Layout {
 		},
 	}
 	return &res
+}
+
+func gifGlobalColorTable(file *os.File, byteLen int64) Layout {
+
+	baseOffset := int64(0x0d)
+
+	childs := []Layout{}
+
+	cnt := 0
+	for i := int64(0); i < byteLen; i += 3 {
+		cnt++
+		childs = append(childs, Layout{Offset: baseOffset + i, Length: 3, Info: fmt.Sprintf("color %d", cnt), Type: RGB})
+	}
+
+	return Layout{
+		Offset: baseOffset,
+		Length: byteLen,
+		Info:   "global color table",
+		Type:   Group,
+		Childs: childs,
+	}
+}
+
+func gifLocalColorTable(file *os.File) *Layout {
+	// XXX The local color table would always immediately follow an
+	// image descriptor but will only be there if the local color table flag is set to 1
+
+	// XXX not present in sample
+	return nil
 }
 
 func gifGraphicsControlExtension(file *os.File) *Layout {
@@ -153,61 +207,34 @@ func gifGraphicsControlExtension(file *os.File) *Layout {
 	return &res
 }
 
-func gifGlobalColorTable(file *os.File) Layout {
-
-	baseOffset := int64(0x0d)
-
-	// XXX TODO The size of the global color table is determined by the value in the packed byte of the logical screen descriptor.
-
+func gifLogicalDescriptor(file *os.File) Layout {
+	base := int64(0x06)
 	return Layout{
-		Offset: baseOffset,
-		Length: 4 * 3,
-		Info:   "global color table",
+		Offset: base,
+		Length: 7,
+		Info:   "logical screen descriptor",
 		Type:   Group,
 		Childs: []Layout{
-			// XXX dont hardcode
-			Layout{Offset: baseOffset, Length: 3, Info: "color 0", Type: RGB},
-			Layout{Offset: baseOffset + 3, Length: 3, Info: "color 1", Type: RGB},
-			Layout{Offset: baseOffset + 6, Length: 3, Info: "color 2", Type: RGB},
-			Layout{Offset: baseOffset + 9, Length: 3, Info: "color 3", Type: RGB},
-		},
-	}
+			Layout{Offset: base, Length: 2, Info: "width", Type: Uint16le},
 
-}
-
-func gifHeader(file *os.File) Layout {
-
-	return Layout{
-		Offset: 0,
-		Length: 13,
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 3, Info: "magic", Type: ASCII},
-
-			Layout{Offset: 3, Length: 3, Info: "version", Type: ASCII},
-
-			Layout{Offset: 6, Length: 2, Info: "width", Type: Uint16le},
-
-			Layout{Offset: 8, Length: 2, Info: "height", Type: Uint16le},
+			Layout{Offset: base + 2, Length: 2, Info: "height", Type: Uint16le},
 
 			// Packed contains the following four subfields of data (bit 0 is the least significant bit, or LSB):
 			//    Bits 0-2    Size of the Global Color Table
 			//    Bit 3   Color Table Sort Flag
 			//    Bits 4-6    Color Resolution
-			/*
-				var Packed = ScreenHeight.RelativeToByte("Packed");
-				byte PackedValue = ReadByte(Packed.offset);
-				int bpp = (PackedValue & 0x7) + 1;
-				Log("bpp = " + bpp);
-				int colorRes = (PackedValue & 0x70) >> 4;
-				Log("color Res = " + colorRes);
-			*/
-			Layout{Offset: 10, Length: 1, Info: "packed", Type: Uint8}, // XXX bitmask decode bpp and color resolution
 
-			Layout{Offset: 11, Length: 1, Info: "background color", Type: Uint8},
+			// XXX bitmask decode bpp and color resolution:
+			Layout{Offset: base + 4, Length: 1, Info: "packed", Type: Uint8, Masks: []Mask{
+				Mask{Low: 0, Length: 3, Info: "size of the global color table"}, // XXX extract to a var
+				Mask{Low: 3, Length: 1, Info: "color table sort flag"},
+				Mask{Low: 4, Length: 3, Info: "color resolution"},
+				Mask{Low: 7, Length: 1, Info: "reserved xxx"},
+			}},
 
-			Layout{Offset: 12, Length: 1, Info: "aspect ratio", Type: Uint8},
+			Layout{Offset: base + 5, Length: 1, Info: "background color", Type: Uint8},
+
+			Layout{Offset: base + 6, Length: 1, Info: "aspect ratio", Type: Uint8},
 		},
 	}
 }

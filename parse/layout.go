@@ -50,6 +50,14 @@ type Layout struct {
 	Type   DataType
 	Info   string
 	Childs []Layout
+	Masks  []Mask
+}
+
+// Mask represents how to decode a bit field
+type Mask struct {
+	Low    int
+	Length int
+	Info   string
 }
 
 // DataType ...
@@ -91,16 +99,52 @@ func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
 	return false
 }
 
+// returns a layout field with .Info quals `info`
 func (pl *ParsedLayout) findInfoField(info string) *Layout {
 
 	for _, layout := range pl.Layout {
 		if layout.Info == info {
 			return &layout
 		}
-
 		for _, childLayout := range layout.Childs {
 			if childLayout.Info == info {
 				return &childLayout
+			}
+		}
+	}
+	return nil
+}
+
+func (pl *ParsedLayout) findBitfieldLayout(info string) *Layout {
+
+	for _, layout := range pl.Layout {
+		for _, mask := range layout.Masks {
+			if mask.Info == info {
+				return &layout
+			}
+		}
+		for _, childLayout := range layout.Childs {
+			for _, mask := range childLayout.Masks {
+				if mask.Info == info {
+					return &childLayout
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
+
+	for _, layout := range pl.Layout {
+		for _, mask := range layout.Masks {
+			if mask.Info == info {
+				return &mask
+			}
+		}
+		for _, childLayout := range layout.Childs {
+			for _, mask := range childLayout.Masks {
+				return &mask
 			}
 		}
 	}
@@ -138,6 +182,42 @@ func (pl *ParsedLayout) updateLabel(label string, newLabel string) {
 	}
 
 	panic("label not found: " + label)
+}
+
+func (pl *ParsedLayout) decodeBitfieldFromInfo(file *os.File, info string) uint32 {
+
+	layout := pl.findBitfieldLayout(info)
+	if layout == nil {
+		fmt.Println("ERROR: layout", info, "not found")
+		return 0
+	}
+
+	mask := pl.findBitfieldMask(info)
+	if mask == nil {
+		fmt.Println("ERROR: mask", info, "not found")
+		return 0
+	}
+
+	file.Seek(layout.Offset, os.SEEK_SET)
+
+	var b byte
+	binary.Read(file, binary.LittleEndian, &b)
+
+	// XXX mask bits accordingly ....
+
+	m := uint32(0)
+	if mask.Low == 0 {
+		switch mask.Length {
+		case 3:
+			m = 7
+		default:
+			panic("FIXME unhandled mask len!")
+		}
+
+		return uint32(b) & m
+	}
+
+	panic("XXX fixme handle bit shifts stuff and tests")
 }
 
 func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) uint32 {

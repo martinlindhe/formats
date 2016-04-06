@@ -215,5 +215,12 @@ func refreshUI(file *os.File) {
 func prettyStatString() string {
 
 	group := fileLayout.Layout[hexView.CurrentGroup]
+
+	// if in sub field view
+	if hexView.BrowseMode == parse.ByFieldInGroup {
+		field := group.Childs[hexView.CurrentField]
+		return fmt.Sprintf("selected: %d bytes (%x), offset %04x", field.Length, field.Length, field.Offset)
+	}
+
 	return fmt.Sprintf("selected: %d bytes (%x), offset %04x", group.Length, group.Length, group.Offset)
 }

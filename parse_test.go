@@ -40,10 +40,20 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("root level must be group %v, %s", l, path)
 			}
 
-			// XXX TODO check 		if type is RGB and field.Length != 3
+			if l.Type == parse.RGB && l.Length != 3 {
+				t.Fatalf("RGB field must be %d bytes, was %d", 3, l.Length)
+			}
+
+			if l.Type == parse.Uint16le && l.Length != 2 {
+				t.Fatalf("Uint16le field must be %d bytes, was %d", 2, l.Length)
+			}
+
+			if l.Type == parse.Uint32le && l.Length != 4 {
+				t.Fatalf("Uint16le field must be %d bytes, was %d", 4, l.Length)
+			}
 
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
-				// t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
+				t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
 			}
 
 			sum := int64(0)
@@ -54,7 +64,7 @@ func TestParsedLayout(t *testing.T) {
 				}
 			}
 			if sum != l.Length {
-				t.Fatalf("child sum is %d, but group length is %d, %v, %s", sum, l.Length, l, path)
+				t.Fatalf("child sum for %s, field %s is %d, but group length is %d, %v", path, l.Info, sum, l.Length, l)
 			}
 		}
 

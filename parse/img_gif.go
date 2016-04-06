@@ -3,11 +3,30 @@ package parse
 import (
 	"encoding/binary"
 	"fmt"
-	"io"
 	"os"
 )
 
 // STATUS xxx, incompelete. need to redo the  parseGIF logic to detect optional chunks, and have a loop
+
+var (
+	gctToLengthMap = map[byte]int64{
+		0: 2 * 3,
+		1: 4 * 3,
+		2: 8 * 3,
+		3: 16 * 3,
+		4: 32 * 3,
+		5: 64 * 3,
+		6: 128 * 3,
+		7: 256 * 3,
+	}
+)
+
+// Section indicators.
+const (
+	sExtension       = 0x21
+	sImageDescriptor = 0x2C
+	sTrailer         = 0x3B
+)
 
 func GIF(file *os.File) *ParsedLayout {
 
@@ -20,9 +39,9 @@ func GIF(file *os.File) *ParsedLayout {
 func isGIF(file *os.File) bool {
 
 	file.Seek(0, os.SEEK_SET)
-	r := io.Reader(file)
+
 	var b [5]byte
-	if err := binary.Read(r, binary.LittleEndian, &b); err != nil {
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
 		return false
 	}
 	if b[0] != 'G' || b[1] != 'I' || b[2] != 'F' || b[3] != '8' {
@@ -41,46 +60,45 @@ func parseGIF(file *os.File) *ParsedLayout {
 	res.Layout = append(res.Layout, gifHeader(file))
 	res.Layout = append(res.Layout, gifLogicalDescriptor(file))
 
-	// XXX extract to a var
 	sizeOfGCT := res.decodeBitfieldFromInfo(file, "size of the global color table")
-	fmt.Println(sizeOfGCT)
-
-	gctToLengthMap := map[byte]int64{
-		0: 2 * 3,
-		1: 4 * 3,
-		2: 8 * 3,
-		3: 16 * 3,
-		4: 32 * 3,
-		5: 64 * 3,
-		6: 128 * 3,
-		7: 256 * 3,
-	}
-
 	if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
-
 		res.Layout = append(res.Layout, gifGlobalColorTable(file, gctByteLen))
 	}
 
-	gfxExt := gifGraphicsControlExtension(file) // // XXX "first byte is extension introducer. All extension blocks begin with 21"
-	if gfxExt != nil {
-		res.Layout = append(res.Layout, *gfxExt)
+	for {
+
+		var b byte
+		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+			fmt.Println("error", err)
+			return nil
+		}
+
+		switch b {
+		case sExtension:
+			// XXX All extension blocks begin with 21
+			gfxExt := gifGraphicsControlExtension(file)
+			if gfxExt != nil {
+				res.Layout = append(res.Layout, *gfxExt)
+			}
+
+		case sImageDescriptor:
+			imgDescriptor := gifImageDescriptor(file)
+			if imgDescriptor != nil {
+				res.Layout = append(res.Layout, *imgDescriptor)
+			}
+
+			// XXX directly after image descriptor, depending on some flag ???
+			localColorTbl := gifLocalColorTable(file)
+			if localColorTbl != nil {
+				res.Layout = append(res.Layout, *localColorTbl)
+			}
+			res.Layout = append(res.Layout, gifImageData(file)) // XXX ?
+
+		case sTrailer:
+			res.Layout = append(res.Layout, gifTrailer(file)) // XXX value 0x3b
+			return &res
+		}
 	}
-
-	imgDescriptor := gifImageDescriptor(file) // XXX  The first byte is the image separator. Every image descriptor begins with the value 2C.
-	if imgDescriptor != nil {
-		res.Layout = append(res.Layout, *imgDescriptor)
-	}
-
-	localColorTbl := gifLocalColorTable(file) // XXX directly after image descriptor, depending on some flag ???
-	if localColorTbl != nil {
-		res.Layout = append(res.Layout, *localColorTbl)
-	}
-
-	res.Layout = append(res.Layout, gifImageData(file)) // XXX ?
-
-	res.Layout = append(res.Layout, gifTrailer(file)) // XXX value 0x3b
-
-	return &res
 }
 
 func gifHeader(file *os.File) Layout {

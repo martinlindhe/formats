@@ -41,10 +41,10 @@ const (
 	imgDescriptorLen = 10
 )
 
-func GIF(file *os.File) *ParsedLayout {
+func GIF(file *os.File) (*ParsedLayout, error) {
 
 	if !isGIF(file) {
-		return nil
+		return nil, fmt.Errorf("Not a GIF")
 	}
 	return parseGIF(file)
 }
@@ -66,7 +66,7 @@ func isGIF(file *os.File) bool {
 	return true
 }
 
-func parseGIF(file *os.File) *ParsedLayout {
+func parseGIF(file *os.File) (*ParsedLayout, error) {
 
 	res := ParsedLayout{}
 
@@ -84,8 +84,7 @@ func parseGIF(file *os.File) *ParsedLayout {
 
 		var b byte
 		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-			fmt.Println("error", err)
-			return nil
+			return nil, err
 		}
 
 		switch b {
@@ -107,12 +106,15 @@ func parseGIF(file *os.File) *ParsedLayout {
 					res.Layout = append(res.Layout, *localColorTbl)
 				}
 			*/
-			imgData, _ := gifImageData(file, offset+imgDescriptorLen)
+			imgData, err := gifImageData(file, offset+imgDescriptorLen)
+			if err != nil {
+				return nil, err
+			}
 			res.Layout = append(res.Layout, *imgData)
 
 		case sTrailer:
 			res.Layout = append(res.Layout, gifTrailer(file, offset))
-			return &res
+			return &res, nil
 		}
 	}
 }

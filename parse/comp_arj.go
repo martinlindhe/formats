@@ -21,10 +21,10 @@ const (
 	arjCrcMask       = 0xffffffff
 )
 
-func ARJ(file *os.File) *ParsedLayout {
+func ARJ(file *os.File) (*ParsedLayout, error) {
 
 	if !isARJ(file) {
-		return nil
+		return nil, fmt.Errorf("not an ARJ")
 	}
 
 	res := ParsedLayout{}
@@ -33,12 +33,11 @@ func ARJ(file *os.File) *ParsedLayout {
 	res.Layout, err = parseARJMainHeader(file)
 
 	if err != nil {
-		fmt.Println("error", err)
-		return nil
+		return nil, err
 	}
 
 	// XXX rest of arj
-	return &res
+	return &res, nil
 }
 
 func parseARJMainHeader(f *os.File) ([]Layout, error) {

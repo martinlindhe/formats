@@ -28,7 +28,9 @@ func TestParsedLayout(t *testing.T) {
 			return err
 		}
 
-		layout := ParseLayout(f)
+		layout, err := ParseLayout(f)
+		assert.Equal(t, nil, err)
+
 		if layout == nil {
 			// NOTE since not all samples is currently supported
 			fmt.Println("FAIL to parse layout from", path)
@@ -103,7 +105,8 @@ func TestParseARJ(t *testing.T) {
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	layout := ParseLayout(file)
+	layout, err := ParseLayout(file)
+	assert.Equal(t, nil, err)
 	assert.Equal(t, `arj main header (0035), Group
   magic (ARJ archive) (0035), uint16-le
   basic header size (0037), uint16-le
@@ -135,7 +138,8 @@ func TestParseBMP(t *testing.T) {
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	layout := ParseLayout(file)
+	layout, err := ParseLayout(file)
+	assert.Equal(t, nil, err)
 
 	assert.Equal(t, `bitmap file header (0000), Group
   magic (BMP image) (0000), ASCII

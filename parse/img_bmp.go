@@ -26,10 +26,10 @@ var (
 	v4len = 68
 )
 
-func BMP(file *os.File) *ParsedLayout {
+func BMP(file *os.File) (*ParsedLayout, error) {
 
 	if !isBMP(file) {
-		return nil
+		return nil, fmt.Errorf("not an BMP")
 	}
 	return parseBMP(file)
 }
@@ -45,7 +45,7 @@ func isBMP(file *os.File) bool {
 	return b[0] == 'B' && b[1] == 'M'
 }
 
-func parseBMP(file *os.File) *ParsedLayout {
+func parseBMP(file *os.File) (*ParsedLayout, error) {
 
 	res := ParsedLayout{}
 
@@ -66,7 +66,7 @@ func parseBMP(file *os.File) *ParsedLayout {
 
 	infoHeader, err := parseBMPInfoHeader(file)
 	if err != nil {
-		fmt.Println("ERROR", err)
+		return nil, err
 	}
 
 	res.Layout = append(res.Layout, infoHeader)
@@ -94,7 +94,7 @@ func parseBMP(file *os.File) *ParsedLayout {
 		res.updateLabel("compression", "compression = "+val)
 	}
 
-	return &res
+	return &res, nil
 }
 
 func readUint32le(reader io.Reader) (uint32, error) {

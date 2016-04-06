@@ -41,9 +41,9 @@ func main() {
 	}
 	defer file.Close()
 
-	layout := formats.ParseLayout(file)
-	if layout == nil {
-		fmt.Println("error: file not recognized")
+	layout, err := formats.ParseLayout(file)
+	if err != nil {
+		fmt.Println("error:", err)
 		os.Exit(1)
 	}
 

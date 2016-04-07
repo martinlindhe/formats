@@ -220,17 +220,16 @@ func (pl *ParsedLayout) decodeBitfieldFromInfo(file *os.File, info string) uint3
 	panic("XXX fixme handle bit shifts stuff and tests")
 }
 
-func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) uint32 {
+func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) (uint32, error) {
 
 	layout := pl.findInfoField(info)
 	if layout == nil {
-		fmt.Println("ERROR didnt find field", info)
-		return 0
+		return 0, fmt.Errorf("ERROR didnt find field %v", info)
 	}
 
 	file.Seek(layout.Offset, os.SEEK_SET)
 
 	var b uint32
 	binary.Read(file, binary.LittleEndian, &b)
-	return b
+	return b, nil
 }

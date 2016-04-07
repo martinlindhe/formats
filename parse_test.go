@@ -134,30 +134,30 @@ func TestParseARJ(t *testing.T) {
 
 func TestParseBMP(t *testing.T) {
 
-	file, err := os.Open("samples/bmp/bmp_003_WinV3.bmp")
+	file, err := os.Open("samples/bmp/bmp_v3-001.bmp")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
 	layout, err := ParseLayout(file)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, `bitmap file header (0000), Group
-  magic (BMP image) (0000), ASCII
+	assert.Equal(t, `file header (0000), Group
+  magic (0000), ASCII
   file size (0002), uint32-le
   reserved (0006), uint32-le
   offset to image data (000a), uint32-le
-bmp info header V3 Win (000e), Group
-  info header size (0028), uint32-le
-  width (002c), uint32-le
-  height (0030), uint32-le
-  planes (0034), uint16-le
-  bpp (0036), uint16-le
-  compression (0038), uint32-le
-  size of picture (003c), uint32-le
-  horizontal resolution (0040), uint32-le
-  vertical resolution (0044), uint32-le
-  number of used colors (0048), uint32-le
-  number of important colors (004c), uint32-le
+info header V3 (000e), Group
+  info header size (000e), uint32-le
+  width (0012), uint32-le
+  height (0016), uint32-le
+  planes (001a), uint16-le
+  bpp (001c), uint16-le
+  compression = rgb (001e), uint32-le
+  size of picture (0022), uint32-le
+  horizontal resolution (0026), uint32-le
+  vertical resolution (002a), uint32-le
+  number of used colors (002e), uint32-le
+  number of important colors (0032), uint32-le
 image data (0036), Group
   image data (0036), uint8
 `, layout.PrettyPrint())

@@ -1,6 +1,6 @@
 package parse
 
-// STATUS FIXME v1 and v2 (OS/2) dont map 100% of the files. v3, v4 and v5 done-ish
+// STATUS: OK
 
 //TODO: parse & display CIEXYZTRIPLE endpoint data: FXPT2DOT30  X, Y, Z
 // XXX TODO samples using png / jpeg compression , and properly decode/extract to file that part as a sub-resource or sth....
@@ -71,27 +71,26 @@ func parseBMP(file *os.File) (*ParsedLayout, error) {
 
 	res.Layout = append(res.Layout, infoHeader)
 
-	imageDataOffset := res.readUint32leFromInfo(file, "offset to image data")
-
 	// body
-	headerLen := fileHeader.Length + infoHeader.Length
+	headerLen := int64(fileHeader.Length + infoHeader.Length)
 
 	dataLayout := Layout{
-		Offset: int64(imageDataOffset),
+		Offset: headerLen,
 		Type:   Group,
 		Info:   "image data",
 		Length: fileSize(file) - headerLen,
 		Childs: []Layout{
-			Layout{Offset: int64(imageDataOffset), Length: fileSize(file) - headerLen, Type: Uint8, Info: "image data"},
+			Layout{Offset: headerLen, Length: fileSize(file) - headerLen, Type: Uint8, Info: "image data"},
 		},
 	}
 
 	res.Layout = append(res.Layout, dataLayout)
 
-	compression := res.readUint32leFromInfo(file, "compression")
-
-	if val, ok := bmpCompressions[compression]; ok {
-		res.updateLabel("compression", "compression = "+val)
+	compression, err := res.readUint32leFromInfo(file, "compression")
+	if err == nil {
+		if val, ok := bmpCompressions[compression]; ok {
+			res.updateLabel("compression", "compression = "+val)
+		}
 	}
 
 	return &res, nil

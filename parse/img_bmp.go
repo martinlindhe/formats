@@ -29,7 +29,7 @@ var (
 func BMP(file *os.File) (*ParsedLayout, error) {
 
 	if !isBMP(file) {
-		return nil, fmt.Errorf("not an BMP")
+		return nil, nil
 	}
 	return parseBMP(file)
 }

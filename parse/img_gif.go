@@ -44,7 +44,7 @@ const (
 func GIF(file *os.File) (*ParsedLayout, error) {
 
 	if !isGIF(file) {
-		return nil, fmt.Errorf("Not a GIF")
+		return nil, nil
 	}
 	return parseGIF(file)
 }

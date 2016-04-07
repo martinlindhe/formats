@@ -24,7 +24,7 @@ const (
 func ARJ(file *os.File) (*ParsedLayout, error) {
 
 	if !isARJ(file) {
-		return nil, fmt.Errorf("not an ARJ")
+		return nil, nil
 	}
 
 	res := ParsedLayout{}

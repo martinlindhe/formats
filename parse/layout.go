@@ -233,3 +233,22 @@ func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) (uint32
 	binary.Read(file, binary.LittleEndian, &b)
 	return b, nil
 }
+
+func readBytesFrom(file *os.File, offset int64, size int64) []byte {
+
+	file.Seek(offset, os.SEEK_SET)
+
+	b := make([]byte, size)
+	binary.Read(file, binary.LittleEndian, &b)
+	return b
+}
+
+func (pl *ParsedLayout) readBytesFromInfo(file *os.File, info string) ([]byte, error) {
+
+	layout := pl.findInfoField(info)
+	if layout == nil {
+		return nil, fmt.Errorf("ERROR didnt find field %v", info)
+	}
+
+	return readBytesFrom(file, layout.Offset, layout.Length), nil
+}

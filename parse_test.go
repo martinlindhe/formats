@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples"
+	searchDir := "./samples/gif"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -56,6 +56,10 @@ func TestParsedLayout(t *testing.T) {
 
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
 				t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
+			}
+
+			if l.Offset+l.Length > layout.FileSize {
+				t.Fatalf("%s child extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
 			}
 
 			sum := int64(0)

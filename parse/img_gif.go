@@ -3,11 +3,12 @@ package parse
 import (
 	"encoding/binary"
 	"fmt"
-	//	"io"
+	"io"
 	"os"
 )
 
-// STATUS wip
+// STATUS gif89 most files ok
+// XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
 
 var (
 	gctToLengthMap = map[byte]int64{
@@ -88,6 +89,10 @@ func parseGIF(file *os.File) (*ParsedLayout, error) {
 
 		var b byte
 		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+			if err == io.EOF {
+				fmt.Println("XXX did not find gif trailer!")
+				return &res, nil
+			}
 			return nil, err
 		}
 
@@ -236,9 +241,18 @@ func gifExtension(file *os.File, baseOffset int64) (*Layout, error) {
 	case eComment:
 		// nothing to do but read the data.
 		typeInfo = "comment"
-		//size = 7 // XXX len
-		fmt.Println(baseOffset)
-		panic("comment len")
+
+		var lenByte byte
+		if err := binary.Read(file, binary.LittleEndian, &lenByte); err != nil {
+			return nil, err
+		}
+
+		size = 2 + int64(lenByte) + 1 // including terminating 0
+
+		typeSpecific = []Layout{
+			Layout{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
+			Layout{Offset: baseOffset + 3, Length: size - 2, Info: "data", Type: ASCIIZ},
+		}
 
 	case eApplication:
 		typeInfo = "application"
@@ -364,6 +378,10 @@ func gifSubBlocks(file *os.File, baseOffset int64) ([]Layout, error) {
 	for {
 		var follows byte // number of bytes follows
 		if err := binary.Read(file, binary.LittleEndian, &follows); err != nil {
+			if err == io.EOF {
+				fmt.Println("XXX sub blocks unexpected EOF")
+				break
+			}
 			return nil, err
 		}
 

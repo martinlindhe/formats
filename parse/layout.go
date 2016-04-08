@@ -184,7 +184,8 @@ func (pl *ParsedLayout) updateLabel(label string, newLabel string) {
 	panic("label not found: " + label)
 }
 
-func (pl *ParsedLayout) decodeBitfieldFromInfo(file *os.File, info string) uint32 {
+// NOTE: went public for testing
+func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint32 {
 
 	layout := pl.findBitfieldLayout(info)
 	if layout == nil {

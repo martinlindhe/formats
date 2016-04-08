@@ -11,6 +11,7 @@ var (
 		"arj": parse.ARJ,
 		"bmp": parse.BMP,
 		"gif": parse.GIF,
+		"ico": parse.ICO,
 	}
 )
 

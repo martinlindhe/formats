@@ -1,14 +1,16 @@
 package parse
 
+// STATUS gif89 most files ok, gif87 broken!
+
+// XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
+// XXX samples/gif/gif_87a_001.gif is broken!
+
 import (
 	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
 )
-
-// STATUS gif89 most files ok
-// XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
 
 var (
 	gctToLengthMap = map[byte]int64{
@@ -75,9 +77,15 @@ func parseGIF(file *os.File) (*ParsedLayout, error) {
 	res.Layout = append(res.Layout, gifHeader(file))
 	res.Layout = append(res.Layout, gifLogicalDescriptor(file))
 
+	// XXX 1. make test using a specific file, with known PACKED value, and use that to test the decode stuff!
+
 	// XXX hack... decodeBitfieldFromInfo should return 1 but returns 2 now for soem reason?!
-	if res.decodeBitfieldFromInfo(file, "global color table flag") != 0 {
-		sizeOfGCT := res.decodeBitfieldFromInfo(file, "size of global color table")
+	if res.DecodeBitfieldFromInfo(file, "global color table flag") != 0 {
+		if res.DecodeBitfieldFromInfo(file, "global color table flag") != 1 {
+			fmt.Println(res.DecodeBitfieldFromInfo(file, "global color table flag"))
+			panic("res is odd!")
+		}
+		sizeOfGCT := res.DecodeBitfieldFromInfo(file, "size of global color table")
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
 			res.Layout = append(res.Layout, gifGlobalColorTable(file, gctByteLen))
 		}
@@ -109,9 +117,9 @@ func parseGIF(file *os.File) (*ParsedLayout, error) {
 			if imgDescriptor != nil {
 				res.Layout = append(res.Layout, *imgDescriptor)
 			}
-			if res.decodeBitfieldFromInfo(file, "local color table flag") == 1 {
+			if res.DecodeBitfieldFromInfo(file, "local color table flag") == 1 {
 				// XXX this is untested due to lack of sample with a local color table
-				sizeOfLCT := res.decodeBitfieldFromInfo(file, "size of local color table")
+				sizeOfLCT := res.DecodeBitfieldFromInfo(file, "size of local color table")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
 					localTbl := gifLocalColorTable(file, offset+imgDescriptorLen, lctByteLen)
 					res.Layout = append(res.Layout, localTbl)

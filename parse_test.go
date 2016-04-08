@@ -90,18 +90,58 @@ func TestParseGIF87a(t *testing.T) {
 	assert.Equal(t, true, layout != nil)
 	assert.Equal(t, `XXX`, layout)
 }
+*/
 
 func TestParseGIF89a(t *testing.T) {
 
-	file, err := os.Open("samples/gif/gif_002_89a.gif")
+	file, err := os.Open("samples/gif/gif_89a_001.gif")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	layout := ParseLayout(file)
-	assert.Equal(t, true, layout != nil)
-	assert.Equal(t, `XXX`, layout)
+	layout, err := ParseLayout(file)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, `header (0000), Group
+  signature (0000), ASCII
+  version (0003), ASCII
+logical screen descriptor (0006), Group
+  width (0006), uint16-le
+  height (0008), uint16-le
+  packed (000a), uint8
+  background color (000b), uint8
+  aspect ratio (000c), uint8
+global color table (000d), Group
+  color 1 (000d), RGB
+  color 2 (0010), RGB
+  color 3 (0013), RGB
+  color 4 (0016), RGB
+extension (0019), Group
+  block id (extension) (0019), uint8
+  graphic control (001a), uint8
+  byte size (001b), uint8
+  packed #2 (001c), uint8
+  delay time (001d), uint16-le
+  transparent color index (001f), uint8
+  block terminator (0020), uint8
+image descriptor (0021), Group
+  image separator (0021), uint8
+  image left (0022), uint16-le
+  image top (0024), uint16-le
+  image width (0026), uint16-le
+  image height (0028), uint16-le
+  packed #3 (002a), uint8
+image data (002b), Group
+  lzw code size (002b), uint8
+  block length (002c), uint8
+  block (002d), uint8
+  block length (0043), uint8
+trailer (0044), Group
+  trailer (0044), uint8
+`, layout.PrettyPrint())
+
+	// perform some bitfield tests on this known file
+	assert.Equal(t, uint32(1), layout.DecodeBitfieldFromInfo(file, "global color table flag"))
+	assert.Equal(t, uint32(0), layout.DecodeBitfieldFromInfo(file, "local color table flag"))
 }
-*/
 
 func TestParseARJ(t *testing.T) {
 
@@ -111,8 +151,8 @@ func TestParseARJ(t *testing.T) {
 
 	layout, err := ParseLayout(file)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, `arj main header (0035), Group
-  magic (ARJ archive) (0035), uint16-le
+	assert.Equal(t, `main header (0035), Group
+  magic (0035), uint16-le
   basic header size (0037), uint16-le
   size up to and including 'extra data' (0039), uint8
   archiver version number (003a), uint8

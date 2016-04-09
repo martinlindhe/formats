@@ -8,10 +8,11 @@ import (
 
 var (
 	parsers = map[string]func(*os.File) (*parse.ParsedLayout, error){
-		"arj": parse.ARJ,
-		"bmp": parse.BMP,
-		"gif": parse.GIF,
-		"ico": parse.ICO,
+		"arj":  parse.ARJ,
+		"bmp":  parse.BMP,
+		"gif":  parse.GIF,
+		"ico":  parse.ICO,
+		"tiff": parse.TIFF,
 	}
 )
 

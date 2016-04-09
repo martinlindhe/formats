@@ -80,8 +80,6 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 	numIcons := hdr[2]
 	resourceEntryLength := int64(16)
 
-	fmt.Println("parsing ", numIcons, " resources")
-
 	res.Layout = append(res.Layout, fileHeader)
 
 	for i := 0; i < int(numIcons); i++ {

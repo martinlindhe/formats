@@ -1,6 +1,6 @@
 package parse
 
-// STATUS: 0%
+// STATUS: 50%
 
 import (
 	"encoding/binary"
@@ -64,7 +64,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 			Type:   Group,
 		}
 
-		fmt.Printf("Reading at %04x\n", offset)
+		fmt.Printf("Reading jpeg chunk at %04x\n", offset)
 		magic, _ := readUint8(file, offset)
 		marker, _ := readUint8(file, offset+1)
 
@@ -77,22 +77,26 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 
 		if marker == 0xd8 {
 			// NOTE: this marker dont have any content
+			chunk.Length = 2
 			chunk.Childs = []Layout{
 				Layout{Offset: offset, Length: 2, Info: jpegChunkTypes[0xd8], Type: Uint16le},
 			}
-			offset += 2
+			res.Layout = append(res.Layout, chunk)
+			offset += chunk.Length
 			continue
 		}
 		if marker == 0xd9 {
+			chunk.Length = 2
 			chunk.Childs = []Layout{
 				Layout{Offset: offset, Length: 2, Info: jpegChunkTypes[0xd9], Type: Uint16be},
 			}
+			res.Layout = append(res.Layout, chunk)
 			fmt.Println("Ending parser since EOI marker was detected")
 			break
 		}
 
 		chunkLen, _ := readUint16be(file, offset+2)
-		fmt.Println("adding", chunkLen)
+
 		chunk.Length = 2 + int64(chunkLen)
 		chunk.Childs = []Layout{
 			Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16be},

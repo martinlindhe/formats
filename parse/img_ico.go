@@ -1,9 +1,10 @@
 package parse
 
 // Windows Icon / Cursor image resources
-// STATUS 90% WIP
+// STATUS 80%
 
 // TODO icon_embedded_png_001.ico has embedded PNG in image data
+// TODO decode non-png as "standard BMP image"...
 // TODO offer "save to file" for the "image data" (bytes type)
 
 import (
@@ -76,59 +77,57 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 
 	offset += fileHeader.Length
 
-	// map up resources
 	numIcons := hdr[2]
 	resourceEntryLength := int64(16)
 
 	fmt.Println("parsing ", numIcons, " resources")
 
-	for i := 0; i < int(numIcons); i++ {
+	res.Layout = append(res.Layout, fileHeader)
 
-		resource := []Layout{
-			Layout{Offset: offset, Length: 1, Info: "width", Type: Uint8},
-			Layout{Offset: offset + 1, Length: 1, Info: "height", Type: Uint8},
-			Layout{Offset: offset + 2, Length: 1, Info: "max number of colors", Type: Uint8},
-			Layout{Offset: offset + 3, Length: 1, Info: "reserved", Type: Uint8},
-			Layout{Offset: offset + 4, Length: 2, Info: "planes", Type: Uint16le},
-			Layout{Offset: offset + 6, Length: 2, Info: "bit count", Type: Uint16le},
-			Layout{Offset: offset + 8, Length: 4, Info: "data size", Type: Uint32le},
-			Layout{Offset: offset + 12, Length: 4, Info: "offset to image", Type: Uint32le},
-		}
-		fileHeader.Childs = append(fileHeader.Childs, resource...)
+	for i := 0; i < int(numIcons); i++ {
+		resNum := fmt.Sprintf("%d", i+1)
+		resource := Layout{
+			Offset: offset,
+			Length: resourceEntryLength,
+			Info:   "resource " + resNum + " header",
+			Type:   Group,
+			Childs: []Layout{
+				Layout{Offset: offset, Length: 1, Info: "width", Type: Uint8},
+				Layout{Offset: offset + 1, Length: 1, Info: "height", Type: Uint8},
+				Layout{Offset: offset + 2, Length: 1, Info: "max number of colors", Type: Uint8},
+				Layout{Offset: offset + 3, Length: 1, Info: "reserved", Type: Uint8},
+				Layout{Offset: offset + 4, Length: 2, Info: "planes", Type: Uint16le},
+				Layout{Offset: offset + 6, Length: 2, Info: "bit count", Type: Uint16le},
+				Layout{Offset: offset + 8, Length: 4, Info: "data size of resource " + resNum, Type: Uint32le},
+				Layout{Offset: offset + 12, Length: 4, Info: "offset to resource " + resNum, Type: Uint32le},
+			}}
+
+		res.Layout = append(res.Layout, resource)
 		fileHeader.Length += resourceEntryLength
 		offset += resourceEntryLength
 	}
 
-	res.Layout = append(res.Layout, fileHeader)
+	for i := 0; i < int(numIcons); i++ {
+		resNum := fmt.Sprintf("%d", i+1)
 
-	dataOffset, err := res.readUint32leFromInfo(file, "offset to image")
-	if err != nil {
-		return nil, err
+		dataOffset, err := res.readUint32leFromInfo(file, "offset to resource "+resNum)
+		if err != nil {
+			return nil, err
+		}
+		dataSize, err := res.readUint32leFromInfo(file, "data size of resource "+resNum)
+		if err != nil {
+			return nil, err
+		}
+
+		res.Layout = append(res.Layout, Layout{
+			Offset: int64(dataOffset),
+			Type:   Group,
+			Info:   "resource " + resNum + " data",
+			Length: int64(dataSize),
+			Childs: []Layout{
+				Layout{Offset: int64(dataOffset), Length: int64(dataSize), Info: "image data", Type: Bytes},
+			}})
 	}
-	dataSize, err := res.readUint32leFromInfo(file, "data size")
-	if err != nil {
-		return nil, err
-	}
-
-	// XXX group + child
-
-	res.Layout = append(res.Layout, Layout{
-		Offset: int64(dataOffset),
-		Type:   Group,
-		Info:   "image data",
-		Length: int64(dataSize),
-		Childs: []Layout{
-			Layout{Offset: int64(dataOffset), Length: int64(dataSize), Info: "image data", Type: Bytes},
-		}})
 
 	return &res, nil
 }
-
-/*
-
-
-    header.length = (uint)(6 + (numIconsValue * iconEntryLength));
-
-    return res;
-}
-*/

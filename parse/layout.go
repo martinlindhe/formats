@@ -9,14 +9,23 @@ import (
 
 // ...
 const (
-	Group DataType = 1 + iota
+	Group DataType = 1 + iota // container
+
+	// single bytes
 	Int8
 	Uint8
+
+	// little endian
 	Int16le
 	Uint16le
 	Int32le
 	Uint32le
-	Bytes // for group of bytes
+
+	// big endian
+	Uint32be
+
+	// groups of bytes
+	Bytes
 	ASCII
 	ASCIIZ
 	RGB
@@ -31,6 +40,7 @@ var (
 		Uint16le: "uint16-le",
 		Int32le:  "int32-le",
 		Uint32le: "uint32-le",
+		Uint32be: "uint32-be",
 		Bytes:    "bytes",
 		ASCII:    "ASCII",
 		ASCIIZ:   "ASCIIZ",

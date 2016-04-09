@@ -243,6 +243,9 @@ func (pl *ParsedLayout) GetHex(file *os.File, hexView HexViewState) (string, err
 
 		colorName := "fg-white"
 		if !pl.isOffsetKnown(base + w) {
+			// XXX different reds depending on the actual value, lower = darker
+
+			// XXX 24-bit colors, port to tcell from termui first!
 			colorName = "fg-red"
 		}
 		if ceil >= layout.Offset && ceil < layout.Offset+int64(layout.Length) {

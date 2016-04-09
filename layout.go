@@ -12,6 +12,7 @@ var (
 		"bmp":  parse.BMP,
 		"gif":  parse.GIF,
 		"ico":  parse.ICO,
+		"png":  parse.PNG,
 		"tiff": parse.TIFF,
 	}
 )

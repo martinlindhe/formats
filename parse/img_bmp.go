@@ -8,7 +8,6 @@ package parse
 import (
 	"encoding/binary"
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -95,13 +94,6 @@ func parseBMP(file *os.File) (*ParsedLayout, error) {
 	return &res, nil
 }
 
-func readUint32le(reader io.Reader) (uint32, error) {
-
-	var b uint32
-	err := binary.Read(reader, binary.LittleEndian, &b)
-	return b, err
-}
-
 func parseBMPInfoHeader(file *os.File) (Layout, error) {
 
 	infoHeaderBase := int64(14)
@@ -110,9 +102,7 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 		Type:   Group,
 	}
 
-	file.Seek(infoHeaderBase, os.SEEK_SET)
-
-	infoHdrSize, err := readUint32le(file)
+	infoHdrSize, err := readUint32le(file, infoHeaderBase)
 	if err != nil {
 		return layout, err
 	}

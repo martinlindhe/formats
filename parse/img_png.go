@@ -1,10 +1,12 @@
 package parse
 
 // handles PNG and MNG images
-// STATUS: 1%
+// STATUS: 80% PNG, 20% MNG. parsing gives up after first IEND, should continue...
 
 import (
 	"encoding/binary"
+	"fmt"
+	"io"
 	"os"
 )
 
@@ -76,83 +78,67 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 		l := Layout{
 			Offset: offset,
 			Length: 8,
-			Info:   "XXX chunk",
 			Type:   Group,
 			Childs: []Layout{
 				Layout{Offset: offset, Length: 4, Info: "length", Type: Uint32be},
-				Layout{Offset: offset + 4, Length: 4, Info: "type", Type: ASCII}, // XXX
+				Layout{Offset: offset + 4, Length: 4, Info: "type", Type: ASCII},
 			},
 		}
+		chunkLength, err := readUint32be(file, offset)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+
+		typeCode, err := knownLengthASCII(file, offset+4, 4)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+
+		l.Info = "chunk " + typeCode
+		offset += l.Length
+
+		if typeCode == "IHDR" {
+			if chunkLength != 13 {
+				fmt.Println("warning: IHDR size must be 13")
+			}
+			l.Childs = append(l.Childs, []Layout{
+				Layout{Offset: offset, Length: 4, Info: "width", Type: Uint32be},
+				Layout{Offset: offset + 4, Length: 4, Info: "height", Type: Uint32be},
+				Layout{Offset: offset + 8, Length: 1, Info: "bit depth", Type: Uint8},
+				Layout{Offset: offset + 9, Length: 1, Info: "color type", Type: Uint8},
+				Layout{Offset: offset + 10, Length: 1, Info: "compression method", Type: Uint8}, // XXX show meaning of value
+				Layout{Offset: offset + 11, Length: 1, Info: "filter method", Type: Uint8},
+				Layout{Offset: offset + 12, Length: 1, Info: "interlace method", Type: Uint8},
+			}...)
+		} else {
+			l.Childs = append(l.Childs, []Layout{
+				Layout{Offset: offset, Length: int64(chunkLength), Info: typeCode + " data", Type: Bytes},
+			}...)
+		}
+
+		offset += int64(chunkLength)
+		l.Length += int64(chunkLength)
+
+		l.Childs = append(l.Childs, []Layout{
+			Layout{Offset: offset, Length: 4, Info: "crc", Type: Uint32be},
+		}...)
+		l.Length += 4
+		offset += 4
 
 		chunks = append(chunks, l)
-		break // XXX
 
-		/*
-
-			chunk.Text = "Chunk " + typeStr;
-			chunk.length = lengthVal + 4 + 4 + 4;  // "length" (4 byte) + "type" (4 byte) + data + crc (4 byte)
-
-			var data = type.RelativeTo("Data", lengthVal);
-
-			if (lengthVal > 0) {
-			    if (typeStr == "IHDR") {
-			        var width = type.RelativeToBigEndian32("Width");
-			        data.Nodes.Add(width);
-
-			        var height = width.RelativeToBigEndian32("Height");
-			        data.Nodes.Add(height);
-
-			        var bd = height.RelativeToByte("Bit depth");
-			        data.Nodes.Add(bd);
-
-			        var color = bd.RelativeToByte("Color type");
-			        data.Nodes.Add(color);
-
-			        var compression = color.RelativeToByte("Compression method");
-			        data.Nodes.Add(compression);
-
-			        var filter = compression.RelativeToByte("Filter method");
-			        data.Nodes.Add(filter);
-
-			        var interlace = filter.RelativeToByte("Interlace method");
-			        data.Nodes.Add(interlace);
-			    }
-
-			    chunk.Nodes.Add(data);
-			}
-
-			var crc = data.RelativeToBigEndian32("Crc");
-			chunk.Nodes.Add(crc);
-
-			offset += chunk.length;
-
-			res.Add(chunk);
-
-			if (typeStr == "IEND") {
-			    Log("Stopped parser after IEND chunk");
-			    break;
-			}
-
-			//} while (offset < BaseStream.Length);
-		*/
+		if typeCode == "IEND" {
+			break
+		}
 	}
 
 	res.Layout = append(res.Layout, chunks...)
 
 	return &res, nil
 }
-
-/*
-private string ReadString(long offset, int length)
-{
-    BaseStream.Position = offset;
-
-    string res = "";
-
-    for (int i = 0; i < length; i++) {
-        res += ReadChar();
-    }
-
-    return res;
-}
-*/

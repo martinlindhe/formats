@@ -61,10 +61,6 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		res += field.prettyDecimalAndHex(int64(i))
 
 	case Uint8:
-		if field.Length != 1 {
-			res += fmt.Sprintf("chunk of bytes")
-			break
-		}
 		var i uint8
 		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 			return fmt.Sprintf("%v", err)
@@ -98,6 +94,9 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 			return fmt.Sprintf("%v", err)
 		}
 		res += field.prettyDecimalAndHex(int64(i))
+
+	case Bytes:
+		res += fmt.Sprintf("chunk of bytes")
 
 	case ASCII, ASCIIZ:
 		buf := make([]byte, field.Length)

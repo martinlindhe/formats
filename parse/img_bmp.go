@@ -1,6 +1,6 @@
 package parse
 
-// STATUS: OK
+// STATUS: 90% need samples using jpeg / png data
 
 //TODO: parse & display CIEXYZTRIPLE endpoint data: FXPT2DOT30  X, Y, Z
 // XXX TODO samples using png / jpeg compression , and properly decode/extract to file that part as a sub-resource or sth....
@@ -79,7 +79,7 @@ func parseBMP(file *os.File) (*ParsedLayout, error) {
 		Info:   "image data",
 		Length: fileSize(file) - headerLen,
 		Childs: []Layout{
-			Layout{Offset: headerLen, Length: fileSize(file) - headerLen, Type: Uint8, Info: "image data"},
+			Layout{Offset: headerLen, Length: fileSize(file) - headerLen, Type: Bytes, Info: "image data"},
 		},
 	}
 

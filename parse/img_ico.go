@@ -1,14 +1,16 @@
 package parse
 
-// STATUS xxx
+// Windows Icon / Cursor image resources
+// STATUS 90% WIP
+
+// TODO icon_embedded_png_001.ico has embedded PNG in image data
+// TODO offer "save to file" for the "image data" (bytes type)
 
 import (
 	"encoding/binary"
 	"fmt"
 	"os"
 )
-
-// Windows Icon / Cursor image resources
 
 func ICO(file *os.File) (*ParsedLayout, error) {
 
@@ -58,75 +60,67 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 		typeName = "unknown"
 	}
 
+	offset := int64(0)
+
 	fileHeader := Layout{
-		Offset: 0,
+		Offset: offset,
 		Length: 6,
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
 			Layout{Offset: 0, Length: 2, Info: "magic", Type: Uint16le},
-			Layout{Offset: 2, Length: 2, Info: typeName, Type: Uint16le},
+			Layout{Offset: 2, Length: 2, Info: "type = " + typeName, Type: Uint16le},
 			Layout{Offset: 4, Length: 2, Info: "number of resources", Type: Uint16le},
 		},
 	}
 
-	res.Layout = append(res.Layout, fileHeader)
+	offset += fileHeader.Length
 
 	// map up resources
 	numIcons := hdr[2]
-	//	iconEntryLength := 16
+	resourceEntryLength := int64(16)
 
 	fmt.Println("parsing ", numIcons, " resources")
 
 	for i := 0; i < int(numIcons); i++ {
-		/*
-		   iconEntry = new Chunk("Resource entry #" + (i + 1));
-		   iconEntry.length = iconEntryLength;
-		   iconEntry.offset = numIcons.offset + numIcons.length + (i * iconEntry.length);
-		   header.Nodes.Add(iconEntry);
 
-		   var width = new ByteChunk("Width");
-		   width.offset = iconEntry.offset;
-		   iconEntry.Nodes.Add(width);
-
-		   var height = width.RelativeToByte("Height");
-		   iconEntry.Nodes.Add(height);
-
-		   //  ColorCount Maximum number of colors
-		   var ColorCount = height.RelativeToByte("Color count");
-		   iconEntry.Nodes.Add(ColorCount);
-
-		   //  Reserved (always 0)
-		   var Reserved = ColorCount.RelativeToByte("Reserved");
-		   iconEntry.Nodes.Add(Reserved);
-
-		   // Planes (always 0 or 1)
-		   var Planes = Reserved.RelativeToLittleEndian16("Planes");
-		   iconEntry.Nodes.Add(Planes);
-
-		   // BitCount (always 0)
-		   var BitCount = Planes.RelativeToLittleEndian16("Bit count");
-		   iconEntry.Nodes.Add(BitCount);
-
-		   //  BytesInRes Length of icon bitmap in bytes
-		   var DataSize = BitCount.RelativeToLittleEndian32("Data size");
-		   var DataSizeValue = (uint)ReadInt32(DataSize.offset);
-		   iconEntry.Nodes.Add(DataSize);
-
-		   // ImageOffset Offset position of icon bitmap in file
-		   var ImageOffset = DataSize.RelativeToLittleEndian32("Image offset");
-		   var OffsetValue = ReadInt32(ImageOffset.offset);
-		   iconEntry.Nodes.Add(ImageOffset);
-
-		   var Data = new Chunk();
-		   Data.Text = "Resource data # " + (i + 1);
-		   Data.offset = OffsetValue;
-		   Data.length = DataSizeValue;
-		   res.Add(Data);
-		*/
+		resource := []Layout{
+			Layout{Offset: offset, Length: 1, Info: "width", Type: Uint8},
+			Layout{Offset: offset + 1, Length: 1, Info: "height", Type: Uint8},
+			Layout{Offset: offset + 2, Length: 1, Info: "max number of colors", Type: Uint8},
+			Layout{Offset: offset + 3, Length: 1, Info: "reserved", Type: Uint8},
+			Layout{Offset: offset + 4, Length: 2, Info: "planes", Type: Uint16le},
+			Layout{Offset: offset + 6, Length: 2, Info: "bit count", Type: Uint16le},
+			Layout{Offset: offset + 8, Length: 4, Info: "data size", Type: Uint32le},
+			Layout{Offset: offset + 12, Length: 4, Info: "offset to image", Type: Uint32le},
+		}
+		fileHeader.Childs = append(fileHeader.Childs, resource...)
+		fileHeader.Length += resourceEntryLength
+		offset += resourceEntryLength
 	}
 
-	// XXX
+	res.Layout = append(res.Layout, fileHeader)
+
+	dataOffset, err := res.readUint32leFromInfo(file, "offset to image")
+	if err != nil {
+		return nil, err
+	}
+	dataSize, err := res.readUint32leFromInfo(file, "data size")
+	if err != nil {
+		return nil, err
+	}
+
+	// XXX group + child
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: int64(dataOffset),
+		Type:   Group,
+		Info:   "image data",
+		Length: int64(dataSize),
+		Childs: []Layout{
+			Layout{Offset: int64(dataOffset), Length: int64(dataSize), Info: "image data", Type: Bytes},
+		}})
+
 	return &res, nil
 }
 

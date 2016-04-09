@@ -1,6 +1,6 @@
 package parse
 
-// STATUS gif89 most files ok, gif87 broken!
+// STATUS ~80%: gif89 most files ok, gif87 broken!
 
 // XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
 // XXX samples/gif/gif_87a_001.gif is broken!

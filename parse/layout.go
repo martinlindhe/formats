@@ -16,6 +16,7 @@ const (
 	Uint16le
 	Int32le
 	Uint32le
+	Bytes // for group of bytes
 	ASCII
 	ASCIIZ
 	RGB
@@ -30,6 +31,7 @@ var (
 		Uint16le: "uint16-le",
 		Int32le:  "int32-le",
 		Uint32le: "uint32-le",
+		Bytes:    "bytes",
 		ASCII:    "ASCII",
 		ASCIIZ:   "ASCIIZ",
 		RGB:      "RGB",

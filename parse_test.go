@@ -41,27 +41,27 @@ func TestParsedLayout(t *testing.T) {
 			if l.Type != parse.Group {
 				t.Fatalf("root level must be group %v, %s", l, path)
 			}
-
 			if l.Type == parse.RGB && l.Length != 3 {
 				t.Fatalf("RGB field must be %d bytes, was %d", 3, l.Length)
 			}
-
+			if l.Type == parse.Uint8 && l.Length != 1 {
+				t.Fatalf("Uint8 field must be %d bytes, was %d", 1, l.Length)
+			}
+			if l.Type == parse.Bytes && l.Length == 1 {
+				t.Fatalf("Bytes field should never be used for single-byte fields")
+			}
 			if l.Type == parse.Uint16le && l.Length != 2 {
 				t.Fatalf("Uint16le field must be %d bytes, was %d", 2, l.Length)
 			}
-
 			if l.Type == parse.Uint32le && l.Length != 4 {
 				t.Fatalf("Uint16le field must be %d bytes, was %d", 4, l.Length)
 			}
-
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
 				t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
 			}
-
 			if l.Offset+l.Length > layout.FileSize {
 				t.Fatalf("%s child extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
 			}
-
 			sum := int64(0)
 			for _, child := range l.Childs {
 				sum += child.Length
@@ -73,7 +73,6 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("child sum for %s, field %s is %d, but group length is %d, %v", path, l.Info, sum, l.Length, l)
 			}
 		}
-
 		return nil
 	})
 	assert.Equal(t, nil, err)

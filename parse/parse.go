@@ -53,10 +53,25 @@ func readBytesFrom(file *os.File, offset int64, size int64) []byte {
 	return b
 }
 
+func readUint8(file *os.File, offset int64) (uint8, error) {
+
+	file.Seek(offset, os.SEEK_SET)
+	var b uint8
+	binary.Read(file, binary.LittleEndian, &b)
+	return b, nil
+}
+
+func readUint16be(file *os.File, offset int64) (uint16, error) {
+
+	file.Seek(offset, os.SEEK_SET)
+	var b uint16
+	binary.Read(file, binary.BigEndian, &b)
+	return b, nil
+}
+
 func readUint32be(file *os.File, offset int64) (uint32, error) {
 
 	file.Seek(offset, os.SEEK_SET)
-
 	var b uint32
 	binary.Read(file, binary.BigEndian, &b)
 	return b, nil
@@ -65,7 +80,6 @@ func readUint32be(file *os.File, offset int64) (uint32, error) {
 func readUint32le(file *os.File, offset int64) (uint32, error) {
 
 	file.Seek(offset, os.SEEK_SET)
-
 	var b uint32
 	binary.Read(file, binary.LittleEndian, &b)
 	return b, nil

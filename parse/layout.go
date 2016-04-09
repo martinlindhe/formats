@@ -22,6 +22,7 @@ const (
 	Uint32le
 
 	// big endian
+	Uint16be
 	Uint32be
 
 	// groups of bytes
@@ -40,6 +41,7 @@ var (
 		Uint16le: "uint16-le",
 		Int32le:  "int32-le",
 		Uint32le: "uint32-le",
+		Uint16be: "uint16-be",
 		Uint32be: "uint32-be",
 		Bytes:    "bytes",
 		ASCII:    "ASCII",

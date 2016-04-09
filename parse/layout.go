@@ -25,6 +25,9 @@ const (
 	Uint16be
 	Uint32be
 
+	// version
+	MajorMinor16 // (first byte=major, last=minor)
+
 	// groups of bytes
 	Bytes
 	ASCII
@@ -34,19 +37,20 @@ const (
 
 var (
 	dataTypes = map[DataType]string{
-		Group:    "Group",
-		Int8:     "int8",
-		Uint8:    "uint8",
-		Int16le:  "int16-le",
-		Uint16le: "uint16-le",
-		Int32le:  "int32-le",
-		Uint32le: "uint32-le",
-		Uint16be: "uint16-be",
-		Uint32be: "uint32-be",
-		Bytes:    "bytes",
-		ASCII:    "ASCII",
-		ASCIIZ:   "ASCIIZ",
-		RGB:      "RGB",
+		Group:        "Group",
+		Int8:         "int8",
+		Uint8:        "uint8",
+		Int16le:      "int16-le",
+		Uint16le:     "uint16-le",
+		Int32le:      "int32-le",
+		Uint32le:     "uint32-le",
+		Uint16be:     "uint16-be",
+		Uint32be:     "uint32-be",
+		MajorMinor16: "major.minor-16",
+		Bytes:        "bytes",
+		ASCII:        "ASCII",
+		ASCIIZ:       "ASCIIZ",
+		RGB:          "RGB",
 	}
 )
 

@@ -95,12 +95,26 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		}
 		res += field.prettyDecimalAndHex(int64(i))
 
+	case Uint16be:
+		var i uint16
+		if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += field.prettyDecimalAndHex(int64(i))
+
 	case Uint32be:
 		var i uint32
 		if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
 			return fmt.Sprintf("%v", err)
 		}
 		res += field.prettyDecimalAndHex(int64(i))
+
+	case MajorMinor16:
+		var b [2]uint8
+		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += fmt.Sprintf("%d.%d", b[0], b[1])
 
 	case Bytes:
 		res += fmt.Sprintf("chunk of bytes")

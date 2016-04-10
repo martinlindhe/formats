@@ -41,5 +41,4 @@ func parsePIF(file *os.File) (*ParsedLayout, error) {
 			Layout{Offset: 0x171, Length: 15, Info: "magic", Type: Uint32le},
 		}})
 	return &res, nil
-
 }

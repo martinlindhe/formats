@@ -57,10 +57,10 @@ func parseARJMainHeader(f *os.File) ([]Layout, error) {
 	archiveName := ""
 	comment := ""
 
-	if archiveName, err = zeroTerminatedASCII(f); err != nil {
+	if archiveName, _, err = zeroTerminatedASCII(f); err != nil {
 		return nil, err
 	}
-	if comment, err = zeroTerminatedASCII(f); err != nil {
+	if comment, _, err = zeroTerminatedASCII(f); err != nil {
 		return nil, err
 	}
 

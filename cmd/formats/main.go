@@ -183,6 +183,8 @@ func uiLoop(file *os.File) {
 
 func focusAtCurrentField() {
 
+	// XXX care if we are in subgroup mode
+
 	// get current field offset
 	offset := fileLayout.Layout[hexView.CurrentGroup].Offset
 
@@ -219,8 +221,8 @@ func prettyStatString() string {
 	// if in sub field view
 	if hexView.BrowseMode == parse.ByFieldInGroup {
 		field := group.Childs[hexView.CurrentField]
-		return fmt.Sprintf("selected: %d bytes (%x), offset %04x", field.Length, field.Length, field.Offset)
+		return fmt.Sprintf("selected %d bytes (%x) from %04x", field.Length, field.Length, field.Offset)
 	}
 
-	return fmt.Sprintf("selected: %d bytes (%x), offset %04x", group.Length, group.Length, group.Offset)
+	return fmt.Sprintf("selected %d bytes (%x) from %04x", group.Length, group.Length, group.Offset)
 }

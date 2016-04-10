@@ -1,21 +1,50 @@
 package parse
 
+// Nintendo 64 ROM image
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func N64ROM(file *os.File) (*ParsedLayout, error) {
+
+	if !isN64ROM(file) {
+		return nil, nil
+	}
+	return parseN64ROM(file)
+}
+
+func isN64ROM(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+	if b[0] != 0x80 || b[1] != 0x37 || b[2] != 0x12 || b[3] != 0x40 {
+		return false
+	}
+	return true
+}
+
+func parseN64ROM(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Uint32le}, // XXX le/be
+		}})
+	return &res, nil
+}
+
 /*
-public Nintendo64RomReader(FileStream fs) : base(fs)
-{
-    name = "Nintendo 64 ROM image";
-    extensions = ".z64";
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-    if (ReadByte() != 0x80 || ReadByte() != 0x37 || ReadByte() != 0x12 || ReadByte() != 0x40)
-        return false;
-
-    return true;
-}
-
 override public List<Chunk> GetFileStructure()
 {
     if (!IsRecognized())

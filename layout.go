@@ -62,6 +62,10 @@ var (
 
 		// windows
 		"pif": parse.PIF,
+
+		// emu
+		"gba-rom": parse.GBAROM,
+		"n64-rom": parse.N64ROM,
 	}
 )
 

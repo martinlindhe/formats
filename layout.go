@@ -8,7 +8,17 @@ import (
 
 var (
 	parsers = map[string]func(*os.File) (*parse.ParsedLayout, error){
-		"arj":  parse.ARJ,
+		// compression
+		"7z":     parse.SEVENZIP,
+		"arj":    parse.ARJ,
+		"bzip2":  parse.BZIP2,
+		"cab":    parse.CAB,
+		"gzip":   parse.GZIP,
+		"iso":    parse.ISO,
+		"td2":    parse.TD2,
+		"winimg": parse.WINIMG, // XXX correct name of the format?
+
+		// image
 		"bmp":  parse.BMP,
 		"gif":  parse.GIF,
 		"ico":  parse.ICO,

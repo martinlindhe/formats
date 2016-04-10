@@ -1,5 +1,7 @@
 package parse
 
+// STATUS borked
+
 import (
 	"encoding/binary"
 	"fmt"

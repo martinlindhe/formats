@@ -1,52 +1,79 @@
 package parse
 
+// STATUS: 1%
+// ASF container (.asf; .wmv; .wma)
+// video/x-ms-wmv, audio/x-ms-wma
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+var (
+	ObjectSignature = []byte{
+		0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11,
+		0xA6, 0xD9, 0x00, 0xAA, 0x00, 0x62, 0xCE, 0x6C}
+	ObjectStreamProperties = []byte{
+		0x91, 0x07, 0xDC, 0xB7, 0xB7, 0xA9, 0xCF, 0x11,
+		0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65}
+	StreamPropertyAudio = []byte{
+		0x40, 0x9E, 0x69, 0xF8, 0x4D, 0x5B, 0xCF, 0x11,
+		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
+	StreamPropertyVideo = []byte{
+		0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11,
+		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
+)
+
+func ASF(file *os.File) (*ParsedLayout, error) {
+
+	if !isASF(file) {
+		return nil, nil
+	}
+	return parseASF(file)
+}
+
+func isASF(file *os.File) bool {
+
+	if !HasASFSignature(file, 0, ObjectSignature) {
+		return false
+	}
+
+	return true
+}
+
+func HasASFSignature(file *os.File, offset int64, sig []byte) bool {
+
+	file.Seek(offset, os.SEEK_SET)
+	var b [16]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	for i := 0; i < len(sig); i++ {
+		if b[i] != sig[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func parseASF(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 16, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 16, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
+}
+
 /*
-// TODO  video/x-ms-wmv, audio/x-ms-wma
-
-public AsfReader(FileStream fs) : base(fs)
-{
-    name = "ASF container";
-    extensions = ".asf; .wmv; .wma";
-}
-
-public static readonly byte[] ObjectSignature = new byte[] {
-    0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9, 0x00, 0xAA, 0x00, 0x62, 0xCE, 0x6C
-};
-public static readonly byte[] ObjectStreamProperties = new byte[] {
-    0x91, 0x07, 0xDC, 0xB7, 0xB7, 0xA9, 0xCF, 0x11, 0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65
-};
-public static readonly byte[] StreamPropertyAudio = new byte[] {
-    0x40, 0x9E, 0x69, 0xF8, 0x4D, 0x5B, 0xCF, 0x11, 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B
-};
-public static readonly byte[] StreamPropertyVideo = new byte[] {
-    0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11, 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B
-};
-
-public bool HasSignature(long offset, byte[] sig)
-{
-    BaseStream.Position = offset;
-
-    for (int i = 0; i < sig.Length; i++)
-        if (ReadByte() != sig[i])
-            return false;
-
-    return true;
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-
-    // FIXME what is minimal size?
-    if (BaseStream.Length < 16 * 4)
-        return false;
-
-    if (!HasSignature(0, ObjectSignature))
-        return false;
-
-    return true;
-}
-
 override public List<Chunk> GetFileStructure()
 {
     if (!IsRecognized())

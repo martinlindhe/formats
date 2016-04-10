@@ -1,22 +1,49 @@
 package parse
 
+import (
+	"encoding/binary"
+	"os"
+)
+
+func XZ(file *os.File) (*ParsedLayout, error) {
+
+	if !isXZ(file) {
+		return nil, nil
+	}
+	return parseXZ(file)
+}
+
+func isXZ(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b [6]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	if b[0] != 0xFD || b[1] != '7' || b[2] != 'z' || b[3] != 'X' || b[4] != 'Z' || b[5] != 0x00 {
+		return false
+	}
+
+	return true
+}
+
+func parseXZ(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 6, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
+}
+
 /*
-public XzReader(FileStream fs) : base(fs)
-{
-    name = "XZ archive";
-    extensions = ".xz";
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-
-    if (ReadByte() != 0xFD || ReadByte() != '7' || ReadByte() != 'z' || ReadByte() != 'X' || ReadByte() != 'Z' || ReadByte() != 0x00)
-        return false;
-
-    return true;
-}
-
 string DecodeFlagsValue(ushort flags)
 {
     if (flags == 0x0000)

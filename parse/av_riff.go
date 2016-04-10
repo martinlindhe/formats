@@ -1,40 +1,47 @@
 package parse
 
-/*
-// TODO detect audio ( WAVE) or video format
+// RIFF format (WAV, AVI)
+// STATUS: 1%
 
-public RiffReader(FileStream fs) : base(fs)
-{
-    name = "RIFF format (WAV, AVI)";
-    extensions = ".wav; .avi";
+import (
+	"encoding/binary"
+	"os"
+)
+
+func RIFF(file *os.File) (*ParsedLayout, error) {
+
+	if !isRIFF(file) {
+		return nil, nil
+	}
+	return parseRIFF(file)
 }
 
-override public bool IsRecognized()
-{
-    if (BaseStream.Length < 100)
-        return false;
+func isRIFF(file *os.File) bool {
 
-    BaseStream.Position = 0;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    if (ReadByte() != 'R' || ReadByte() != 'I' || ReadByte() != 'F' || ReadByte() != 'F')
-        return false;
+	if b[0] != 'R' || b[1] != 'I' || b[2] != 'F' || b[3] != 'F' {
+		return false
+	}
 
-    return true;
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a riff");
+func parseRIFF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "WAV identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

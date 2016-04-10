@@ -1,35 +1,46 @@
 package parse
 
-/*
-public PdfReader(FileStream fs) : base(fs)
-{
-    name = "Portable Document Format";
-    extensions = ".pdf";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func PDF(file *os.File) (*ParsedLayout, error) {
+
+	if !isPDF(file) {
+		return nil, nil
+	}
+	return parsePDF(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isPDF(file *os.File) bool {
 
-    if (ReadByte() != '%' || ReadByte() != 'P' || ReadByte() != 'D' || ReadByte() != 'F')
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	if b[0] != '%' || b[1] != 'P' || b[2] != 'D' || b[3] != 'F' {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a pdf");
+func parsePDF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "PDF identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

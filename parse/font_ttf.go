@@ -1,35 +1,46 @@
 package parse
 
-/*
-public TtfReader(FileStream fs) : base(fs)
-{
-    name = "TrueType Font";
-    extensions = ".ttf";
+// truetype fonts
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func TTF(file *os.File) (*ParsedLayout, error) {
+
+	if !isTTF(file) {
+		return nil, nil
+	}
+	return parseTTF(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isTTF(file *os.File) bool {
 
-    if (ReadByte() != 0 || ReadByte() != 1 || ReadByte() != 0 || ReadByte() != 0)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+	if b[0] != 0 || b[1] != 1 || b[2] != 0 || b[3] != 0 {
+		return false
+	}
 
-    return true;
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a ttf");
+func parseTTF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 5;
-    header.Text = "TTF identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
 }
-*/

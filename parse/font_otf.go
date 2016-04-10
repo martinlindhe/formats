@@ -1,35 +1,45 @@
 package parse
 
-/*
-public OtfReader(FileStream fs) : base(fs)
-{
-    name = "OpenType Font";
-    extensions = ".otf";
+// STATUS 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func OTF(file *os.File) (*ParsedLayout, error) {
+
+	if !isOTF(file) {
+		return nil, nil
+	}
+	return parseOTF(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isOTF(file *os.File) bool {
 
-    if (ReadByte() != 'O' || ReadByte() != 'T' || ReadByte() != 'T' || ReadByte() != 'O')
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+	if b[0] != 'O' || b[1] != 'T' || b[2] != 'T' || b[3] != 'O' {
+		return false
+	}
 
-    return true;
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a otf");
+func parseOTF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "OTF identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
 }
-*/

@@ -1,5 +1,56 @@
 package parse
 
+import (
+	"encoding/binary"
+	"os"
+)
+
+func RAR(file *os.File) (*ParsedLayout, error) {
+
+	if !isRAR(file) {
+		return nil, nil
+	}
+	return parseRAR(file)
+}
+
+func isRAR(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	if b[0] != 'R' || b[1] != 'a' || b[2] != 'r' || b[3] != '!' {
+		return false
+	}
+
+	// RAR 4.x signature
+	//if (ReadByte() != 0x1A || ReadByte() != 0x07 || ReadByte() != 0x00)
+	//    return false;
+
+	// RAR 5.0 signature
+	//if (ReadByte() != 0x1A || ReadByte() != 0x07 || ReadByte() != 0x01 || ReadByte() != 0x00)
+	//    return false;
+
+	return true
+}
+
+func parseRAR(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
+}
+
 /*
 // NOTE: internal field naming from unrar sources (headers.hpp, arcread.cpp)
 // TODO: support RAR 5.0 format, need samples
@@ -14,28 +65,6 @@ class RarVolumeHeader
     public ushort size;
 }
 
-public RarReader(FileStream fs) : base(fs)
-{
-    name = "RAR archive";
-    extensions = ".rar; .r00; .r01; .r02; .r03; .000; .001; .002; .003";
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-    if (ReadByte() != 'R' || ReadByte() != 'a' || ReadByte() != 'r' || ReadByte() != '!')
-        return false;
-
-    // RAR 4.x signature
-    if (ReadByte() != 0x1A || ReadByte() != 0x07 || ReadByte() != 0x00)
-        return false;
-
-    // RAR 5.0 signature
-    //if (ReadByte() != 0x1A || ReadByte() != 0x07 || ReadByte() != 0x01 || ReadByte() != 0x00)
-    //    return false;
-
-    return true;
-}
 
 void DecodeMainHeaderFlags(ushort flags)
 {

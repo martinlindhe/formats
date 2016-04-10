@@ -1,40 +1,48 @@
 package parse
 
-/*
-public CafReader(FileStream fs) : base(fs)
-{
-    name = "CAF audio";
-    extensions = ".caf";
+// STATUS: 1%
+// Core Audio Format (CAF)
+// Modern audio format container by Apple, commonly used in OSX
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func CAF(file *os.File) (*ParsedLayout, error) {
+
+	if !isCAF(file) {
+		return nil, nil
+	}
+	return parseCAF(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isCAF(file *os.File) bool {
 
-    if (BaseStream.Length < 100)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    if (ReadByte() != 'c' || ReadByte() != 'a' || ReadByte() != 'f' || ReadByte() != 'f')
-        return false;
+	if b[0] != 'c' || b[1] != 'a' || b[2] != 'f' || b[3] != 'f' {
+		return false
+	}
 
-    return true;
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    BaseStream.Position = 0;
+func parseCAF(file *os.File) (*ParsedLayout, error) {
 
-    if (!IsRecognized())
-        throw new Exception("not a caff");
+	res := ParsedLayout{}
 
-    List<Chunk> res = new List<Chunk>();
-
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "CAFF identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
 }
-*/

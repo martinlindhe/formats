@@ -1,36 +1,46 @@
 package parse
 
-/*
-public FlvReader(FileStream fs) : base(fs)
-{
-    name = "FLV video";
-    extensions = ".flv";
-    mimetype = "video/x-flv";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func FLV(file *os.File) (*ParsedLayout, error) {
+
+	if !isFLV(file) {
+		return nil, nil
+	}
+	return parseFLV(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isFLV(file *os.File) bool {
 
-    if (ReadByte() != 'F' || ReadByte() != 'L' || ReadByte() != 'V')
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [3]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	if b[0] != 'F' || b[1] != 'L' || b[2] != 'V' {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a flv");
+func parseFLV(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 3;
-    header.Text = "FLV identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 3, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 3, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

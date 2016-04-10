@@ -1,20 +1,47 @@
 package parse
 
+import (
+	"encoding/binary"
+	"os"
+)
+
+func ZIP(file *os.File) (*ParsedLayout, error) {
+
+	if !isZIP(file) {
+		return nil, nil
+	}
+	return parseZIP(file)
+}
+
+func isZIP(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b [6]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+	if b[0] != 'P' || b[1] != 'K' || b[2] != 3 || b[3] != 4 {
+		return false
+	}
+	return true
+}
+
+func parseZIP(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 6, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
+}
+
 /*
-public ZipReader(FileStream fs) : base(fs)
-{
-    name = "ZIP archive";
-    extensions = ".zip; .zipx";
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-    if (ReadByte() == 'P' && ReadByte() == 'K' && ReadByte() == 3 && ReadByte() == 4)
-        return true;
-
-    return false;
-}
 
 // PkZip Host OS table
 private static string DecodeHostOs(byte b)
@@ -324,21 +351,18 @@ override public List<Chunk> GetFileStructure()
         if (b1 == 1 && b2 == 2) {
 
             var header = ParseZipCds(offset);
-
             offset += header.length;
             res.Add(header);
 
         } else if (b1 == 3 && b2 == 4) {
 
             var header = ParseZipHeader(offset);
-
             offset += header.length;
             res.Add(header);
 
         } else if (b1 == 5 && b2 == 6) {
 
             var header = ParseEndOfCds(offset);
-
             offset += header.length;
             res.Add(header);
 
@@ -349,10 +373,5 @@ override public List<Chunk> GetFileStructure()
     } while (count < 300);
 
     return res;
-}
-
-public static void Log(string s)
-{
-    Console.WriteLine("[ZipReader] " + s);
 }
 */

@@ -1,36 +1,48 @@
 package parse
 
-/*
-public ChmReader(FileStream fs) : base(fs)
-{
-    name = "CHM help file (Windows)";
-    extensions = ".chm";
+// CHM help file (Windows)
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func CHM(file *os.File) (*ParsedLayout, error) {
+
+	if !isCHM(file) {
+		return nil, nil
+	}
+	return parseCHM(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isCHM(file *os.File) bool {
 
-    // TODO what is right magic bytes? just guessing
-    if (ReadByte() != 'I' || ReadByte() != 'T' || ReadByte() != 'S' || ReadByte() != 'F')
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	// TODO what is right magic bytes? just guessing
+	if b[0] != 'I' || b[1] != 'T' || b[2] != 'S' || b[3] != 'F' {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a CHM");
+func parseCHM(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "CHM identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

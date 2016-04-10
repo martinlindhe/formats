@@ -1,36 +1,48 @@
 package parse
 
-/*
-public DocReader(FileStream fs) : base(fs)
-{
-    name = "MS Word document";
-    extensions = ".doc";
+// MS Word document (.doc)
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func WORD(file *os.File) (*ParsedLayout, error) {
+
+	if !isWORD(file) {
+		return nil, nil
+	}
+	return parseWORD(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isWORD(file *os.File) bool {
 
-    // TODO what is right magic bytes? just guessing
-    if (ReadByte() != 0xD0 || ReadByte() != 0xCF || ReadByte() != 0x11 || ReadByte() != 0xE0)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [5]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	// TODO what is right magic bytes? just guessing
+	if b[0] != 0xd0 || b[1] != 0xcf || b[2] != 0x11 || b[3] != 0xe0 {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a DOC");
+func parseWORD(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "DOC identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

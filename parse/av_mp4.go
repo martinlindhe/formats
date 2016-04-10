@@ -1,36 +1,47 @@
 package parse
 
-/*
-public Mp4Reader(FileStream fs) : base(fs)
-{
-    name = "MP4 audio";
-    extensions = ".mp4; .m4a; .m4r";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func MP4(file *os.File) (*ParsedLayout, error) {
+
+	if !isMP4(file) {
+		return nil, nil
+	}
+	return parseMP4(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isMP4(file *os.File) bool {
 
-    // TODO what is right magic bytes? just guessing
-    if (ReadByte() != 0 || ReadByte() != 0 || ReadByte() != 0 || ReadByte() != 0x18)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	// TODO what is right magic bytes? just guessing
+	if b[0] != 0 || b[1] != 0 || b[2] != 0 || b[3] != 0x18 {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a mp4");
+func parseMP4(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "MP4 identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

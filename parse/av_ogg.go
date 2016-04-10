@@ -1,38 +1,46 @@
 package parse
 
-/*
-public OggReader(FileStream fs) : base(fs)
-{
-    name = "OGG container";
-    extensions = ".ogg; .oga; .ogv";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func OGG(file *os.File) (*ParsedLayout, error) {
+
+	if !isOGG(file) {
+		return nil, nil
+	}
+	return parseOGG(file)
 }
 
-override public bool IsRecognized()
-{
-    if (BaseStream.Length < 100)
-        return false;
+func isOGG(file *os.File) bool {
 
-    BaseStream.Position = 0;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    if (ReadByte() != 'O' || ReadByte() != 'g' || ReadByte() != 'g')
-        return false;
+	if b[0] != 'O' || b[1] != 'g' || b[2] != 'g' {
+		return false
+	}
 
-    return true;
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a ogg");
+func parseOGG(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 3;
-    header.Text = "OGG identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 3, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 3, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

@@ -1,38 +1,46 @@
 package parse
 
-/*
-public FlacReader(FileStream fs) : base(fs)
-{
-    name = "FLAC audio";
-    extensions = ".fla; .flac";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func FLAC(file *os.File) (*ParsedLayout, error) {
+
+	if !isFLAC(file) {
+		return nil, nil
+	}
+	return parseFLAC(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isFLAC(file *os.File) bool {
 
-    if (BaseStream.Length < 100)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    if (ReadByte() != 'f' || ReadByte() != 'L' || ReadByte() != 'a' || ReadByte() != 'C')
-        return false;
+	if b[0] != 'f' || b[1] != 'L' || b[2] != 'a' || b[3] != 'C' {
+		return false
+	}
 
-    return true;
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a flac");
+func parseFLAC(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "FLAC identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
 }
-*/

@@ -1,35 +1,44 @@
 package parse
 
-/*
-public MidiReader(FileStream fs) : base(fs)
-{
-    name = "MIDI file";
-    extensions = ".mid; .midi";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func MIDI(file *os.File) (*ParsedLayout, error) {
+
+	if !isMIDI(file) {
+		return nil, nil
+	}
+	return parseMIDI(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isMIDI(file *os.File) bool {
 
-    if (ReadByte() != 'M' || ReadByte() != 'T' || ReadByte() != 'h' || ReadByte() != 'd')
-        return false;
-
-    return true;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+	if b[0] != 'M' || b[1] != 'T' || b[2] != 'h' || b[3] != 'd' {
+		return false
+	}
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a midi");
+func parseMIDI(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "MIDI identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

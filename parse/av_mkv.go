@@ -1,36 +1,46 @@
 package parse
 
-/*
-public MkvReader(FileStream fs) : base(fs)
-{
-    name = "MKV container";
-    extensions = ".mkv";
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func MKV(file *os.File) (*ParsedLayout, error) {
+
+	if !isMKV(file) {
+		return nil, nil
+	}
+	return parseMKV(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isMKV(file *os.File) bool {
 
-    // TODO what is magic sequence?
-    if (ReadByte() != 0x1a || ReadByte() != 0x45 || ReadByte() != 0xdf || ReadByte() != 0xa3)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	// XXX what is magic sequence? just guessing
+	if b[0] != 0x1a || b[1] != 0x45 || b[2] != 0xdf || b[3] != 0xa3 {
+		return false
+	}
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a mkv");
+func parseMKV(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "MKV identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

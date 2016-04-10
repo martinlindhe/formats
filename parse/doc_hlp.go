@@ -1,36 +1,48 @@
 package parse
 
-/*
-public HlpReader(FileStream fs) : base(fs)
-{
-    name = "HLP help file (Windows)";
-    extensions = ".hlp";
+// HLP help file (Windows)
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func HLP(file *os.File) (*ParsedLayout, error) {
+
+	if !isHLP(file) {
+		return nil, nil
+	}
+	return parseHLP(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isHLP(file *os.File) bool {
 
-    // TODO what is right magic bytes? just guessing
-    if (ReadByte() != 0x3F || ReadByte() != 0x5F || ReadByte() != 3 || ReadByte() != 0)
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	// TODO what is right magic bytes? just guessing
+	if b[0] != 0x3f || b[1] != 0x5f || b[2] != 3 || b[3] != 0 {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a HLP");
+func parseHLP(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "HLP identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

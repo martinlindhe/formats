@@ -1,31 +1,58 @@
 package parse
 
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func MP3(file *os.File) (*ParsedLayout, error) {
+
+	if !isMP3(file) {
+		return nil, nil
+	}
+	return parseMP3(file)
+}
+
+func isMP3(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	// TODO find mp3 stream start, ignore id3 tags
+
+	if b[0] != 'I' || b[1] != 'D' || b[2] != '3' {
+		return false
+	}
+	/*
+	   byte id3ver = ReadByte();
+	   if (id3ver != 3 && id3ver != 4)
+	       return false;
+	*/
+
+	return true
+}
+
+func parseMP3(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
+}
+
 /*
-public Mp3Reader(FileStream fs) : base(fs)
-{
-    name = "MP3 audio";
-    extensions = ".mp3";
-}
-
-override public bool IsRecognized()
-{
-    if (BaseStream.Length < 100)
-        return false;
-
-    BaseStream.Position = 0;
-
-    // TODO find mp3 stream start, ignore id3 tags
-
-    if (ReadByte() != 'I' || ReadByte() != 'D' || ReadByte() != '3')
-        return false;
-
-    byte id3ver = ReadByte();
-    if (id3ver != 3 && id3ver != 4)
-        return false;
-
-    return true;
-}
-
 override public List<Chunk> GetFileStructure()
 {
     if (!IsRecognized())

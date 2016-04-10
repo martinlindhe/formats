@@ -1,36 +1,50 @@
 package parse
 
-/*
-public AiffReader(FileStream fs) : base(fs)
-{
-    name = "AIFF audio";
-    extensions = ".aiff";
+// Audio Interchange File Format (AIFF)
+// Developed by Apple, popular on Mac OS in the 90's
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func AIFF(file *os.File) (*ParsedLayout, error) {
+
+	if !isAIFF(file) {
+		return nil, nil
+	}
+	return parseAIFF(file)
 }
 
-override public bool IsRecognized()
-{
-    // TODO also detect "AIFF" string
-    BaseStream.Position = 0;
+func isAIFF(file *os.File) bool {
 
-    if (ReadByte() != 'F' || ReadByte() != 'O' || ReadByte() != 'R' || ReadByte() != 'M')
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	if b[0] != 'F' || b[1] != 'O' || b[2] != 'R' || b[3] != 'M' {
+		return false
+	}
+
+	// TODO also detect "AIFF" string
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a aiff");
+func parseAIFF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 4;
-    header.Text = "AIFF identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+		}})
+	return &res, nil
 }
-*/

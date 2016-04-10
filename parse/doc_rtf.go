@@ -1,35 +1,47 @@
 package parse
 
-/*
-public RtfReader(FileStream fs) : base(fs)
-{
-    name = "Rich Type File";
-    extensions = ".rtf";
+// Rich Type File (RTF)
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func RTF(file *os.File) (*ParsedLayout, error) {
+
+	if !isRTF(file) {
+		return nil, nil
+	}
+	return parseRTF(file)
 }
 
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
+func isRTF(file *os.File) bool {
 
-    if (ReadByte() != '{' || ReadByte() != '\\' || ReadByte() != 'r' || ReadByte() != 't' || ReadByte() != 'f')
-        return false;
+	file.Seek(0, os.SEEK_SET)
+	var b [5]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
 
-    return true;
+	if b[0] != '{' || b[1] != '\\' || b[2] != 'r' || b[3] != 't' || b[4] != 'f' {
+		return false
+	}
+
+	return true
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a rtf");
+func parseRTF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 5;
-    header.Text = "RTF identifier";
-    res.Add(header);
-
-    return res;
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 5, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 5, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
 }
-*/

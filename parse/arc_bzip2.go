@@ -18,12 +18,16 @@ func BZIP2(file *os.File) (*ParsedLayout, error) {
 func isBZIP2(file *os.File) bool {
 
 	file.Seek(0, os.SEEK_SET)
-	var b [2]byte
+	var b [3]byte
 	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
 		return false
 	}
 
 	if b[0] != 'B' || b[1] != 'Z' {
+		return false
+	}
+	if b[2] != 'h' {
+		// NOTE: onlu huffman encoding is used in the format (?)
 		return false
 	}
 

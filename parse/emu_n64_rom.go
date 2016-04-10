@@ -1,3 +1,5 @@
+package parse
+
 /*
 public Nintendo64RomReader(FileStream fs) : base(fs)
 {

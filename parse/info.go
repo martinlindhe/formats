@@ -116,6 +116,13 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		}
 		res += fmt.Sprintf("%d.%d", b[0], b[1])
 
+	case MinorMajor16:
+		var b [2]uint8
+		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += fmt.Sprintf("%d.%d", b[1], b[0])
+
 	case Bytes:
 		res += fmt.Sprintf("chunk of bytes")
 

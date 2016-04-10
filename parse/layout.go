@@ -26,7 +26,8 @@ const (
 	Uint32be
 
 	// version
-	MajorMinor16 // (first byte=major, last=minor)
+	MajorMinor16 // first byte = major, last = minor
+	MinorMajor16 // first byte = minor, last = major
 
 	// groups of bytes
 	Bytes
@@ -47,6 +48,7 @@ var (
 		Uint16be:     "uint16-be",
 		Uint32be:     "uint32-be",
 		MajorMinor16: "major.minor-16",
+		MinorMajor16: "minor.major-16",
 		Bytes:        "bytes",
 		ASCII:        "ASCII",
 		ASCIIZ:       "ASCIIZ",

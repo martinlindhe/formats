@@ -1,85 +1,76 @@
 package parse
 
+// Python bytecode
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+var (
+	pythonVersionMagic = map[uint32]string{
+		0x00999902: "1.0",
+		0x00999903: "1.1-1.2",
+		0x0A0D2E89: "1.3",
+		0x0A0D1704: "1.4",
+		0x0A0D4E99: "1.5",
+		0x0A0DC4FC: "1.6",
+		0x0A0DC687: "2.0",
+		0x0A0DEB2A: "2.1",
+		0x0A0DED2D: "2.2",
+		0x0A0DF23B: "2.3",
+		0x0A0DF26D: "2.4",
+		0x0A0DF2B3: "2.5",
+		0x0A0DF2D1: "2.6",
+		0x0A0DF303: "2.7",
+		0x0A0D0C3A: "3.0",
+		0x0A0D0C4E: "3.1",
+		0x0A0D0C6C: "3.2",
+		0x0A0D0C9E: "3.3",
+		0x0A0D0CEE: "3.4",
+	}
+)
+
+func PYTHON(file *os.File) (*ParsedLayout, error) {
+
+	if !isPYTHON(file) {
+		return nil, nil
+	}
+	return parsePYTHON(file)
+}
+
+func isPYTHON(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b uint32
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	if _, ok := pythonVersionMagic[b]; ok {
+		return true
+	}
+
+	return false
+}
+
+func parsePYTHON(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Uint32le}, // XXX decode to python version
+		}})
+	return &res, nil
+}
+
 /*
-public PythonBytecodeReader(FileStream fs) : base(fs)
-{
-    name = "Python bytecode";
-}
-
-public string GetPythonVersion()
-{
-    BaseStream.Position = 0;
-
-    var magic = ReadUInt32();
-
-    if (magic == 0x00999902) {
-        return "1.0";
-    }
-    if (magic == 0x00999903) {
-        return "1.1-1.2";
-    }
-    if (magic == 0x0A0D2E89) {
-        return "1.3";
-    }
-    if (magic == 0x0A0D1704) {
-        return "1.4";
-    }
-    if (magic == 0x0A0D4E99) {
-        return "1.5";
-    }
-    if (magic == 0x0A0DC4FC) {
-        return "1.6";
-    }
-    if (magic == 0x0A0DC687) {
-        return "2.0";
-    }
-    if (magic == 0x0A0DEB2A) {
-        return "2.1";
-    }
-    if (magic == 0x0A0DED2D) {
-        return "2.2";
-    }
-    if (magic == 0x0A0DF23B) {
-        return "2.3";
-    }
-    if (magic == 0x0A0DF26D) {
-        return "2.4";
-    }
-    if (magic == 0x0A0DF2B3) {
-        return "2.5";
-    }
-    if (magic == 0x0A0DF2D1) {
-        return "2.6";
-    }
-    if (magic == 0x0A0DF303) {
-        return "2.7";
-    }
-    if (magic == 0x0A0D0C3A) {
-        return "3.0";
-    }
-    if (magic == 0x0A0D0C4E) {
-        return "3.1";
-    }
-    if (magic == 0x0A0D0C6C) {
-        return "3.2";
-    }
-    if (magic == 0x0A0D0C9E) {
-        return "3.3";
-    }
-    if (magic == 0x0A0D0CEE) {
-        return "3.4";
-    }
-    return null;
-}
-
-override public bool IsRecognized()
-{
-    var ver = GetPythonVersion();
-    if (ver == null) {
-        return false;
-    }
-    return true;
-}
 
 // creates a timestamp from a Unix time (seconds since  00:00:00 GMT, Jan. 1, 1970)
 private static DateTime MTimeToTimestamp(uint mtime)

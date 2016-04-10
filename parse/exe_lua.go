@@ -1,24 +1,53 @@
 package parse
 
+// Lua bytecode
+// STATUS: 1%
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func LUA(file *os.File) (*ParsedLayout, error) {
+
+	if !isLUA(file) {
+		return nil, nil
+	}
+	return parseLUA(file)
+}
+
+func isLUA(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b uint32
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	if b == 0x61754c1b {
+		// Lua 5.1 and 5.2 identifer
+		return true
+	}
+
+	return false
+}
+
+func parseLUA(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: Uint32le},
+		}})
+	return &res, nil
+}
+
 /*
-public LuaBytecodeReader(FileStream fs) : base(fs)
-{
-    name = "Lua bytecode";
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-
-    var magic = ReadUInt32();
-    if (magic == 0x61754c1b) {
-        // Lua 5.1 and 5.2 identifer
-        return true;
-    }
-
-    return false;
-}
-
 override public List<Chunk> GetFileStructure()
 {
     // NOTE: first 12 bytes are same for lua 5.1 and lua 5.2

@@ -1,37 +1,69 @@
 package parse
 
-/*
-// TODO split each Exe type (PE, NE, etc) into own subclass
+// MS-DOS executable
+// .exe; .sys; .dll; .ocx; .vxd; .cpl; .msi
+// STATUS: 1%
 
-    public class SectionPointer
-    {
-        public long virtualOffset;
-        public long realOffset;
-        public uint length;
-        public string Text;
-    }
+// TODO move the NE-exe code to separate file
+
+import (
+	"encoding/binary"
+	"os"
+)
+
+func MZ(file *os.File) (*ParsedLayout, error) {
+
+	if !isMZ(file) {
+		return nil, nil
+	}
+	return parseMZ(file)
+}
+
+func isMZ(file *os.File) bool {
+
+	file.Seek(0, os.SEEK_SET)
+	var b [4]byte
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return false
+	}
+
+	if b[0] != 'M' || b[1] != 'Z' {
+		return false
+	}
+
+	return true
+}
+
+func parseMZ(file *os.File) (*ParsedLayout, error) {
+
+	res := ParsedLayout{}
+
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+		}})
+	return &res, nil
+}
+
+/*
+
+public class SectionPointer
+{
+    public long virtualOffset;
+    public long realOffset;
+    public uint length;
+    public string Text;
+}
 
 public List<SectionPointer> sections = new List<SectionPointer>();
 public List<SectionPointer> dataDirectory = new List<SectionPointer>();
 public long EntryPoint;
 long ExtendedHeaderOffset;
 public long ExeHeaderLength;
-
-public MzExeReader(FileStream fs) : base(fs)
-{
-    name = "MS-DOS executable";
-    extensions = ".exe; .sys; .dll; .ocx; .vxd; .cpl; .msi";
-}
-
-override public bool IsRecognized()
-{
-    BaseStream.Position = 0;
-
-    if (ReadByte() != 'M' || ReadByte() != 'Z')
-        return false;
-
-    return true;
-}
 
 public long FileOffsetFromVirtualAddress(long va)
 {

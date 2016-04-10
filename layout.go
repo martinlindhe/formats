@@ -54,6 +54,14 @@ var (
 		// font
 		"otf": parse.OTF,
 		"ttf": parse.TTF,
+
+		// exe
+		"mz":     parse.MZ,
+		"lua":    parse.LUA,
+		"python": parse.PYTHON,
+
+		// windows
+		"pif": parse.PIF,
 	}
 )
 

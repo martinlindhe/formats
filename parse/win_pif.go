@@ -1,34 +1,45 @@
 package parse
 
-/*
-public PifReader(FileStream fs) : base(fs)
-{
-    name = "Windows PIF file";
-    extensions = ".pif";
+// Program Information File (PIF)
+// Used in Windows
+// STATUS: 1%
+
+import (
+	"os"
+)
+
+func PIF(file *os.File) (*ParsedLayout, error) {
+
+	if !isPIF(file) {
+		return nil, nil
+	}
+	return parsePIF(file)
 }
 
-override public bool IsRecognized()
-{
-    string ext = Path.GetExtension(filename);
-    if (ext.ToLower() != ".pif")
-        return false;
+func isPIF(file *os.File) bool {
 
-    return true;
+	s, err := knownLengthASCII(file, 0x171, 15)
+	if err != nil {
+		return false
+	}
+	if s == "MICROSOFT PIFEX" {
+		return true
+	}
+	return false
 }
 
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized())
-        throw new Exception("not a pif");
+func parsePIF(file *os.File) (*ParsedLayout, error) {
 
-    List<Chunk> res = new List<Chunk>();
+	res := ParsedLayout{}
 
-    var header = new Chunk();
-    header.offset = 0;
-    header.length = 2;
-    header.Text = "PIF identifier";
-    res.Add(header);
+	res.Layout = append(res.Layout, Layout{
+		Offset: 0x171,
+		Length: 15, // XXX
+		Info:   "header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: 0x171, Length: 15, Info: "magic", Type: Uint32le},
+		}})
+	return &res, nil
 
-    return res;
 }
-*/

@@ -2,6 +2,7 @@ package parse
 
 import (
 	"encoding/binary"
+	//	"fmt"
 	"io"
 	"log"
 	"os"
@@ -104,4 +105,21 @@ func fileSize(file *os.File) int64 {
 		log.Fatal(err)
 	}
 	return fi.Size()
+}
+
+func (pl *ParsedLayout) PercentMapped(totalSize int64) float64 {
+
+	mapped := 0
+	for _, l := range pl.Layout {
+		mapped += int(l.Length)
+	}
+
+	//	fmt.Println("total =", totalSize, "mapped=", mapped, "in ", len(pl.Layout), " layouts")
+	//	os.Exit(1)
+	pct := (float64(mapped) / float64(totalSize)) * 100
+	return pct
+}
+
+func (pl *ParsedLayout) PercentUnmapped(totalSize int64) float64 {
+	return 100 - pl.PercentMapped(totalSize)
 }

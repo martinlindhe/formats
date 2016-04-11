@@ -26,7 +26,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	layout := formats.ParseLayout(f)
+	layout, err := formats.ParseLayout(f)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	fmt.Println(layout.PrettyPrint())
 }

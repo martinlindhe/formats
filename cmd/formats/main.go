@@ -18,6 +18,7 @@ var (
 	boxPar     *termui.Par
 	asciiPar   *termui.Par
 	statsPar   *termui.Par
+	boxFooter  *termui.Par
 	hexView    = parse.HexViewState{
 		BrowseMode:   parse.ByGroup,
 		StartingRow:  0,
@@ -95,6 +96,13 @@ func uiLoop(file *os.File) {
 	boxPar.TextFgColor = termui.ColorWhite
 	boxPar.BorderLabel = fileLayout.FormatName
 	boxPar.BorderFg = termui.ColorCyan
+
+	boxFooter = termui.NewPar("")
+	boxFooter.Border = false
+	boxFooter.Height = 1
+	boxFooter.Width = 14
+	boxFooter.X = 75
+	boxFooter.Y = 7
 
 	statsPar = termui.NewPar("")
 	statsPar.Border = false
@@ -208,10 +216,14 @@ func refreshUI(file *os.File) {
 	offsetsPar.Text = fileLayout.PrettyOffsetView(file, hexView)
 	hexPar.Text = fileLayout.PrettyHexView(file, hexView)
 	asciiPar.Text = fileLayout.PrettyASCIIView(file, hexView)
+
 	boxPar.Text = hexView.CurrentFieldInfo(file, fileLayout)
+	pos, _ := file.Seek(0, os.SEEK_CUR)
+	boxFooter.Text = fmt.Sprintf("%.1f %%", fileLayout.PercentMapped(pos)) + " mapped"
+
 	statsPar.Text = prettyStatString()
 
-	termui.Render(offsetsPar, statsPar, hexPar, asciiPar, boxPar)
+	termui.Render(offsetsPar, statsPar, hexPar, asciiPar, boxPar, boxFooter)
 }
 
 func prettyStatString() string {

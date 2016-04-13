@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/ico"
+	searchDir := "./samples/archives/cab"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 

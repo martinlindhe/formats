@@ -1,6 +1,6 @@
 package parse
 
-// STATUS 20%
+// STATUS 80% some polishing remains
 
 import (
 	"encoding/binary"
@@ -50,8 +50,8 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 			Layout{Offset: offset + 16, Length: 4, Info: "offset to CFFILE", Type: Uint32le},
 			Layout{Offset: offset + 20, Length: 4, Info: "reserved 3", Type: Uint32le},
 			Layout{Offset: offset + 24, Length: 2, Info: "format version", Type: MinorMajor16},
-			Layout{Offset: offset + 26, Length: 2, Info: "number of CFFOLDER entries", Type: Uint16le},
-			Layout{Offset: offset + 28, Length: 2, Info: "number of CFFILE entries", Type: Uint16le},
+			Layout{Offset: offset + 26, Length: 2, Info: "CFFOLDER entries", Type: Uint16le},
+			Layout{Offset: offset + 28, Length: 2, Info: "CFFILE entries", Type: Uint16le},
 			Layout{Offset: offset + 30, Length: 2, Info: "flags", Type: Uint16le},
 			Layout{Offset: offset + 32, Length: 2, Info: "set id", Type: Uint16le},
 			Layout{Offset: offset + 34, Length: 2, Info: "cabinet number", Type: Uint16le},
@@ -73,6 +73,8 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 
 	dirEntries, _ := readUint16le(file, 26)
 
+	cfDataBlocks := map[uint32]uint16{}
+
 	for i := 0; i < int(dirEntries); i++ {
 		chunk := Layout{
 			Offset: offset,
@@ -81,11 +83,15 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 			Type:   Group,
 			Childs: []Layout{
 				Layout{Offset: offset, Length: 4, Info: "offset of first CFDATA block", Type: Uint32le},
-				Layout{Offset: offset + 4, Length: 2, Info: "number of CFDATA blocks", Type: Uint16le},
+				Layout{Offset: offset + 4, Length: 2, Info: "CFDATA blocks", Type: Uint16le},
 				Layout{Offset: offset + 6, Length: 2, Info: "compression type", Type: Uint16le},
 				// XXX:
 				// u1  abReserve[];   /* (optional) per-folder reserved area */
 			}}
+
+		pos, _ := readUint32le(file, offset)
+		cnt, _ := readUint16le(file, offset+4)
+		cfDataBlocks[pos] = cnt
 
 		offset += chunk.Length
 		res.Layout = append(res.Layout, chunk)
@@ -125,7 +131,25 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 		res.Layout = append(res.Layout, chunk)
 	}
 
-	// XXX actual file data remains
+	// map the compressed data
+	for dataOffset, cnt := range cfDataBlocks {
+		offset = int64(dataOffset)
+		for i := 1; i < int(cnt); i++ {
+			cbLen, _ := readUint16le(file, int64(dataOffset)+4)
+			res.Layout = append(res.Layout, Layout{
+				Offset: offset,
+				Length: 8 + int64(cbLen),
+				Info:   "CFDATA " + fmt.Sprintf("%d", i),
+				Type:   Group,
+				Childs: []Layout{
+					Layout{Offset: offset, Length: 4, Info: "checksum", Type: Uint32le},
+					Layout{Offset: offset + 4, Length: 2, Info: "compressed len", Type: Uint16le},
+					Layout{Offset: offset + 6, Length: 2, Info: "uncompressed len", Type: Uint16le},
+					Layout{Offset: offset + 8, Length: int64(cbLen), Info: "compressed data", Type: Bytes},
+				}})
+			offset += 8 + int64(cbLen)
+		}
+	}
 
 	return &res, nil
 }

@@ -13,6 +13,7 @@ import (
 var (
 	inFile     = kingpin.Arg("file", "Input file").Required().String()
 	fileLayout = parse.ParsedLayout{}
+	mappedPct  float64
 	offsetsPar *termui.Par
 	hexPar     *termui.Par
 	boxPar     *termui.Par
@@ -22,7 +23,6 @@ var (
 	hexView    = parse.HexViewState{
 		BrowseMode:   parse.ByGroup,
 		StartingRow:  0,
-		VisibleRows:  11,
 		RowWidth:     16,
 		CurrentGroup: 0,
 		CurrentField: 0,
@@ -49,6 +49,7 @@ func main() {
 	}
 
 	fileLayout = *layout
+	mappedPct = fileLayout.PercentMapped(fileLayout.FileSize)
 
 	uiLoop(file)
 }
@@ -63,7 +64,7 @@ func uiLoop(file *os.File) {
 	}
 	defer termui.Close()
 
-	hexView.VisibleRows = termui.TermHeight() - 3
+	hexView.VisibleRows = termui.TermHeight() - 2
 
 	offsetsPar = termui.NewPar("")
 	offsetsPar.BorderLeft = false
@@ -107,9 +108,9 @@ func uiLoop(file *os.File) {
 	statsPar = termui.NewPar("")
 	statsPar.Border = false
 	statsPar.Height = 1
-	statsPar.Width = 50
-	statsPar.X = 0
-	statsPar.Y = hexView.VisibleRows + 2
+	statsPar.Width = 35
+	statsPar.X = 10
+	statsPar.Y = hexView.VisibleRows + 1
 
 	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit
@@ -218,12 +219,14 @@ func refreshUI(file *os.File) {
 	asciiPar.Text = fileLayout.PrettyASCIIView(file, hexView)
 
 	boxPar.Text = hexView.CurrentFieldInfo(file, fileLayout)
-	pos, _ := file.Seek(0, os.SEEK_CUR)
-	boxFooter.Text = fmt.Sprintf("%.1f %%", fileLayout.PercentMapped(pos)) + " mapped"
+
+	if mappedPct < 100.0 {
+		boxFooter.Text = fmt.Sprintf("%.1f%%", mappedPct) + " mapped"
+	}
 
 	statsPar.Text = prettyStatString()
 
-	termui.Render(offsetsPar, statsPar, hexPar, asciiPar, boxPar, boxFooter)
+	termui.Render(offsetsPar, hexPar, asciiPar, boxPar, boxFooter, statsPar)
 }
 
 func prettyStatString() string {

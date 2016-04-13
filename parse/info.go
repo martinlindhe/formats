@@ -29,7 +29,7 @@ func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string 
 
 	field := group.Childs[state.CurrentField]
 
-	res += ": " + field.fieldInfoByType(f) + " (" + field.Type.String() + ")"
+	res += "\n └ " + field.fieldInfoByType(f) + " (" + field.Type.String() + ")"
 
 	return res
 }

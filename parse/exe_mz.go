@@ -4,8 +4,6 @@ package parse
 // .exe; .sys; .dll; .ocx; .vxd; .cpl; .msi
 // STATUS: 1%
 
-// TODO move the NE-exe code to separate file
-
 import (
 	"encoding/binary"
 	"os"
@@ -40,16 +38,366 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 
 	res.Layout = append(res.Layout, Layout{
 		Offset: 0,
-		Length: 4, // XXX
+		Length: 28, // XXX
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+			Layout{Offset: 0, Length: 2, Info: "magic", Type: ASCII},
+			Layout{Offset: 2, Length: 2, Info: "bytes in last page", Type: Uint16le},
+			Layout{Offset: 4, Length: 2, Info: "pages", Type: Uint16le},
+			Layout{Offset: 6, Length: 2, Info: "relocation items", Type: Uint16le},
+			Layout{Offset: 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
+			Layout{Offset: 10, Length: 2, Info: "min mem", Type: Uint16le},
+			Layout{Offset: 12, Length: 2, Info: "max mem", Type: Uint16le},
+			Layout{Offset: 14, Length: 2, Info: "ss", Type: Uint16le},
+			Layout{Offset: 16, Length: 2, Info: "sp", Type: Uint16le},
+			Layout{Offset: 18, Length: 2, Info: "checksum", Type: Uint16le},
+			Layout{Offset: 20, Length: 2, Info: "ip", Type: Uint16le},
+			Layout{Offset: 22, Length: 2, Info: "cs", Type: Uint16le},
+
+			// Offset of relocation table; 40h for new-(NE,LE,LX,W3,PE etc.) executable
+			Layout{Offset: 24, Length: 2, Info: "reloc offset", Type: Uint16le},
+			Layout{Offset: 26, Length: 2, Info: "overlay", Type: Uint16le},
 		}})
 	return &res, nil
+
+	//	header.length = headerSizeValue * 16;
+
 }
 
 /*
+
+override public List<Chunk> GetFileStructure()
+{
+    if (!IsRecognized()) {
+        return new List<Chunk>();
+    }
+
+    List<Chunk> res = new List<Chunk>();
+
+    var header = new Chunk();
+    header.offset = 0;
+    header.Text = "EXE header";
+
+    var identifier = new LittleEndian16BitChunk("MZ identifier");
+    identifier.offset = 0;
+
+    header.Nodes.Add(identifier);
+
+    var bytes = identifier.RelativeToLittleEndian16("Bytes in last page");
+    header.Nodes.Add(bytes);
+
+    var pages = bytes.RelativeToLittleEndian16("Pages");
+    header.Nodes.Add(pages);
+
+    var relocCnt = pages.RelativeToLittleEndian16("Relocation items");
+    BaseStream.Position = relocCnt.offset;
+    var relocCntValue = (uint)ReadInt16();
+    header.Nodes.Add(relocCnt);
+
+    /// 1 paragraph = group of 16 bytes
+    var headerSize = relocCnt.RelativeToLittleEndian16("Header size in paragraphs");
+    BaseStream.Position = headerSize.offset;
+    var headerSizeValue = (uint)ReadInt16();
+    header.Nodes.Add(headerSize);
+
+    header.length = headerSizeValue * 16;
+    this.ExeHeaderLength = header.length;
+
+    var minPara = headerSize.RelativeToLittleEndian16("Min mem");
+    header.Nodes.Add(minPara);
+
+    var maxPara = minPara.RelativeToLittleEndian16("Max mem");
+    header.Nodes.Add(maxPara);
+
+    var ss = maxPara.RelativeToLittleEndian16("SS");
+    header.Nodes.Add(ss);
+
+    var sp = ss.RelativeToLittleEndian16("SP");
+    header.Nodes.Add(sp);
+
+    var checksum = sp.RelativeToLittleEndian16("Checksum");
+    BaseStream.Position = checksum.offset;
+    var mzChecksumValue = ReadUInt16();
+
+    //Log("MZ checksum: 0x" + mzChecksumValue.ToString("x4"));
+    //Log("calculated checksum: 0x" + CalculateChecksum16bit().ToString("x4"));
+
+    header.Nodes.Add(checksum);
+
+    var ip = checksum.RelativeToLittleEndian16("IP");
+    BaseStream.Position = ip.offset;
+    var ipValue = ReadUInt16();
+    header.Nodes.Add(ip);
+
+    var cs = ip.RelativeToLittleEndian16("CS");
+    BaseStream.Position = cs.offset;
+    var csValue = ReadUInt16();
+    header.Nodes.Add(cs);
+
+    // Offset of relocation table; 40h for new-(NE,LE,LX,W3,PE etc.) executable
+    var reloc = cs.RelativeToLittleEndian16("Reloc offset");
+    BaseStream.Position = reloc.offset;
+    var relocValue = (uint)ReadInt16();
+    header.Nodes.Add(reloc);
+
+    // Overlay number (0h = main program)
+    var overlay = reloc.RelativeToLittleEndian16("Overlay");
+    BaseStream.Position = overlay.offset;
+    var overlayValue = ReadInt16();
+    header.Nodes.Add(overlay);
+
+
+    if (overlayValue == 0x0000)
+        overlay.Text += " = main program";
+    else
+        throw new Exception("SAMPLE PLZ- Unseen overlay value 0x" + overlayValue.ToString("x4"));
+
+
+    // look for extended headers (PKLITE etc) for traditional MZ executables
+
+
+    BaseStream.Position = 0x001C;
+    if (ReadByte() == 0x01 && ReadByte() == 0x00 && ReadByte() == 0xFB) {
+
+        // Borland TLINK
+        // OFFSET              Count TYPE   Description
+        // 001Ch                   2 byte   ?? (apparently always 01h 00h)
+        // 001Eh                   1 byte   ID=0FBh
+        // 001Fh                   1 byte   TLink version, major in high nybble
+        // 0020h                   2 byte   ??
+
+        Console.WriteLine("borland TLINK (DOS)");
+
+        var tlink = overlay.RelativeTo("Borland TLINK header", 6);
+
+        var tlinkHeader = overlay.RelativeTo("Identifier", 3);
+        tlink.Nodes.Add(tlinkHeader);
+
+        var tlinkVersion = tlinkHeader.RelativeToVersionMajorMinor8("Version");   // XXX hi & low nibble. 0x30  = 3.0
+        tlink.Nodes.Add(tlinkVersion);
+
+        var tlinkExtra = tlinkVersion.RelativeTo("Unknown", 2); // always "jr" ?
+        tlink.Nodes.Add(tlinkExtra);
+
+        header.Nodes.Add(tlink);
+    }
+
+
+    BaseStream.Position = 0x001C;
+    var lzexeId = ReadStringZ();
+    if (lzexeId.Length >= 4 && lzexeId.Substring(0, 2) == "LZ") {
+        var lzexe = overlay.RelativeTo("LZEXE compressed executable header", 4);
+
+        var lzexeIdentifier = overlay.RelativeTo("Identifier", 2);
+        lzexe.Nodes.Add(lzexeIdentifier);
+
+        string lzexeVerName = "UNKNOWN VERSION";
+        switch (lzexeId.Substring(2, 2)) {
+        case "09":
+            lzexeVerName = "0.9";
+            break;
+        case "91":
+            lzexeVerName = "0.91";
+            break;
+        }
+
+        var lzexeVersion = lzexeIdentifier.RelativeTo("Version " + lzexeVerName, 2);
+        lzexe.Nodes.Add(lzexeVersion);
+
+        header.Nodes.Add(lzexe);
+    }
+
+
+
+    BaseStream.Position = 0x001E;
+    var pkliteId = ReadStringZ();
+    if (pkliteId.Length > 6 && pkliteId.Substring(0, 6) == "PKLITE") {
+        var pklite = overlay.RelativeTo("PKLITE compressed executable header", (uint)(2 + pkliteId.Length));
+
+        // 001Ch                   1 byte   Minor version number
+        var pkliteMinVer = overlay.RelativeToByte("Minor version");
+        pklite.Nodes.Add(pkliteMinVer);
+
+        //001Dh                   1 byte   Bit mapped :
+        //                                 0-3 - major version
+        //                                 4 - Extra compression
+        //                                 5 - Multi-segment file
+        var pkliteMajorVer = pkliteMinVer.RelativeToByte("Major version");
+        pklite.Nodes.Add(pkliteMajorVer);
+
+        var pkliteString = pkliteMajorVer.RelativeTo("Identifier", (uint)pkliteId.Length);
+        pklite.Nodes.Add(pkliteString);
+
+        header.Nodes.Add(pklite);
+    }
+
+
+
+    res.Add(header);
+
+    if (relocValue != 0x0040) {
+
+        if (relocCntValue > 0) {
+            // After the header, there follow the relocation items, which are used to span
+            // multpile segments. The relocation items have the following format :
+            // OFFSET              Count TYPE   Description
+            // 0000h                   1 word   Offset within segment
+            // 0002h                   1 word   Segment of relocation
+            // To get the position of the relocation within the file, you have to compute the
+            // physical adress from the segment:offset pair, which is done by multiplying the
+            // segment by 16 and adding the offset and then adding the offset of the binary
+            // start. Note that the raw binary code starts on a paragraph boundary within the
+            // executable file. All segments are relative to the start of the executable in
+            // memory, and this value must be added to every segment if relocation is done
+            // manually
+
+            BaseStream.Position = relocValue;
+
+            var relocChunk = new Chunk("Relocation Table");
+            relocChunk.offset = relocValue;
+            relocChunk.length = relocCntValue * 4;
+            header.Nodes.Add(relocChunk);
+
+            for (int i = 1; i <= relocCntValue; i++) {
+                ushort relocOffset = ReadUInt16();
+                ushort relocSegment = ReadUInt16();
+                var offset = ((headerSizeValue + relocSegment) * 16) + relocOffset - 1;
+
+                string tmp = "Reloc " + i + " " + relocSegment.ToString("x4") + ":" + relocOffset.ToString("x4") + " => " + offset.ToString("x6");
+
+                var relocItem = new Chunk(tmp);
+                relocItem.offset = relocValue + ((i - 1) * 4);
+                relocItem.length = 4;
+                relocChunk.Nodes.Add(relocItem);
+            }
+        }
+
+        Log("HeaderSize = " + headerSizeValue.ToString("x4"));
+        Log("seg * 16 = " + (csValue * 16).ToString("x4"));
+        EntryPoint = (((headerSizeValue + csValue) * 16) + ipValue);
+
+        Log("EntryPoint CS:IP = " + csValue.ToString("x4") + ":" + ipValue.ToString("x4"));
+
+        // decode to seg:offset "exact" address:
+        int xx = (csValue * 16) + ipValue;
+        Log("  tmp = 0x" + xx.ToString("x4"));
+
+        Log("  = linear offset 0x" + EntryPoint.ToString("x6"));
+
+
+
+    } else {
+        // 40h for new-(NE,PE,LE,LX,W3 etc.) executable
+
+        var subHead = ParseSubHeader(overlay);
+        header.Nodes.Add(subHead);
+
+        BaseStream.Position = ExtendedHeaderOffset;
+        char b1 = ReadChar();
+        char b2 = ReadChar();
+
+        if (b1 == 'N' && b2 == 'E') {
+            // Win16 / OS/2 file
+            var neHead = ParseNEHeader();
+            header.Nodes.Add(neHead);
+        } else if (b1 == 'P' && b2 == 'E') {
+            // Win32
+            var peHead = ParsePEHeader();
+            header.Nodes.Add(peHead);
+        } else {
+            throw new Exception("TODO unknown header at 0x" + ExtendedHeaderOffset.ToString("x4") + ": " + b1 + ", " + b2);
+        }
+    }
+
+    // calculates real offset from virtual address
+    foreach (var tmp in sections) {
+        var chunk = new Chunk("Section " + tmp.Text);
+        chunk.length = tmp.length;
+        if (chunk.length > 0) {
+            tmp.realOffset = FileOffsetFromVirtualAddress(tmp.virtualOffset);
+            chunk.offset = tmp.realOffset;
+            res.Add(chunk);
+        }
+    }
+
+    // calculates real offset from virtual address
+    foreach (var tmp in dataDirectory) {
+        var chunk = new Chunk("DataDirectory " + tmp.Text);
+        chunk.length = tmp.length;
+
+        if (chunk.length > 0) {
+            tmp.realOffset = FileOffsetFromVirtualAddress(tmp.virtualOffset);
+            chunk.offset = tmp.realOffset;
+
+            // TODO use ImportChunk class or soemthing
+            if (tmp.Text == "Imports") {
+                var OriginalFirstThunk = new LittleEndian32BitChunk("Original First Thunk");
+                OriginalFirstThunk.offset = chunk.offset;
+                BaseStream.Position = OriginalFirstThunk.offset;
+                int OriginalFirstThunkValue = ReadInt32();
+
+                if (OriginalFirstThunkValue > 0) {
+                    long OriginalFirstThunkRealOffset = FileOffsetFromVirtualAddress(OriginalFirstThunkValue);
+                    //OriginalFirstThunk.Text += " real offset " + OriginalFirstThunkRealOffset.ToString("x8");
+
+                    var OriginalFirstData = new Chunk("Original First Data");
+                    OriginalFirstData.offset = OriginalFirstThunkRealOffset;
+                    OriginalFirstData.length = 6; // XXX empty-entry-terminated array
+
+                    OriginalFirstThunk.Nodes.Add(OriginalFirstData);
+                }
+
+
+                chunk.Nodes.Add(OriginalFirstThunk);
+
+                var TimeDateStamp = OriginalFirstThunk.RelativeToLittleEndianDateStamp("TimeDateStamp");
+                chunk.Nodes.Add(TimeDateStamp);
+
+                var ForwarderChain = TimeDateStamp.RelativeToLittleEndian32("Forwarder Chain");
+                chunk.Nodes.Add(ForwarderChain);
+
+                var Name = ForwarderChain.RelativeToLittleEndian32("Name");
+                BaseStream.Position = Name.offset;
+                int NameValue = ReadInt32();
+                if (NameValue > 0) {
+                    long realNameOffset = FileOffsetFromVirtualAddress(NameValue);
+
+                    var NameData = new ZeroTerminatedStringChunk();
+                    NameData.offset = realNameOffset;
+                    NameData.length = 16;
+
+                    string realName = "XX FIX FIX FIXME TODO NAME";  // NameData.GetString(d);
+
+                    //Log("realName = " + realName);
+
+                    NameData.length = (uint)(realName.Length + 1); // 0-terminated string
+                    NameData.Text = realName;
+                    Name.Nodes.Add(NameData);
+                }
+
+                chunk.Nodes.Add(Name);
+
+                var FirstThunk = Name.RelativeToLittleEndian32("First Thunk");
+                BaseStream.Position = FirstThunk.offset;
+                int FirstThunkValue = ReadInt32();
+
+
+                var FirstData = new Chunk("First Data");
+                FirstData.offset = FileOffsetFromVirtualAddress(FirstThunkValue);
+                FirstData.length = 6; // XXX empty-entry-terminated array
+                FirstThunk.Nodes.Add(FirstData);
+
+
+                chunk.Nodes.Add(FirstThunk);
+            }
+
+            res.Add(chunk);
+        }
+    }
+
+    return res;
+}
 
 public class SectionPointer
 {
@@ -1215,338 +1563,6 @@ private Chunk ParsePEHeader()
     peHead.length += SectionsOverview.length;
 
     return peHead;
-}
-
-override public List<Chunk> GetFileStructure()
-{
-    if (!IsRecognized()) {
-        return new List<Chunk>();
-    }
-
-    List<Chunk> res = new List<Chunk>();
-
-    var header = new Chunk();
-    header.offset = 0;
-    header.Text = "EXE header";
-
-    var identifier = new LittleEndian16BitChunk("MZ identifier");
-    identifier.offset = 0;
-
-    header.Nodes.Add(identifier);
-
-    var bytes = identifier.RelativeToLittleEndian16("Bytes in last page");
-    header.Nodes.Add(bytes);
-
-    var pages = bytes.RelativeToLittleEndian16("Pages");
-    header.Nodes.Add(pages);
-
-    var relocCnt = pages.RelativeToLittleEndian16("Relocation items");
-    BaseStream.Position = relocCnt.offset;
-    var relocCntValue = (uint)ReadInt16();
-    header.Nodes.Add(relocCnt);
-
-    /// 1 paragraph = group of 16 bytes
-    var headerSize = relocCnt.RelativeToLittleEndian16("Header size in paragraphs");
-    BaseStream.Position = headerSize.offset;
-    var headerSizeValue = (uint)ReadInt16();
-    header.Nodes.Add(headerSize);
-
-    header.length = headerSizeValue * 16;
-    this.ExeHeaderLength = header.length;
-
-    var minPara = headerSize.RelativeToLittleEndian16("Min mem");
-    header.Nodes.Add(minPara);
-
-    var maxPara = minPara.RelativeToLittleEndian16("Max mem");
-    header.Nodes.Add(maxPara);
-
-    var ss = maxPara.RelativeToLittleEndian16("SS");
-    header.Nodes.Add(ss);
-
-    var sp = ss.RelativeToLittleEndian16("SP");
-    header.Nodes.Add(sp);
-
-    var checksum = sp.RelativeToLittleEndian16("Checksum");
-    BaseStream.Position = checksum.offset;
-    var mzChecksumValue = ReadUInt16();
-
-    //Log("MZ checksum: 0x" + mzChecksumValue.ToString("x4"));
-    //Log("calculated checksum: 0x" + CalculateChecksum16bit().ToString("x4"));
-
-    header.Nodes.Add(checksum);
-
-    var ip = checksum.RelativeToLittleEndian16("IP");
-    BaseStream.Position = ip.offset;
-    var ipValue = ReadUInt16();
-    header.Nodes.Add(ip);
-
-    var cs = ip.RelativeToLittleEndian16("CS");
-    BaseStream.Position = cs.offset;
-    var csValue = ReadUInt16();
-    header.Nodes.Add(cs);
-
-    // Offset of relocation table; 40h for new-(NE,LE,LX,W3,PE etc.) executable
-    var reloc = cs.RelativeToLittleEndian16("Reloc offset");
-    BaseStream.Position = reloc.offset;
-    var relocValue = (uint)ReadInt16();
-    header.Nodes.Add(reloc);
-
-    // Overlay number (0h = main program)
-    var overlay = reloc.RelativeToLittleEndian16("Overlay");
-    BaseStream.Position = overlay.offset;
-    var overlayValue = ReadInt16();
-    header.Nodes.Add(overlay);
-
-
-    if (overlayValue == 0x0000)
-        overlay.Text += " = main program";
-    else
-        throw new Exception("SAMPLE PLZ- Unseen overlay value 0x" + overlayValue.ToString("x4"));
-
-
-    // look for extended headers (PKLITE etc) for traditional MZ executables
-
-
-    BaseStream.Position = 0x001C;
-    if (ReadByte() == 0x01 && ReadByte() == 0x00 && ReadByte() == 0xFB) {
-
-        // Borland TLINK
-        // OFFSET              Count TYPE   Description
-        // 001Ch                   2 byte   ?? (apparently always 01h 00h)
-        // 001Eh                   1 byte   ID=0FBh
-        // 001Fh                   1 byte   TLink version, major in high nybble
-        // 0020h                   2 byte   ??
-
-        Console.WriteLine("borland TLINK (DOS)");
-
-        var tlink = overlay.RelativeTo("Borland TLINK header", 6);
-
-        var tlinkHeader = overlay.RelativeTo("Identifier", 3);
-        tlink.Nodes.Add(tlinkHeader);
-
-        var tlinkVersion = tlinkHeader.RelativeToVersionMajorMinor8("Version");   // XXX hi & low nibble. 0x30  = 3.0
-        tlink.Nodes.Add(tlinkVersion);
-
-        var tlinkExtra = tlinkVersion.RelativeTo("Unknown", 2); // always "jr" ?
-        tlink.Nodes.Add(tlinkExtra);
-
-        header.Nodes.Add(tlink);
-    }
-
-
-    BaseStream.Position = 0x001C;
-    var lzexeId = ReadStringZ();
-    if (lzexeId.Length >= 4 && lzexeId.Substring(0, 2) == "LZ") {
-        var lzexe = overlay.RelativeTo("LZEXE compressed executable header", 4);
-
-        var lzexeIdentifier = overlay.RelativeTo("Identifier", 2);
-        lzexe.Nodes.Add(lzexeIdentifier);
-
-        string lzexeVerName = "UNKNOWN VERSION";
-        switch (lzexeId.Substring(2, 2)) {
-        case "09":
-            lzexeVerName = "0.9";
-            break;
-        case "91":
-            lzexeVerName = "0.91";
-            break;
-        }
-
-        var lzexeVersion = lzexeIdentifier.RelativeTo("Version " + lzexeVerName, 2);
-        lzexe.Nodes.Add(lzexeVersion);
-
-        header.Nodes.Add(lzexe);
-    }
-
-
-
-    BaseStream.Position = 0x001E;
-    var pkliteId = ReadStringZ();
-    if (pkliteId.Length > 6 && pkliteId.Substring(0, 6) == "PKLITE") {
-        var pklite = overlay.RelativeTo("PKLITE compressed executable header", (uint)(2 + pkliteId.Length));
-
-        // 001Ch                   1 byte   Minor version number
-        var pkliteMinVer = overlay.RelativeToByte("Minor version");
-        pklite.Nodes.Add(pkliteMinVer);
-
-        //001Dh                   1 byte   Bit mapped :
-        //                                 0-3 - major version
-        //                                 4 - Extra compression
-        //                                 5 - Multi-segment file
-        var pkliteMajorVer = pkliteMinVer.RelativeToByte("Major version");
-        pklite.Nodes.Add(pkliteMajorVer);
-
-        var pkliteString = pkliteMajorVer.RelativeTo("Identifier", (uint)pkliteId.Length);
-        pklite.Nodes.Add(pkliteString);
-
-        header.Nodes.Add(pklite);
-    }
-
-
-
-    res.Add(header);
-
-    if (relocValue != 0x0040) {
-
-        if (relocCntValue > 0) {
-            // After the header, there follow the relocation items, which are used to span
-            // multpile segments. The relocation items have the following format :
-            // OFFSET              Count TYPE   Description
-            // 0000h                   1 word   Offset within segment
-            // 0002h                   1 word   Segment of relocation
-            // To get the position of the relocation within the file, you have to compute the
-            // physical adress from the segment:offset pair, which is done by multiplying the
-            // segment by 16 and adding the offset and then adding the offset of the binary
-            // start. Note that the raw binary code starts on a paragraph boundary within the
-            // executable file. All segments are relative to the start of the executable in
-            // memory, and this value must be added to every segment if relocation is done
-            // manually
-
-            BaseStream.Position = relocValue;
-
-            var relocChunk = new Chunk("Relocation Table");
-            relocChunk.offset = relocValue;
-            relocChunk.length = relocCntValue * 4;
-            header.Nodes.Add(relocChunk);
-
-            for (int i = 1; i <= relocCntValue; i++) {
-                ushort relocOffset = ReadUInt16();
-                ushort relocSegment = ReadUInt16();
-                var offset = ((headerSizeValue + relocSegment) * 16) + relocOffset - 1;
-
-                string tmp = "Reloc " + i + " " + relocSegment.ToString("x4") + ":" + relocOffset.ToString("x4") + " => " + offset.ToString("x6");
-
-                var relocItem = new Chunk(tmp);
-                relocItem.offset = relocValue + ((i - 1) * 4);
-                relocItem.length = 4;
-                relocChunk.Nodes.Add(relocItem);
-            }
-        }
-
-        Log("HeaderSize = " + headerSizeValue.ToString("x4"));
-        Log("seg * 16 = " + (csValue * 16).ToString("x4"));
-        EntryPoint = (((headerSizeValue + csValue) * 16) + ipValue);
-
-        Log("EntryPoint CS:IP = " + csValue.ToString("x4") + ":" + ipValue.ToString("x4"));
-
-        // decode to seg:offset "exact" address:
-        int xx = (csValue * 16) + ipValue;
-        Log("  tmp = 0x" + xx.ToString("x4"));
-
-        Log("  = linear offset 0x" + EntryPoint.ToString("x6"));
-
-
-
-    } else {
-        // 40h for new-(NE,PE,LE,LX,W3 etc.) executable
-
-        var subHead = ParseSubHeader(overlay);
-        header.Nodes.Add(subHead);
-
-        BaseStream.Position = ExtendedHeaderOffset;
-        char b1 = ReadChar();
-        char b2 = ReadChar();
-
-        if (b1 == 'N' && b2 == 'E') {
-            // Win16 / OS/2 file
-            var neHead = ParseNEHeader();
-            header.Nodes.Add(neHead);
-        } else if (b1 == 'P' && b2 == 'E') {
-            // Win32
-            var peHead = ParsePEHeader();
-            header.Nodes.Add(peHead);
-        } else {
-            throw new Exception("TODO unknown header at 0x" + ExtendedHeaderOffset.ToString("x4") + ": " + b1 + ", " + b2);
-        }
-    }
-
-    // calculates real offset from virtual address
-    foreach (var tmp in sections) {
-        var chunk = new Chunk("Section " + tmp.Text);
-        chunk.length = tmp.length;
-        if (chunk.length > 0) {
-            tmp.realOffset = FileOffsetFromVirtualAddress(tmp.virtualOffset);
-            chunk.offset = tmp.realOffset;
-            res.Add(chunk);
-        }
-    }
-
-    // calculates real offset from virtual address
-    foreach (var tmp in dataDirectory) {
-        var chunk = new Chunk("DataDirectory " + tmp.Text);
-        chunk.length = tmp.length;
-
-        if (chunk.length > 0) {
-            tmp.realOffset = FileOffsetFromVirtualAddress(tmp.virtualOffset);
-            chunk.offset = tmp.realOffset;
-
-            // TODO use ImportChunk class or soemthing
-            if (tmp.Text == "Imports") {
-                var OriginalFirstThunk = new LittleEndian32BitChunk("Original First Thunk");
-                OriginalFirstThunk.offset = chunk.offset;
-                BaseStream.Position = OriginalFirstThunk.offset;
-                int OriginalFirstThunkValue = ReadInt32();
-
-                if (OriginalFirstThunkValue > 0) {
-                    long OriginalFirstThunkRealOffset = FileOffsetFromVirtualAddress(OriginalFirstThunkValue);
-                    //OriginalFirstThunk.Text += " real offset " + OriginalFirstThunkRealOffset.ToString("x8");
-
-                    var OriginalFirstData = new Chunk("Original First Data");
-                    OriginalFirstData.offset = OriginalFirstThunkRealOffset;
-                    OriginalFirstData.length = 6; // XXX empty-entry-terminated array
-
-                    OriginalFirstThunk.Nodes.Add(OriginalFirstData);
-                }
-
-
-                chunk.Nodes.Add(OriginalFirstThunk);
-
-                var TimeDateStamp = OriginalFirstThunk.RelativeToLittleEndianDateStamp("TimeDateStamp");
-                chunk.Nodes.Add(TimeDateStamp);
-
-                var ForwarderChain = TimeDateStamp.RelativeToLittleEndian32("Forwarder Chain");
-                chunk.Nodes.Add(ForwarderChain);
-
-                var Name = ForwarderChain.RelativeToLittleEndian32("Name");
-                BaseStream.Position = Name.offset;
-                int NameValue = ReadInt32();
-                if (NameValue > 0) {
-                    long realNameOffset = FileOffsetFromVirtualAddress(NameValue);
-
-                    var NameData = new ZeroTerminatedStringChunk();
-                    NameData.offset = realNameOffset;
-                    NameData.length = 16;
-
-                    string realName = "XX FIX FIX FIXME TODO NAME";  // NameData.GetString(d);
-
-                    //Log("realName = " + realName);
-
-                    NameData.length = (uint)(realName.Length + 1); // 0-terminated string
-                    NameData.Text = realName;
-                    Name.Nodes.Add(NameData);
-                }
-
-                chunk.Nodes.Add(Name);
-
-                var FirstThunk = Name.RelativeToLittleEndian32("First Thunk");
-                BaseStream.Position = FirstThunk.offset;
-                int FirstThunkValue = ReadInt32();
-
-
-                var FirstData = new Chunk("First Data");
-                FirstData.offset = FileOffsetFromVirtualAddress(FirstThunkValue);
-                FirstData.length = 6; // XXX empty-entry-terminated array
-                FirstThunk.Nodes.Add(FirstData);
-
-
-                chunk.Nodes.Add(FirstThunk);
-            }
-
-            res.Add(chunk);
-        }
-    }
-
-    return res;
 }
 
 // Calculates the 16-bit checksum used in the orginal MZ header

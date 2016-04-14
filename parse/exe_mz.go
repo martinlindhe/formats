@@ -1,11 +1,11 @@
 package parse
 
 // MS-DOS executable
-// .exe; .sys; .dll; .ocx; .vxd; .cpl; .msi
-// STATUS: 1%
+// STATUS: 10%
 
 import (
 	"encoding/binary"
+	"fmt"
 	"os"
 )
 
@@ -36,33 +36,70 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 
 	res := ParsedLayout{}
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
+	offset := int64(0)
+	mz := Layout{
+		Offset: offset,
 		Length: 28, // XXX
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: 0, Length: 2, Info: "magic", Type: ASCII},
-			Layout{Offset: 2, Length: 2, Info: "bytes in last page", Type: Uint16le},
-			Layout{Offset: 4, Length: 2, Info: "pages", Type: Uint16le},
-			Layout{Offset: 6, Length: 2, Info: "relocation items", Type: Uint16le},
-			Layout{Offset: 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
-			Layout{Offset: 10, Length: 2, Info: "min mem", Type: Uint16le},
-			Layout{Offset: 12, Length: 2, Info: "max mem", Type: Uint16le},
-			Layout{Offset: 14, Length: 2, Info: "ss", Type: Uint16le},
-			Layout{Offset: 16, Length: 2, Info: "sp", Type: Uint16le},
-			Layout{Offset: 18, Length: 2, Info: "checksum", Type: Uint16le},
-			Layout{Offset: 20, Length: 2, Info: "ip", Type: Uint16le},
-			Layout{Offset: 22, Length: 2, Info: "cs", Type: Uint16le},
+			Layout{Offset: offset, Length: 2, Info: "magic", Type: ASCII},
+			Layout{Offset: offset + 2, Length: 2, Info: "extra bytes", Type: Uint16le},
+			Layout{Offset: offset + 4, Length: 2, Info: "pages", Type: Uint16le},
+			Layout{Offset: offset + 6, Length: 2, Info: "relocation items", Type: Uint16le},
+			Layout{Offset: offset + 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
+			Layout{Offset: offset + 10, Length: 2, Info: "min allocation", Type: Uint16le},
+			Layout{Offset: offset + 12, Length: 2, Info: "max allocation", Type: Uint16le},
+			Layout{Offset: offset + 14, Length: 2, Info: "initial ss", Type: Uint16le},
+			Layout{Offset: offset + 16, Length: 2, Info: "initial sp", Type: Uint16le},
+			Layout{Offset: offset + 18, Length: 2, Info: "checksum", Type: Uint16le},
+			Layout{Offset: offset + 20, Length: 2, Info: "initial ip", Type: Uint16le},
+			Layout{Offset: offset + 22, Length: 2, Info: "initial cs", Type: Uint16le},
 
 			// Offset of relocation table; 40h for new-(NE,LE,LX,W3,PE etc.) executable
-			Layout{Offset: 24, Length: 2, Info: "reloc offset", Type: Uint16le},
-			Layout{Offset: 26, Length: 2, Info: "overlay", Type: Uint16le},
-		}})
+			Layout{Offset: offset + 24, Length: 2, Info: "relocation offset", Type: Uint16le},
+			Layout{Offset: offset + 26, Length: 2, Info: "overlay", Type: Uint16le},
+		}}
+
+	res.Layout = append(res.Layout, mz)
+
+	hdrSizeInParagraphs, _ := readUint16le(file, offset+8)
+	exeStart := int64(hdrSizeInParagraphs) * 16
+
+	relocItems, _ := readUint16le(file, offset+6)
+	if relocItems > 0 {
+		relocOffset, _ := readUint16le(file, offset+24)
+		offset = int64(relocOffset)
+		reloc := Layout{
+			Offset: offset,
+			Length: int64(relocItems) * 4,
+			Info:   "relocation table",
+			Type:   Group}
+
+		for i := 1; i <= int(relocItems); i++ {
+			reloc.Childs = append(reloc.Childs, []Layout{
+				Layout{Offset: offset, Length: 2, Info: "offset " + fmt.Sprintf("%d", i), Type: Uint16le},
+				Layout{Offset: offset + 2, Length: 2, Info: "segment " + fmt.Sprintf("%d", i), Type: Uint16le},
+			}...)
+			offset += 4
+		}
+		res.Layout = append(res.Layout, reloc)
+	}
+
+	// XXX disasm until first ret or sth ???
+	offset = exeStart
+	codeChunk := Layout{
+		Offset: offset,
+		Length: 4,
+		Info:   "program XXX",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: offset, Length: 4, Info: "XXX", Type: Bytes},
+		}}
+
+	res.Layout = append(res.Layout, codeChunk)
+
 	return &res, nil
-
-	//	header.length = headerSizeValue * 16;
-
 }
 
 /*

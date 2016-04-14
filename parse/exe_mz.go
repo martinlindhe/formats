@@ -1,8 +1,6 @@
 package parse
 
 // STATUS: 60%
-//   0% NE (win?!)
-//   0% PE (win?!)
 
 import (
 	"encoding/binary"
@@ -57,8 +55,6 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 			Layout{Offset: offset + 18, Length: 2, Info: "checksum", Type: Uint16le},
 			Layout{Offset: offset + 20, Length: 2, Info: "initial ip", Type: Uint16le},
 			Layout{Offset: offset + 22, Length: 2, Info: "initial cs", Type: Uint16le},
-
-			// Offset of relocation table; 40h for new-(NE,LE,LX,W3,PE etc.) executable
 			Layout{Offset: offset + 24, Length: 2, Info: "relocation offset", Type: Uint16le},
 			Layout{Offset: offset + 26, Length: 2, Info: "overlay", Type: Uint16le},
 		}}
@@ -76,14 +72,14 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 	relocOffset, _ := readUint16le(file, offset+24)
 
 	if relocOffset == 0x40 {
-		// XXX NE, PE etc
+		// 0x40 for new-(NE,LE,LX,W3,PE etc.) executable
 		offset += mzHeaderLen
 
-		newHeaderLen := int64(36) // XXX
+		subHeaderLen := int64(36) // XXX
 		res.Layout = append(res.Layout, Layout{
 			Offset: offset,
-			Length: newHeaderLen,
-			Info:   "new header",
+			Length: subHeaderLen,
+			Info:   "sub header", // XXX name
 			Type:   Group,
 			Childs: []Layout{
 				Layout{Offset: offset, Length: 8, Info: "reserved", Type: Bytes},
@@ -93,27 +89,23 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 				Layout{Offset: offset + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
 			}})
 
-		/*
+		newHeaderPos, _ := readUint32le(file, offset+32)
 
+		offset = int64(newHeaderPos)
+		newHeaderId, _ := knownLengthASCII(file, offset, 2)
 
-			## xxx
-
-					   BaseStream.Position = ExtendedHeaderOffset;
-					   char b1 = ReadChar();
-					   char b2 = ReadChar();
-
-					   if (b1 == 'N' && b2 == 'E') {
-					       // Win16 / OS/2 file
-					       var neHead = ParseNEHeader();
-					       header.Nodes.Add(neHead);
-					   } else if (b1 == 'P' && b2 == 'E') {
-					       // Win32
-					       var peHead = ParsePEHeader();
-					       header.Nodes.Add(peHead);
-					   } else {
-					       throw new Exception("TODO unknown header at 0x" + ExtendedHeaderOffset.ToString("x4") + ": " + b1 + ", " + b2);
-					   }
-		*/
+		switch newHeaderId {
+		case "NE":
+			// Win16, OS/2
+			neHeader, _ := parseMZ_NEHeader(file)
+			res.Layout = append(res.Layout, *neHeader)
+		case "PE":
+			// Win32, Win64
+			panic("PE")
+		default:
+			// XXX get samples of LE, LX, W3 files
+			panic("unknown newHeaderId =" + newHeaderId)
+		}
 	} else {
 		relocItems, _ := readUint16le(file, offset+6)
 		if relocItems > 0 {

@@ -1,5 +1,8 @@
 package parse
 
+// PE exe (Win32, Win64)
+// STATUS: 0%
+
 /*
 
 private Chunk ParsePEHeader()

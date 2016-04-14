@@ -1,267 +1,147 @@
 package parse
 
-// STATUS: 0% 16-bit NE exe (Win16, OS/2)
+// 16-bit NE exe (Win16, OS/2)
+// STATUS: 10%
 
-/*
+import (
+	"os"
+)
 
-private Chunk ParseNEHeader()
-{
-    // used in win16 (Windows 3) and OS/2 executables
-    this.name = "New Executable (Win16)";
+var (
+	neTargetOS = map[byte]string{
+		1: "OS/2",
+		2: "Windows",
+		3: "European MS-DOS 4.x",
+		4: "Windows 386",
+		5: "BOSS (Borland Operating System Services)",
+	}
+)
 
-    var neHead = new Chunk("NE header");
-    neHead.offset = ExtendedHeaderOffset;
-    neHead.length = 0x40;
+// parses 16-bit Windows and OS/2 executables
+func parseMZ_NEHeader(file *os.File) (*Layout, error) {
 
-    var neIdentifier = new LittleEndian16BitChunk("NE identifier");
-    neIdentifier.offset = ExtendedHeaderOffset;
-    neHead.Nodes.Add(neIdentifier);
+	offset := int64(0x400)
 
-    var LinkerVersion = neIdentifier.RelativeToVersionMajorMinor16("Linker version");
-    neHead.Nodes.Add(LinkerVersion);
+	targetOSId, _ := readUint8(file, offset+54)
+	targetOS := "unknown"
 
+	if val, ok := neTargetOS[targetOSId]; ok {
+		targetOS = val
+	}
 
-    var OffsetToEntryTable = LinkerVersion.RelativeToLittleEndian16("EntryTableOffset");
-    BaseStream.Position = OffsetToEntryTable.offset;
-    var OffsetToEntryTableValue = neHead.offset + ReadUInt16();
-    neHead.Nodes.Add(OffsetToEntryTable);
+	res := Layout{
+		Offset: offset,
+		Length: 64, // XXX
+		Info:   "NE header",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: offset, Length: 2, Info: "identifier", Type: ASCII},
+			Layout{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16},
+			Layout{Offset: offset + 4, Length: 2, Info: "entry table offset", Type: Uint16le},
+			Layout{Offset: offset + 6, Length: 2, Info: "entry table length", Type: Uint16le},
+			Layout{Offset: offset + 8, Length: 4, Info: "file crc", Type: Uint32le},
+			Layout{Offset: offset + 12, Length: 2, Info: "format flags", Type: Uint16le},
+			// XXX bit map:
+			/*
+			   if ((FormatFlagsValue & 0x0001) != 0) {
+			       // The  linker  sets  this  bit  if  the executable-file format is
+			       // SINGLEDATA. An  executable file with  this format contains  one
+			       // data segment.  This bit is  set if the  file is a  dynamic-link
+			       // library (DLL).
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_SINGLEDATA"));
+			   }
+			   if ((FormatFlagsValue & 0x0002) != 0) {
+			       // The  linker  sets  this  bit  if  the executable-file format is
+			       // MULTIPLEDATA.  An  executable  file  with  this format contains
+			       // multiple  data segments.  This bit  is  set  if the  file is  a
+			       // Windows application.
+			       // If neither bit  0 nor bit 1 is  set, the executable-file format
+			       // is  NOAUTODATA. An  executable file  with this  format does not
+			       // contain an automatic data segment.
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_MULTIPLEDATA"));
+			   }
+			   if ((FormatFlagsValue & 0x0010) != 0)
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_WIN32"));
+			   if ((FormatFlagsValue & 0x0020) != 0)// Wine built-in module
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_BUILTIN"));
+			   if ((FormatFlagsValue & 0x0800) != 0) {
+			       // If this  bit is set, the  first segment in the  executable file
+			       // contains code that loads the application.
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_SELFLOAD"));
+			   }
+			   if ((FormatFlagsValue & 0x2000) != 0) {
+			       // If this bit is set, the  linker detects errors at link time but
+			       // still creates an executable file.
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_LINKERROR"));
+			   }
+			   if ((FormatFlagsValue & 0x4000) != 0)
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_CALLWEP"));
+			   if ((FormatFlagsValue & 0x8000) != 0) {
+			       // If this bit is set, the executable file is a library module.
+			       // If   bit  15   is  set,   the  CS:IP   registers  point  to  an
+			       // initialization  procedure  called  with  the  value  in  the AX
+			       // register  equal  to  the   module  handle.  The  initialization
+			       // procedure  must execute  a far   return to  the caller.  If the
+			       // procedure is successful, the value in AX is nonzero. Otherwise,
+			       // the value in AX is zero. The value in the DS register is set to
+			       // the library's data segment if  SINGLEDATA is set. Otherwise, DS
+			       // is set  to the data segment  of the application that  loads the
+			       // library.
+			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_LIBMODULE"));
+			   }*/
 
-    var EntryTableLength = OffsetToEntryTable.RelativeToLittleEndian16("EntryTableLength");
-    BaseStream.Position = EntryTableLength.offset;
-    var EntryTableLengthValue = ReadUInt16();
-    neHead.Nodes.Add(EntryTableLength);
+			Layout{Offset: offset + 14, Length: 2, Info: "auto data segment index", Type: Uint16le},
+			Layout{Offset: offset + 16, Length: 2, Info: "initial local heap size", Type: Uint16le},
+			Layout{Offset: offset + 18, Length: 2, Info: "initial stack size", Type: Uint16le},
+			Layout{Offset: offset + 20, Length: 4, Info: "entry point CS:IP", Type: Uint32le},   // XXX type CS:IP,  XXX XFIXME READ PARSE DECODE
+			Layout{Offset: offset + 24, Length: 4, Info: "stack pointer SS:SP", Type: Uint32le}, // XXX type
+			Layout{Offset: offset + 28, Length: 2, Info: "segment table entries", Type: Uint16le},
+			Layout{Offset: offset + 30, Length: 2, Info: "module reference table entires", Type: Uint16le},
+			Layout{Offset: offset + 32, Length: 2, Info: "nonresident names table size", Type: Uint16le},
+			Layout{Offset: offset + 34, Length: 2, Info: "offset segment table", Type: Uint16le},
+			Layout{Offset: offset + 36, Length: 2, Info: "offset resource table", Type: Uint16le},
+			Layout{Offset: offset + 38, Length: 2, Info: "offset resident names table", Type: Uint16le},
+			Layout{Offset: offset + 40, Length: 2, Info: "offset module reference table", Type: Uint16le},
+			Layout{Offset: offset + 42, Length: 2, Info: "offset imported names table", Type: Uint16le},    // XXX (array of counted strings, terminated with a string of length 00h)
+			Layout{Offset: offset + 44, Length: 4, Info: "offset nonresident names table", Type: Uint32le}, // Offset from start of file to nonresident names table
+			Layout{Offset: offset + 48, Length: 2, Info: "movable entry points in entry table", Type: Uint16le},
+			Layout{Offset: offset + 50, Length: 2, Info: "file alignment size shift", Type: Uint16le}, //  File alignment size shift count, 0 is equivalent to 9 (default 512-byte pages)
+			Layout{Offset: offset + 52, Length: 2, Info: "resources", Type: Uint16le},                 // Number of resource table entries
+			Layout{Offset: offset + 54, Length: 1, Info: "target os = " + targetOS, Type: Uint8},
+			Layout{Offset: offset + 55, Length: 1, Info: "extra flags", Type: Uint8, Masks: []Mask{
+				Mask{Low: 0, Length: 1, Info: "long filename support"},
+				Mask{Low: 1, Length: 1, Info: "win2 protected mode"},
+				Mask{Low: 2, Length: 1, Info: "win2 proportional fonts"},
+				Mask{Low: 3, Length: 1, Info: "fastload area"},
+				Mask{Low: 4, Length: 4, Info: "reserved"},
+			}},
+			Layout{Offset: offset + 56, Length: 2, Info: "OffsetToFastload", Type: Uint16le}, // XXX only used by windows
+			Layout{Offset: offset + 58, Length: 2, Info: "LengthOfFastload", Type: Uint16le}, // XXX only used by windows, offset to segment reference thunks or length of gangload area.
+			Layout{Offset: offset + 60, Length: 2, Info: "reserved", Type: Uint16le},
+			Layout{Offset: offset + 62, Length: 2, Info: "ExpectedWindowsVersion", Type: MinorMajor16}, // XXX only used by windows
+		}}
 
+	/*
 
-    var FileLoadCrc = EntryTableLength.RelativeToLittleEndian32("File Crc");
-    neHead.Nodes.Add(FileLoadCrc);
+	   neHead.Nodes.Add(ParseNEModuleReferenceTable(OffsetModuleReferenceTableValue, ModuleReferenceCountValue));
 
-    var FormatFlags = FileLoadCrc.RelativeToLittleEndian16("Format flags");
-    BaseStream.Position = FormatFlags.offset;
-    var FormatFlagsValue = ReadUInt16();
-    neHead.Nodes.Add(FormatFlags);
+	   neHead.Nodes.Add(ParseNEEntryTable(OffsetToEntryTableValue, EntryTableLengthValue));
 
-    if ((FormatFlagsValue & 0x0001) != 0) {
-        // The  linker  sets  this  bit  if  the executable-file format is
-        // SINGLEDATA. An  executable file with  this format contains  one
-        // data segment.  This bit is  set if the  file is a  dynamic-link
-        // library (DLL).
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_SINGLEDATA"));
-    }
-    if ((FormatFlagsValue & 0x0002) != 0) {
-        // The  linker  sets  this  bit  if  the executable-file format is
-        // MULTIPLEDATA.  An  executable  file  with  this format contains
-        // multiple  data segments.  This bit  is  set  if the  file is  a
-        // Windows application.
-        // If neither bit  0 nor bit 1 is  set, the executable-file format
-        // is  NOAUTODATA. An  executable file  with this  format does not
-        // contain an automatic data segment.
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_MULTIPLEDATA"));
-    }
-    if ((FormatFlagsValue & 0x0010) != 0)
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_WIN32"));
-    if ((FormatFlagsValue & 0x0020) != 0)// Wine built-in module
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_BUILTIN"));
-    if ((FormatFlagsValue & 0x0800) != 0) {
-        // If this  bit is set, the  first segment in the  executable file
-        // contains code that loads the application.
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_SELFLOAD"));
-    }
-    if ((FormatFlagsValue & 0x2000) != 0) {
-        // If this bit is set, the  linker detects errors at link time but
-        // still creates an executable file.
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_LINKERROR"));
-    }
-    if ((FormatFlagsValue & 0x4000) != 0)
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_CALLWEP"));
-    if ((FormatFlagsValue & 0x8000) != 0) {
-        // If this bit is set, the executable file is a library module.
-        // If   bit  15   is  set,   the  CS:IP   registers  point  to  an
-        // initialization  procedure  called  with  the  value  in  the AX
-        // register  equal  to  the   module  handle.  The  initialization
-        // procedure  must execute  a far   return to  the caller.  If the
-        // procedure is successful, the value in AX is nonzero. Otherwise,
-        // the value in AX is zero. The value in the DS register is set to
-        // the library's data segment if  SINGLEDATA is set. Otherwise, DS
-        // is set  to the data segment  of the application that  loads the
-        // library.
-        FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_LIBMODULE"));
-    }
+	   neHead.Nodes.Add(ParseNESegmentTable(OffsetSegmentTableValue, SegmentCountValue));
 
-    var AutoDataSegmentIndex = FormatFlags.RelativeToLittleEndian16("Auto Data Segment Index");
-    neHead.Nodes.Add(AutoDataSegmentIndex);
+	   neHead.Nodes.Add(ParseNEImportedTable(OffsetImportedNamesTableValue));
 
-    var InitialLocalHeapSize = AutoDataSegmentIndex.RelativeToLittleEndian16("Initial Local Heap Size");
-    neHead.Nodes.Add(InitialLocalHeapSize);
+	   neHead.Nodes.Add(ParseNEResidentTable(OffsetResidentNamesTableValue));
 
-    var InitialStackSize = InitialLocalHeapSize.RelativeToLittleEndian16("Initial Stack Size");
-    neHead.Nodes.Add(InitialStackSize);
+	   neHead.Nodes.Add(ParseNENonResidentTable(OffsetNonresidentNamesTableValue));
 
-    var EntryPointCSIP = InitialStackSize.RelativeToLittleEndian32("Entry Point CS:IP");
-    neHead.Nodes.Add(EntryPointCSIP);
-    Log("NE Entry point = CS:IP XXXX XFIXME READ PARSE DECODE");
+	   neHead.Nodes.Add(ParseNEResourceTable(OffsetResourceTableValue));
+	*/
 
-    var InitialStackPointer = EntryPointCSIP.RelativeToLittleEndian32("Stack Pointer SS:SP");
-    neHead.Nodes.Add(InitialStackPointer);
-
-    // # of entries in segment table
-    var SegmentCount = InitialStackPointer.RelativeToLittleEndian16("Segment table entries");
-    BaseStream.Position = SegmentCount.offset;
-    var SegmentCountValue = ReadUInt16();
-    neHead.Nodes.Add(SegmentCount);
-
-    // # of entries in module reference table
-    var ModuleReferenceCount = SegmentCount.RelativeToLittleEndian16("Module reference table entires");
-    BaseStream.Position = ModuleReferenceCount.offset;
-    var ModuleReferenceCountValue = ReadUInt16();
-    neHead.Nodes.Add(ModuleReferenceCount);
-
-    var NonresidentNamesTableSize = ModuleReferenceCount.RelativeToLittleEndian16("NonresidentNamesTableSize");
-    neHead.Nodes.Add(NonresidentNamesTableSize);
-
-    var OffsetSegmentTable = NonresidentNamesTableSize.RelativeToLittleEndian16("OffsetSegmentTable");
-    BaseStream.Position = OffsetSegmentTable.offset;
-    var OffsetSegmentTableValue = neHead.offset + ReadInt16();
-    neHead.Nodes.Add(OffsetSegmentTable);
-
-    var OffsetResourceTable = OffsetSegmentTable.RelativeToLittleEndian16("OffsetResourceTable");
-    BaseStream.Position = OffsetResourceTable.offset;
-    var OffsetResourceTableValue = neHead.offset + ReadInt16();
-    neHead.Nodes.Add(OffsetResourceTable);
-
-    var OffsetResidentNamesTable = OffsetResourceTable.RelativeToLittleEndian16("OffsetResidentNamesTable");
-    BaseStream.Position = OffsetResidentNamesTable.offset;
-    var OffsetResidentNamesTableValue = neHead.offset + ReadInt16();
-    neHead.Nodes.Add(OffsetResidentNamesTable);
-
-
-
-    var OffsetModuleReferenceTable = OffsetResidentNamesTable.RelativeToLittleEndian16("OffsetModuleReferenceTable");
-    BaseStream.Position = OffsetModuleReferenceTable.offset;
-    var OffsetModuleReferenceTableValue = neHead.offset + ReadInt16();
-    neHead.Nodes.Add(OffsetModuleReferenceTable);
-
-
-
-    // (array of counted strings, terminated with a string of length 00h)
-    var OffsetImportedNamesTable = OffsetModuleReferenceTable.RelativeToLittleEndian16("OffsetImportedNamesTable");
-    BaseStream.Position = OffsetImportedNamesTable.offset;
-    var OffsetImportedNamesTableValue = neHead.offset + ReadInt16();
-    neHead.Nodes.Add(OffsetImportedNamesTable);
-
-
-
-    // Offset from start of file to nonresident names table
-    var OffsetNonresidentNamesTable = OffsetImportedNamesTable.RelativeToLittleEndian32("OffsetNonresidentNamesTable");
-    BaseStream.Position = OffsetNonresidentNamesTable.offset;
-    var OffsetNonresidentNamesTableValue = ReadInt32();
-    neHead.Nodes.Add(OffsetNonresidentNamesTable);
-
-
-    // Count of moveable entry point listed in entry table
-    var MovableEntryPointsInEntryTable = OffsetNonresidentNamesTable.RelativeToLittleEndian16("MovableEntryPointsInEntryTable");
-    BaseStream.Position = MovableEntryPointsInEntryTable.offset;
-    var MovableEntryPointsInEntryTableValue = ReadInt32();
-    neHead.Nodes.Add(MovableEntryPointsInEntryTable);
-
-    //  File alignment size shift count, 0 is equivalent to 9 (default 512-byte pages)
-    var FileAlignmentSizeShift = MovableEntryPointsInEntryTable.RelativeToLittleEndian16("FileAlignmentSizeShift");
-    neHead.Nodes.Add(FileAlignmentSizeShift);
-
-    // Number of resource table entries
-    var ResourceTableEntries = FileAlignmentSizeShift.RelativeToLittleEndian16("Resources");
-    neHead.Nodes.Add(ResourceTableEntries);
-
-    var TargetOs = ResourceTableEntries.RelativeToByte("Target OS");
-
-    BaseStream.Position = TargetOs.offset;
-    var TargetOsValue = ReadByte();
-    neHead.Nodes.Add(TargetOs);
-
-    string TargetOsName = "Unknown";
-    switch (TargetOsValue) {
-    case 1:
-        TargetOsName = "OS/2";
-        break;
-    case 2:
-        TargetOsName = "Windows";
-        break;
-    case 3:
-        TargetOsName = "European MS-DOS 4.x";
-        break;
-    case 4:
-        TargetOsName = "Windows 386";
-        break;
-    case 5:
-        TargetOsName = "BOSS (Borland Operating System Services)";
-        break;
-    }
-    TargetOs.Text += " = " + TargetOsName;
-
-    var AdditionalFlags = TargetOs.RelativeToByte("Additional Flags");
-    BaseStream.Position = AdditionalFlags.offset;
-    var AdditionalFlagsValue = ReadByte();
-    neHead.Nodes.Add(AdditionalFlags);
-
-    if ((AdditionalFlagsValue & 0x01) != 0)
-        Log("TODO Long filename support?!?!");
-
-    if ((AdditionalFlagsValue & 0x02) != 0) {
-        // The executable file contains a Windows 2.x
-        // application that runs in version 3.x protected mode.
-        Log("TODO WIN2 protected mode");
-    }
-
-    if ((AdditionalFlagsValue & 0x04) != 0) {
-        // If this bit is set, the  executable file contains a Windows 2.x
-        // application that supports proportional fonts.
-        Log("TODO WIN2 preoportional fonts");
-    }
-    if ((AdditionalFlagsValue & 0x08) != 0) {
-        Log("TODO Executable has fastload area");
-    }
-
-    // NOTE: only used by windows
-    var OffsetToFastload = AdditionalFlags.RelativeToLittleEndian16("OffsetToFastload");
-    BaseStream.Position = OffsetToFastload.offset;
-    var OffsetToFastloadValue = ReadInt16();
-    neHead.Nodes.Add(OffsetToFastload);
-
-
-    // NOTE: only used by windows
-    // offset to segment reference thunks or length of gangload area.
-    var LengthOfFastload = OffsetToFastload.RelativeToLittleEndian16("LengthOfFastload");
-    BaseStream.Position = LengthOfFastload.offset;
-    var LengthOfFastloadValue = ReadInt16();
-    neHead.Nodes.Add(LengthOfFastload);
-    Log("TODO offset to OffsetToFastload Area 0x" + OffsetToFastloadValue.ToString("x4") + ", length=0x" + LengthOfFastloadValue.ToString("x4"));
-
-    var ReservedWord = LengthOfFastload.RelativeToLittleEndian16("Reserved");
-    neHead.Nodes.Add(ReservedWord);
-
-    // NOTE: only used by windows
-    // TODO add to version datatype, MINOR.MAJOR byte order, 2 bytes
-    var ExpectedWindowsVersion = ReservedWord.RelativeToLittleEndian16("ExpectedWindowsVersion");
-    neHead.Nodes.Add(ExpectedWindowsVersion);
-
-
-
-    neHead.Nodes.Add(ParseNEModuleReferenceTable(OffsetModuleReferenceTableValue, ModuleReferenceCountValue));
-
-    neHead.Nodes.Add(ParseNEEntryTable(OffsetToEntryTableValue, EntryTableLengthValue));
-
-    neHead.Nodes.Add(ParseNESegmentTable(OffsetSegmentTableValue, SegmentCountValue));
-
-    neHead.Nodes.Add(ParseNEImportedTable(OffsetImportedNamesTableValue));
-
-    neHead.Nodes.Add(ParseNEResidentTable(OffsetResidentNamesTableValue));
-
-    neHead.Nodes.Add(ParseNENonResidentTable(OffsetNonresidentNamesTableValue));
-
-    neHead.Nodes.Add(ParseNEResourceTable(OffsetResourceTableValue));
-
-    return neHead;
+	return &res, nil
 }
 
+/*
 private Chunk ParseNEModuleReferenceTable(long baseOffset, uint count)
 {
     var chunk = new Chunk("Module Reference Table");

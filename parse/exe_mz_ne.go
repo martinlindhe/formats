@@ -8,6 +8,7 @@ package parse
 import (
 	"fmt"
 	"os"
+	"sort"
 )
 
 var (
@@ -138,6 +139,8 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 	resourceTableOffset, _ := readUint16le(file, offset+36)
 	resourceTableEntries, _ := readUint16le(file, offset+52)
 	res = append(res, *parseNEResourceTable(file, offset+int64(resourceTableOffset), resourceTableEntries))
+
+	sort.Sort(ByLayout(res))
 
 	return res, nil
 }

@@ -30,6 +30,27 @@ func knownLengthASCII(file *os.File, offset int64, length int) (string, error) {
 }
 
 // return string, bytes read, error
+func countInitiatedASCII(r io.Reader) (string, int, error) {
+
+	var count byte
+	var c byte
+	s := ""
+
+	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
+		return s, 0, err
+	}
+	readCnt := 0
+	for i := 0; i < int(count); i++ {
+		if err := binary.Read(r, binary.LittleEndian, &c); err != nil {
+			return s, 0, err
+		}
+		s += string(c)
+		readCnt++
+	}
+	return s, readCnt, nil
+}
+
+// return string, bytes read, error
 func zeroTerminatedASCII(r io.Reader) (string, int, error) {
 
 	var c byte
@@ -47,6 +68,14 @@ func zeroTerminatedASCII(r io.Reader) (string, int, error) {
 		s += string(c)
 	}
 	return s, readCnt, nil
+}
+
+func readCString(file *os.File, offset int64) string {
+
+	file.Seek(offset, os.SEEK_SET)
+
+	s, _, _ := countInitiatedASCII(file)
+	return s
 }
 
 func readBytesFrom(file *os.File, offset int64, size int64) []byte {

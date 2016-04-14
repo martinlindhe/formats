@@ -32,6 +32,7 @@ const (
 	// groups of bytes
 	Bytes
 	ASCII
+	ASCIIC
 	ASCIIZ
 	RGB
 )
@@ -51,6 +52,7 @@ var (
 		MinorMajor16: "minor.major-16",
 		Bytes:        "bytes",
 		ASCII:        "ASCII",
+		ASCIIC:       "ASCIIC",
 		ASCIIZ:       "ASCIIZ",
 		RGB:          "RGB",
 	}

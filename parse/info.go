@@ -109,19 +109,26 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		}
 		res += field.prettyDecimalAndHex(int64(i))
 
-	case MajorMinor16:
+	case MajorMinor16le:
 		var b [2]uint8
 		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d.%d", b[0], b[1])
 
-	case MinorMajor16:
+	case MinorMajor16le:
 		var b [2]uint8
 		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d.%d", b[1], b[0])
+
+	case MajorMinor32le:
+		var b [2]uint16
+		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += fmt.Sprintf("%d.%d", b[0], b[1])
 
 	case Bytes:
 		res += fmt.Sprintf("chunk of bytes")

@@ -190,7 +190,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 					Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
 					Layout{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
 					Layout{Offset: offset + 4, Length: 5, Info: "identifier", Type: ASCII},
-					Layout{Offset: offset + 9, Length: 2, Info: "revision", Type: MajorMinor16},
+					Layout{Offset: offset + 9, Length: 2, Info: "revision", Type: MajorMinor16be},
 					Layout{Offset: offset + 11, Length: 1, Info: "units used", Type: Uint8},
 					Layout{Offset: offset + 12, Length: 2, Info: "width", Type: Uint16be},
 					Layout{Offset: offset + 14, Length: 2, Info: "height", Type: Uint16be},

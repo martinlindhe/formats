@@ -8,7 +8,6 @@ package parse
 import (
 	"fmt"
 	"os"
-	"sort"
 )
 
 var (
@@ -25,32 +24,28 @@ var (
 		0x8002: "bitmap",
 		0x8003: "icon",
 		0x8004: "menu",
-		0x8005: "dialog box",
-		0x8006: "string table",
+		0x8005: "dialog",
+		0x8006: "string",
 		0x8007: "font directory",
 		0x8008: "font",
 		0x8009: "accelerator table",
 		0x800a: "resource data",
-		// b: "message table", // ?
-		0x800c: "cursor directory",
-		0x800e: "icon directory",
+		0x800c: "group cursor",
+		0x800e: "group icon",
 		0x8010: "version",
 	}
 )
 
 // parses 16-bit Windows and OS/2 executables
-func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
+func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
 
-	offset := int64(0x400)
-
+	res := []Layout{}
 	targetOSId, _ := readUint8(file, offset+54)
 	targetOS := "unknown"
 
 	if val, ok := neTargetOS[targetOSId]; ok {
 		targetOS = val
 	}
-
-	res := []Layout{}
 
 	res = append(res, Layout{
 		Offset: offset,
@@ -59,7 +54,7 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 		Type:   Group,
 		Childs: []Layout{
 			Layout{Offset: offset, Length: 2, Info: "identifier", Type: ASCII},
-			Layout{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16},
+			Layout{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
 			Layout{Offset: offset + 4, Length: 2, Info: "entry table offset", Type: Uint16le},
 			Layout{Offset: offset + 6, Length: 2, Info: "entry table length", Type: Uint16le},
 			Layout{Offset: offset + 8, Length: 4, Info: "file load crc", Type: Uint32le},
@@ -108,7 +103,7 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 			Layout{Offset: offset + 56, Length: 2, Info: "offset to fastload", Type: Uint16le}, // XXX only used by windows
 			Layout{Offset: offset + 58, Length: 2, Info: "length of fastload", Type: Uint16le}, // XXX only used by windows, offset to segment reference thunks or length of gangload area.
 			Layout{Offset: offset + 60, Length: 2, Info: "reserved", Type: Uint16le},
-			Layout{Offset: offset + 62, Length: 2, Info: "expected windows version", Type: MinorMajor16}, // XXX only used by windows
+			Layout{Offset: offset + 62, Length: 2, Info: "expected windows version", Type: MinorMajor16le}, // XXX only used by windows
 		}})
 
 	moduleReferenceEntries, _ := readUint16le(file, offset+30)
@@ -137,7 +132,17 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 	resourceTableEntries, _ := readUint16le(file, offset+52)
 	res = append(res, *parseNEResourceTable(file, offset+int64(resourceTableOffset), resourceTableEntries))
 
-	sort.Sort(ByLayout(res))
+	fastloadAreaOffset, _ := readUint16le(file, offset+56)
+	fastloadAreaLength, _ := readUint16le(file, offset+58)
+
+	// XXX how to parse this stuff
+	// XXX offset seems wrong
+	res = append(res, Layout{
+		Offset: int64(fastloadAreaOffset) * 16,
+		Length: int64(fastloadAreaLength),
+		Info:   "fast-load area", // XXX
+		Type:   Group,
+	})
 
 	return res, nil
 }

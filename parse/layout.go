@@ -26,9 +26,11 @@ const (
 	Uint32be
 
 	// version
-	MajorMinor8  // high nibble = major, low = minor
-	MajorMinor16 // first byte = major, last = minor
-	MinorMajor16 // first byte = minor, last = major
+	MajorMinor8    // high nibble = major, low = minor
+	MajorMinor16le // first byte = major, last = minor
+	MajorMinor16be // first byte = major, last = minor
+	MajorMinor32le // first word = major, last = minor
+	MinorMajor16le // first byte = minor, last = major
 
 	// groups of bytes
 	Bytes
@@ -40,23 +42,25 @@ const (
 
 var (
 	dataTypes = map[DataType]string{
-		Group:        "Group",
-		Int8:         "int8",
-		Uint8:        "uint8",
-		Int16le:      "int16-le",
-		Uint16le:     "uint16-le",
-		Int32le:      "int32-le",
-		Uint32le:     "uint32-le",
-		Uint16be:     "uint16-be",
-		Uint32be:     "uint32-be",
-		MajorMinor8:  "major.minor-8",
-		MajorMinor16: "major.minor-16",
-		MinorMajor16: "minor.major-16",
-		Bytes:        "bytes",
-		ASCII:        "ASCII",
-		ASCIIC:       "ASCIIC",
-		ASCIIZ:       "ASCIIZ",
-		RGB:          "RGB",
+		Group:          "Group",
+		Int8:           "int8",
+		Uint8:          "uint8",
+		Int16le:        "int16-le",
+		Uint16le:       "uint16-le",
+		Int32le:        "int32-le",
+		Uint32le:       "uint32-le",
+		Uint16be:       "uint16-be",
+		Uint32be:       "uint32-be",
+		MajorMinor8:    "major.minor-8",
+		MajorMinor16le: "major.minor-16le",
+		MajorMinor16be: "major.minor-16be",
+		MajorMinor32le: "major.minor-32le",
+		MinorMajor16le: "minor.major-16le",
+		Bytes:          "bytes",
+		ASCII:          "ASCII",
+		ASCIIC:         "ASCIIC",
+		ASCIIZ:         "ASCIIZ",
+		RGB:            "RGB",
 	}
 )
 

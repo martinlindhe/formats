@@ -49,7 +49,7 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 			Layout{Offset: offset + 12, Length: 4, Info: "reserved 2", Type: Uint32le},
 			Layout{Offset: offset + 16, Length: 4, Info: "offset to CFFILE", Type: Uint32le},
 			Layout{Offset: offset + 20, Length: 4, Info: "reserved 3", Type: Uint32le},
-			Layout{Offset: offset + 24, Length: 2, Info: "format version", Type: MinorMajor16},
+			Layout{Offset: offset + 24, Length: 2, Info: "format version", Type: MinorMajor16le},
 			Layout{Offset: offset + 26, Length: 2, Info: "CFFOLDER entries", Type: Uint16le},
 			Layout{Offset: offset + 28, Length: 2, Info: "CFFILE entries", Type: Uint16le},
 			Layout{Offset: offset + 30, Length: 2, Info: "flags", Type: Uint16le},

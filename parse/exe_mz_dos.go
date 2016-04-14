@@ -37,7 +37,7 @@ func findCustomDOSHeaders(file *os.File) *Layout {
 			Type:   Group,
 			Childs: []Layout{
 				Layout{Offset: offset, Length: 4, Info: "identifier", Type: ASCII},
-				Layout{Offset: offset + 4, Length: 2, Info: "exe version", Type: MajorMinor16},
+				Layout{Offset: offset + 4, Length: 2, Info: "exe version", Type: MajorMinor16le},
 			}}
 
 		// XXX

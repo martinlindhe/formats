@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"sort"
 )
 
 func MZ(file *os.File) (*ParsedLayout, error) {
@@ -95,10 +96,14 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		newHeaderId, _ := knownLengthASCII(file, offset, 2)
 
 		switch newHeaderId {
+		case "LX":
+			// OS/2
+			header, _ := parseMZ_LXHeader(file, offset)
+			res.Layout = append(res.Layout, header...)
 		case "NE":
 			// Win16, OS/2
-			neHeader, _ := parseMZ_NEHeader(file)
-			res.Layout = append(res.Layout, neHeader...)
+			header, _ := parseMZ_NEHeader(file, offset)
+			res.Layout = append(res.Layout, header...)
 		case "PE":
 			// Win32, Win64
 			panic("PE")
@@ -141,6 +146,8 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		}}
 
 	res.Layout = append(res.Layout, codeChunk)
+
+	sort.Sort(ByLayout(res.Layout))
 
 	return &res, nil
 }

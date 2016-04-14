@@ -4,6 +4,7 @@ package parse
 // STATUS: 10%
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -18,7 +19,7 @@ var (
 )
 
 // parses 16-bit Windows and OS/2 executables
-func parseMZ_NEHeader(file *os.File) (*Layout, error) {
+func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 
 	offset := int64(0x400)
 
@@ -29,7 +30,9 @@ func parseMZ_NEHeader(file *os.File) (*Layout, error) {
 		targetOS = val
 	}
 
-	res := Layout{
+	res := []Layout{}
+
+	res = append(res, Layout{
 		Offset: offset,
 		Length: 64, // XXX
 		Info:   "NE header",
@@ -96,7 +99,7 @@ func parseMZ_NEHeader(file *os.File) (*Layout, error) {
 			Layout{Offset: offset + 20, Length: 4, Info: "entry point CS:IP", Type: Uint32le},   // XXX type CS:IP,  XXX XFIXME READ PARSE DECODE
 			Layout{Offset: offset + 24, Length: 4, Info: "stack pointer SS:SP", Type: Uint32le}, // XXX type
 			Layout{Offset: offset + 28, Length: 2, Info: "segment table entries", Type: Uint16le},
-			Layout{Offset: offset + 30, Length: 2, Info: "module reference table entires", Type: Uint16le},
+			Layout{Offset: offset + 30, Length: 2, Info: "module reference entires", Type: Uint16le},
 			Layout{Offset: offset + 32, Length: 2, Info: "nonresident names table size", Type: Uint16le},
 			Layout{Offset: offset + 34, Length: 2, Info: "offset segment table", Type: Uint16le},
 			Layout{Offset: offset + 36, Length: 2, Info: "offset resource table", Type: Uint16le},
@@ -115,11 +118,16 @@ func parseMZ_NEHeader(file *os.File) (*Layout, error) {
 				Mask{Low: 3, Length: 1, Info: "fastload area"},
 				Mask{Low: 4, Length: 4, Info: "reserved"},
 			}},
-			Layout{Offset: offset + 56, Length: 2, Info: "OffsetToFastload", Type: Uint16le}, // XXX only used by windows
-			Layout{Offset: offset + 58, Length: 2, Info: "LengthOfFastload", Type: Uint16le}, // XXX only used by windows, offset to segment reference thunks or length of gangload area.
+			Layout{Offset: offset + 56, Length: 2, Info: "offset to fastload", Type: Uint16le}, // XXX only used by windows
+			Layout{Offset: offset + 58, Length: 2, Info: "length of fastload", Type: Uint16le}, // XXX only used by windows, offset to segment reference thunks or length of gangload area.
 			Layout{Offset: offset + 60, Length: 2, Info: "reserved", Type: Uint16le},
-			Layout{Offset: offset + 62, Length: 2, Info: "ExpectedWindowsVersion", Type: MinorMajor16}, // XXX only used by windows
-		}}
+			Layout{Offset: offset + 62, Length: 2, Info: "expected windows version", Type: MinorMajor16}, // XXX only used by windows
+		}})
+
+	moduleReferenceEntries, _ := readUint16le(file, offset+30)
+	offsetModuleReferenceTable, _ := readUint16le(file, offset+40)
+
+	res = append(res, *parseNEModuleReferenceTable(offset+int64(offsetModuleReferenceTable), moduleReferenceEntries))
 
 	/*
 
@@ -138,33 +146,27 @@ func parseMZ_NEHeader(file *os.File) (*Layout, error) {
 	   neHead.Nodes.Add(ParseNEResourceTable(OffsetResourceTableValue));
 	*/
 
-	return &res, nil
+	return res, nil
+}
+
+func parseNEModuleReferenceTable(offset int64, count uint16) *Layout {
+
+	res := Layout{
+		Offset: offset,
+		Length: int64(count) * 2,
+		Info:   "NE module reference table",
+		Type:   Group}
+
+	// The module-reference table contains offsets for
+	// module names stored in the imported-name table.
+	for i := uint16(1); i <= count; i++ {
+		res.Childs = append(res.Childs, Layout{Offset: offset, Length: 2, Info: "module reference " + fmt.Sprintf("%d", i), Type: Uint16le})
+		offset += 2
+	}
+	return &res
 }
 
 /*
-private Chunk ParseNEModuleReferenceTable(long baseOffset, uint count)
-{
-    var chunk = new Chunk("Module Reference Table");
-    chunk.offset = baseOffset;
-    chunk.length = count * 2;
-
-    //Log("Module Reference Table at 0x" + OffsetModuleReferenceTableValue.ToString("x4"));
-    BaseStream.Position = baseOffset;
-
-    // The module-reference table contains offsets for
-    // module names stored in the imported-name table.
-    for (int i = 0; i < count; i++) {
-        long currOffset = BaseStream.Position;
-        ushort offset = ReadUInt16();
-        //Log("  module reference: " + offset.ToString("x4"));
-
-        var sub = new Chunk("Module reference = " + offset.ToString("x4"));
-        sub.offset = currOffset;
-        sub.length = 2;
-        chunk.Nodes.Add(sub);
-    }
-    return chunk;
-}
 
 private Chunk ParseNEEntryTable(long baseOffset, uint length)
 {

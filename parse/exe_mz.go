@@ -98,7 +98,7 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		case "NE":
 			// Win16, OS/2
 			neHeader, _ := parseMZ_NEHeader(file)
-			res.Layout = append(res.Layout, *neHeader)
+			res.Layout = append(res.Layout, neHeader...)
 		case "PE":
 			// Win32, Win64
 			panic("PE")

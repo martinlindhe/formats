@@ -101,8 +101,11 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 	entryTableLength, _ := readUint16le(file, offset+6)
 	res = append(res, *parseNEEntryTable(file, offset+int64(entryTableOffset), entryTableLength))
 
+	segmentTableOffset, _ := readUint16le(file, offset+34)
+	segmentTableEntries, _ := readUint16le(file, offset+28)
+	res = append(res, *parseNESegmentTable(file, offset+int64(segmentTableOffset), segmentTableEntries))
 	/*
-	   neHead.Nodes.Add(ParseNESegmentTable(OffsetSegmentTableValue, SegmentCountValue));
+
 
 	   neHead.Nodes.Add(ParseNEImportedTable(OffsetImportedNamesTableValue));
 
@@ -134,8 +137,6 @@ func parseNEModuleReferenceTable(offset int64, count uint16) *Layout {
 }
 
 func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
-
-	// Log(" XXXX TODO care about MovableEntryPointsInEntryTableValue = " + MovableEntryPointsInEntryTableValue);
 
 	res := Layout{
 		Offset: offset,
@@ -209,12 +210,12 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 				// unsigned short offset;
 
 			default:
-				panic("xxx")
 				if entries > 1 {
 					// panic("sample please! entries > 1")
 				}
 				//Log("  TODO segment index " + nSegNumber);
 				//NOTE: only sample i seen was empty here
+				panic("xxx")
 			}
 		}
 	}
@@ -222,86 +223,45 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 	return &res
 }
 
-/*
+func parseNESegmentTable(file *os.File, offset int64, count uint16) *Layout {
 
+	segmentLen := int64(8)
 
-private Chunk ParseNESegmentTable(long baseOffset, uint count)
-{
-    //Log("Segment Table at 0x" + OffsetSegmentTableValue.ToString("x4"));
-    var chunk = new Chunk("Segment Table");
-    chunk.offset = baseOffset;
-    chunk.length = 8 * count;
+	res := Layout{
+		Offset: offset,
+		Length: segmentLen * int64(count),
+		Info:   "NE segment table",
+		Type:   Group}
 
-    BaseStream.Position = baseOffset;
+	for i := 1; i <= int(count); i++ {
+		id := fmt.Sprintf("%d", i)
 
-    for (int i = 0; i < count; i++) {
-        var offset = ReadUInt16() * 16;   // Sector offset (in segments) of segment data. 0 = no data exists
-        if (offset == 0)
-            throw new Exception("sample plz");
+		res.Childs = append(res.Childs, []Layout{
+			Layout{Offset: offset, Length: 2, Info: "segment " + id + " offset", Type: Uint16le}, // in segments. 0 = no data exists
+			Layout{Offset: offset + 2, Length: 2, Info: "segment " + id + " length", Type: Uint16le},
+			Layout{Offset: offset + 4, Length: 2, Info: "segment " + id + " flags", Type: Uint16le, Masks: []Mask{
+				Mask{Low: 0, Length: 1, Info: "segment " + id + " type"}, // 0=code, 1=data
+				Mask{Low: 1, Length: 1, Info: "allocated"},
+				Mask{Low: 2, Length: 1, Info: "loaded"},
+				Mask{Low: 3, Length: 1, Info: "iterated"},
+				Mask{Low: 4, Length: 1, Info: "1=moveable, 0=fixed"},
+				Mask{Low: 5, Length: 1, Info: "shareable"},
+				Mask{Low: 6, Length: 1, Info: "1=preload, 0=loadoncall"},
+				Mask{Low: 7, Length: 1, Info: "execute only/read only"},
+				Mask{Low: 8, Length: 1, Info: "reloc data"},
+				Mask{Low: 9, Length: 3, Info: "reserved"},
+				Mask{Low: 12, Length: 1, Info: "discardable"},
+				Mask{Low: 13, Length: 3, Info: "reserved"},
+			}},
+			Layout{Offset: offset + 6, Length: 2, Info: "segment " + id + " min alloc size", Type: Uint16le}, // 0 = 64k
+		}...)
+		offset += segmentLen
+	}
 
-
-        var length = ReadUInt16();   // Length of segment data
-        var flags = ReadUInt16();    // Flags associated with this segment
-        var minAlloc = ReadUInt16(); // Minimum allocation size for table. 0 = 64k, unless offset also is 0
-
-        var sub = new Chunk("offset=0x" + offset.ToString("x4") + ", flags=0x" + flags.ToString("x4") + ", minAlloc=0x" + minAlloc.ToString("x4"));
-        sub.offset = offset;
-        sub.length = length;
-
-        if ((flags & 0x0001) != 0) {
-            // If this bit  is set, the segment is a data segment. Otherwise,
-            // the segment is a code segment.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_DATA"));
-        }
-
-        if ((flags & 0x0002) != 0) {
-            // If this  bit is set,  the loader has  allocated memory for  the segment.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_ALLOCATED"));
-        }
-
-        if ((flags & 0x0004) != 0) {
-            // If this bit is set, the segment is loaded.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_LOADED"));
-        }
-
-        if ((flags & 0x0008) != 0) {
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_ITERATED"));
-        }
-
-        if ((flags & 0x0010) != 0) {
-            // If this bit is set, the segment type is MOVABLE. Otherwise, the
-            // segment type is FIXED.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_MOVEABLE"));
-        }
-        if ((flags & 0x0020) != 0) {
-            // If  this bit  is set,  the segment  type is  PURE or SHAREABLE.
-            // Otherwise, the segment type is IMPURE or NONSHAREABLE.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_SHAREABLE"));
-        }
-        if ((flags & 0x0040) != 0) {
-            // If this bit is set, the segment type is PRELOAD. Otherwise, the
-            // segment type is LOADONCALL.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_PRELOAD"));
-        }
-        if ((flags & 0x0080) != 0) {
-            // If  this bit  is set  and the  segment is  a code  segment, the
-            // segment type is EXECUTEONLY. If this bit is set and the segment
-            // is a data segment, the segment type is READONLY.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_EXECUTEONLY"));
-        }
-        if ((flags & 0x0100) != 0) {
-            // If this bit is set, the segment contains relocation data.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_RELOC_DATA"));
-        }
-        if ((flags & 0x1000) != 0) {
-            // If this bit is set, the segment is discardable.
-            sub.Nodes.Add(new Chunk("NE_SEGFLAGS_DISCARDABLE"));
-        }
-
-        chunk.Nodes.Add(sub);
-    }
-    return chunk;
+	return &res
 }
+
+/*
 
 private Chunk ParseNEImportedTable(long baseOffset)
 {

@@ -1,7 +1,7 @@
 package parse
 
 // 16-bit NE exe (Win16, OS/2)
-// STATUS: 10%
+// STATUS: 70 %
 
 // XXX: http://www.program-transformation.org/Transform/NeFormat
 
@@ -150,8 +150,6 @@ func parseNEModuleReferenceTable(offset int64, count uint16) *Layout {
 		Info:   "NE module reference table",
 		Type:   Group}
 
-	// The module-reference table contains offsets for
-	// module names stored in the imported-name table.
 	for i := uint16(1); i <= count; i++ {
 		res.Childs = append(res.Childs, Layout{Offset: offset, Length: 2, Info: "module reference " + fmt.Sprintf("%d", i), Type: Uint16le})
 		offset += 2
@@ -229,7 +227,6 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 
 			case 0xfe:
 				panic("  TODO   refer to constant defined within module")
-
 				// struct entry_tab_fixed_s
 				// unsigned char flags;
 				// unsigned short offset;
@@ -444,11 +441,11 @@ func parseNEResourceTable(file *os.File, offset int64, count uint16) *Layout {
 
 	len := int64(2)
 	offset += 2
+	tnameInfoLen := int64(12)
 
 	for {
 
 		resourceType, _ := readUint16le(file, offset)
-
 		if resourceType == 0 {
 			len += 2
 			res.Childs = append(res.Childs, Layout{
@@ -456,56 +453,37 @@ func parseNEResourceTable(file *os.File, offset int64, count uint16) *Layout {
 			break
 		}
 
-		count, _ = readUint16le(file, offset+2)
+		resourceCount, _ := readUint16le(file, offset+2)
 
 		info := "type"
 		if val, ok := neResourceType[resourceType]; ok {
 			info += " = " + val
 		}
 
-		tnameInfoStructsLen := int64(count) * 12 // XXX
-		res.Childs = append(res.Childs, []Layout{
-			// TYPEINFO:
+		res.Childs = append(res.Childs, []Layout{ // TTYPEINFO
 			Layout{Offset: offset, Length: 2, Info: info, Type: Uint16le},
 			Layout{Offset: offset + 2, Length: 2, Info: "resource count", Type: Uint16le},
 			Layout{Offset: offset + 4, Length: 4, Info: "reserved", Type: Uint32le},
-			Layout{Offset: offset + 8, Length: tnameInfoStructsLen, Info: "TNAMEINFO structs", Type: Bytes},
 		}...)
 
-		len += 8 + tnameInfoStructsLen
-		offset += 8 + tnameInfoStructsLen
+		offset += 8
+		len += 8
 
-		//Log("Resource: " + typeName + ", " + count + " items");
+		for i := 0; i < int(resourceCount); i++ {
+			res.Childs = append(res.Childs, []Layout{ // TNAMEINFO
+				Layout{Offset: offset, Length: 2, Info: "offset", Type: Uint16le},
+				Layout{Offset: offset + 2, Length: 2, Info: "size", Type: Uint16le},
+				Layout{Offset: offset + 4, Length: 2, Info: "flags", Type: Uint16le},
+				Layout{Offset: offset + 6, Length: 2, Info: "id", Type: Uint16le},
+				Layout{Offset: offset + 8, Length: 2, Info: "reserved 1", Type: Uint16le},
+				Layout{Offset: offset + 10, Length: 2, Info: "reserved 2", Type: Uint16le},
+			}...)
 
-		/*
-
-		   for (int i = 0; i < count; i++) {
-		       var offset = ReadUInt16() << shift;
-		       var size = (uint)(ReadUInt16() << shift);
-		       var flags = ReadUInt16();
-		       var resource = ReadUInt16();
-
-		       //Log("   resource " + resource.ToString("x4") + ", offset=" + offset.ToString("x8") + ", size=" + size.ToString("x8") + ", flags=" + flags);
-		       var yoSub = new Chunk("resource " + resource.ToString("x4") + ", flags=" + flags.ToString("x4"));
-		       yoSub.offset = offset;
-		       yoSub.length = size;
-		       yo.Nodes.Add(yoSub);
-
-		       var res1 = ReadUInt16(); // skip 2 unknown bytes, 00
-		       var res2 = ReadUInt16(); // skip 2 more unknown bytes, 00
-		       if (res1 != 0 || res2 != 0)
-		           throw new Exception("TODO sample-please: reserved assumed to be zero wasnt #2: " + res1 + ", " + res2);
-
-		       yo.length += 12;
-		   }
-
-		   resourceLen += yo.length;
-		   chunk.Nodes.Add(yo);
-		*/
-
+			offset += tnameInfoLen
+			len += tnameInfoLen
+		}
 	}
 
 	res.Length = len
 	return &res
-
 }

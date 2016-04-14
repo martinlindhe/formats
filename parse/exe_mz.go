@@ -38,9 +38,10 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 	res := ParsedLayout{}
 
 	offset := int64(0)
+	mzHeaderLen := int64(28) // XXX
 	mz := Layout{
 		Offset: offset,
-		Length: 28, // XXX
+		Length: mzHeaderLen,
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
@@ -76,27 +77,42 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 
 	if relocOffset == 0x40 {
 		// XXX NE, PE etc
+		offset += mzHeaderLen
+
+		newHeaderLen := int64(36) // XXX
+		res.Layout = append(res.Layout, Layout{
+			Offset: offset,
+			Length: newHeaderLen,
+			Info:   "new header",
+			Type:   Group,
+			Childs: []Layout{
+				Layout{Offset: offset, Length: 8, Info: "reserved", Type: Bytes},
+				Layout{Offset: offset + 8, Length: 2, Info: "oem id", Type: Uint16le},
+				Layout{Offset: offset + 10, Length: 2, Info: "oem info", Type: Uint16le},
+				Layout{Offset: offset + 12, Length: 20, Info: "reserved 2", Type: Uint16le},
+				Layout{Offset: offset + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
+			}})
 
 		/*
 
-		   var subHead = ParseSubHeader(overlay);
-		   header.Nodes.Add(subHead);
 
-		   BaseStream.Position = ExtendedHeaderOffset;
-		   char b1 = ReadChar();
-		   char b2 = ReadChar();
+			## xxx
 
-		   if (b1 == 'N' && b2 == 'E') {
-		       // Win16 / OS/2 file
-		       var neHead = ParseNEHeader();
-		       header.Nodes.Add(neHead);
-		   } else if (b1 == 'P' && b2 == 'E') {
-		       // Win32
-		       var peHead = ParsePEHeader();
-		       header.Nodes.Add(peHead);
-		   } else {
-		       throw new Exception("TODO unknown header at 0x" + ExtendedHeaderOffset.ToString("x4") + ": " + b1 + ", " + b2);
-		   }
+					   BaseStream.Position = ExtendedHeaderOffset;
+					   char b1 = ReadChar();
+					   char b2 = ReadChar();
+
+					   if (b1 == 'N' && b2 == 'E') {
+					       // Win16 / OS/2 file
+					       var neHead = ParseNEHeader();
+					       header.Nodes.Add(neHead);
+					   } else if (b1 == 'P' && b2 == 'E') {
+					       // Win32
+					       var peHead = ParsePEHeader();
+					       header.Nodes.Add(peHead);
+					   } else {
+					       throw new Exception("TODO unknown header at 0x" + ExtendedHeaderOffset.ToString("x4") + ": " + b1 + ", " + b2);
+					   }
 		*/
 	} else {
 		relocItems, _ := readUint16le(file, offset+6)
@@ -125,8 +141,8 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 	offset = exeStart
 	codeChunk := Layout{
 		Offset: offset,
-		Length: 4,
-		Info:   "program XXX",
+		Length: 4, // XXX
+		Info:   "dos entry point",
 		Type:   Group,
 		Childs: []Layout{
 			Layout{Offset: offset, Length: 4, Info: "XXX", Type: Bytes},
@@ -138,39 +154,6 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 }
 
 /*
-
-private Chunk ParseSubHeader(Chunk previous)
-{
-    var subHead = new Chunk();
-
-    subHead.offset = previous.offset + previous.length;
-    subHead.Text = "Extended header";
-
-    // New Executable header
-    var unknown = previous.RelativeTo("Reserved", 8);
-    subHead.Nodes.Add(unknown);
-
-    var oemId = unknown.RelativeToLittleEndian16("OEM id");
-    subHead.Nodes.Add(oemId);
-
-    var oemInfo = oemId.RelativeToLittleEndian16("OEM info");
-    subHead.Nodes.Add(oemInfo);
-
-    var reserved = oemInfo.RelativeTo("Reserved", 20);
-    subHead.Nodes.Add(reserved);
-
-    // Offset of extended executable header from start of file (or 0 if plain MZ executable)
-    var neHeader = reserved.RelativeToLittleEndian32("Offset of header");
-    BaseStream.Position = neHeader.offset;
-    this.ExtendedHeaderOffset = ReadUInt32();
-    subHead.Nodes.Add(neHeader);
-
-    subHead.length = (uint)((neHeader.offset + neHeader.length) - subHead.offset);
-
-    // TODO: wrap "this program cant be run in dos mode" in a chunk, how to detect size? start offset is 0x40
-    return subHead;
-}
-
 
 override public List<Chunk> GetFileStructure()
 {

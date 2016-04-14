@@ -3,6 +3,8 @@ package parse
 // 16-bit NE exe (Win16, OS/2)
 // STATUS: 10%
 
+// XXX: http://www.program-transformation.org/Transform/NeFormat
+
 import (
 	"fmt"
 	"os"
@@ -42,57 +44,24 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 			Layout{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16},
 			Layout{Offset: offset + 4, Length: 2, Info: "entry table offset", Type: Uint16le},
 			Layout{Offset: offset + 6, Length: 2, Info: "entry table length", Type: Uint16le},
-			Layout{Offset: offset + 8, Length: 4, Info: "file crc", Type: Uint32le},
-			Layout{Offset: offset + 12, Length: 2, Info: "format flags", Type: Uint16le},
-			// XXX bit map:
-			/*
-			   if ((FormatFlagsValue & 0x0001) != 0) {
-			       // The  linker  sets  this  bit  if  the executable-file format is
-			       // SINGLEDATA. An  executable file with  this format contains  one
-			       // data segment.  This bit is  set if the  file is a  dynamic-link
-			       // library (DLL).
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_SINGLEDATA"));
-			   }
-			   if ((FormatFlagsValue & 0x0002) != 0) {
-			       // The  linker  sets  this  bit  if  the executable-file format is
-			       // MULTIPLEDATA.  An  executable  file  with  this format contains
-			       // multiple  data segments.  This bit  is  set  if the  file is  a
-			       // Windows application.
-			       // If neither bit  0 nor bit 1 is  set, the executable-file format
-			       // is  NOAUTODATA. An  executable file  with this  format does not
-			       // contain an automatic data segment.
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_MULTIPLEDATA"));
-			   }
-			   if ((FormatFlagsValue & 0x0010) != 0)
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_WIN32"));
-			   if ((FormatFlagsValue & 0x0020) != 0)// Wine built-in module
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_BUILTIN"));
-			   if ((FormatFlagsValue & 0x0800) != 0) {
-			       // If this  bit is set, the  first segment in the  executable file
-			       // contains code that loads the application.
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_SELFLOAD"));
-			   }
-			   if ((FormatFlagsValue & 0x2000) != 0) {
-			       // If this bit is set, the  linker detects errors at link time but
-			       // still creates an executable file.
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_LINKERROR"));
-			   }
-			   if ((FormatFlagsValue & 0x4000) != 0)
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_CALLWEP"));
-			   if ((FormatFlagsValue & 0x8000) != 0) {
-			       // If this bit is set, the executable file is a library module.
-			       // If   bit  15   is  set,   the  CS:IP   registers  point  to  an
-			       // initialization  procedure  called  with  the  value  in  the AX
-			       // register  equal  to  the   module  handle.  The  initialization
-			       // procedure  must execute  a far   return to  the caller.  If the
-			       // procedure is successful, the value in AX is nonzero. Otherwise,
-			       // the value in AX is zero. The value in the DS register is set to
-			       // the library's data segment if  SINGLEDATA is set. Otherwise, DS
-			       // is set  to the data segment  of the application that  loads the
-			       // library.
-			       FormatFlags.Nodes.Add(new Chunk("NE_FFLAGS_LIBMODULE"));
-			   }*/
-
+			Layout{Offset: offset + 8, Length: 4, Info: "file load crc", Type: Uint32le},
+			Layout{Offset: offset + 12, Length: 1, Info: "program flags", Type: Uint8, Masks: []Mask{
+				Mask{Low: 0, Length: 2, Info: "dgroup type"}, // XXX 0=none, 1=single shared, 2=multiple, 3=null
+				Mask{Low: 2, Length: 1, Info: "global initialization"},
+				Mask{Low: 3, Length: 1, Info: "protected mode only"},
+				Mask{Low: 4, Length: 1, Info: "8086 instructions"},
+				Mask{Low: 5, Length: 1, Info: "80286 instructions"},
+				Mask{Low: 6, Length: 1, Info: "80386 instructions"},
+				Mask{Low: 7, Length: 1, Info: "80x87 instructions"},
+			}},
+			Layout{Offset: offset + 13, Length: 1, Info: "app flags", Type: Uint8, Masks: []Mask{
+				Mask{Low: 0, Length: 3, Info: "app type"},               // XXX 1=unaware of win api, 2=compatible with win api, 3=uses win api
+				Mask{Low: 3, Length: 1, Info: "OS/2 family app"},        // XXX
+				Mask{Low: 4, Length: 1, Info: "reserved"},               // XXX
+				Mask{Low: 5, Length: 1, Info: "errors in image"},        // XXX
+				Mask{Low: 6, Length: 1, Info: "non-conforming program"}, // XXX
+				Mask{Low: 7, Length: 1, Info: "dll or driver"},          // XXX
+			}},
 			Layout{Offset: offset + 14, Length: 2, Info: "auto data segment index", Type: Uint16le},
 			Layout{Offset: offset + 16, Length: 2, Info: "initial local heap size", Type: Uint16le},
 			Layout{Offset: offset + 18, Length: 2, Info: "initial stack size", Type: Uint16le},
@@ -125,16 +94,14 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 		}})
 
 	moduleReferenceEntries, _ := readUint16le(file, offset+30)
-	offsetModuleReferenceTable, _ := readUint16le(file, offset+40)
+	moduleReferenceOffset, _ := readUint16le(file, offset+40)
+	res = append(res, *parseNEModuleReferenceTable(offset+int64(moduleReferenceOffset), moduleReferenceEntries))
 
-	res = append(res, *parseNEModuleReferenceTable(offset+int64(offsetModuleReferenceTable), moduleReferenceEntries))
+	entryTableOffset, _ := readUint16le(file, offset+4)
+	entryTableLength, _ := readUint16le(file, offset+6)
+	res = append(res, *parseNEEntryTable(file, offset+int64(entryTableOffset), entryTableLength))
 
 	/*
-
-	   neHead.Nodes.Add(ParseNEModuleReferenceTable(OffsetModuleReferenceTableValue, ModuleReferenceCountValue));
-
-	   neHead.Nodes.Add(ParseNEEntryTable(OffsetToEntryTableValue, EntryTableLengthValue));
-
 	   neHead.Nodes.Add(ParseNESegmentTable(OffsetSegmentTableValue, SegmentCountValue));
 
 	   neHead.Nodes.Add(ParseNEImportedTable(OffsetImportedNamesTableValue));
@@ -166,93 +133,97 @@ func parseNEModuleReferenceTable(offset int64, count uint16) *Layout {
 	return &res
 }
 
+func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
+
+	// Log(" XXXX TODO care about MovableEntryPointsInEntryTableValue = " + MovableEntryPointsInEntryTableValue);
+
+	res := Layout{
+		Offset: offset,
+		Length: int64(length),
+		Info:   "NE entry table",
+		Type:   Group}
+
+	// The entry-table data is organized by bundle, each of which begins with
+	// a 2-byte header. The first byte of the header specifies the number of
+	// entries in the bundle (a value of 00h designates the end of the table).
+	// The second byte specifies whether the corresponding segment is movable
+	// or fixed. If the value in this byte is 0FFh, the segment is movable.
+	// If the value in this byte is 0FEh, the entry does not refer to a segment
+	// but refers, instead, to a constant defined within the module. If the
+	// value in this byte is neither 0FFh nor 0FEh, it is a segment index.
+
+	entryTableLen := 0
+	for entryTableLen < int(length) {
+
+		entries, _ := readUint8(file, offset)
+		entryTableLen += 1
+
+		segNumber, _ := readUint8(file, offset+1)
+		entryTableLen += 1
+
+		if entries == 0 {
+			res.Childs = append(res.Childs, Layout{
+				Offset: offset,
+				Length: 2,
+				Info:   "end marker",
+				Type:   Uint16le})
+			continue
+		}
+
+		res.Childs = append(res.Childs, []Layout{
+			Layout{Offset: offset, Length: 1, Info: "items", Type: Uint8},
+			Layout{Offset: offset + 1, Length: 1, Info: "segment", Type: Uint8},
+		}...)
+
+		offset += 2
+
+		for i := 1; i <= int(entries); i++ {
+			switch segNumber {
+			case 0xff:
+				int3f, _ := readUint16le(file, offset+1)
+
+				entryTableLen += 6
+				if int3f != 0x3fcd {
+					panic("PARSE ERROR in NE - entry points. int3f == " + fmt.Sprintf("%04x", int3f))
+				}
+
+				id := fmt.Sprintf("%d", i)
+				res.Childs = append(res.Childs, []Layout{
+					Layout{Offset: offset, Length: 1, Info: "movable " + id + " flags", Type: Uint8, Masks: []Mask{
+						Mask{Low: 0, Length: 1, Info: "exported"},
+						Mask{Low: 1, Length: 1, Info: "global data segment"},
+						Mask{Low: 2, Length: 1, Info: "reserved"},
+						Mask{Low: 3, Length: 5, Info: "ring transition words"},
+					}},
+					Layout{Offset: offset + 1, Length: 2, Info: "movable " + id + " int3f", Type: Uint16le},
+					Layout{Offset: offset + 3, Length: 1, Info: "movable " + id + " segment", Type: Uint8},
+					Layout{Offset: offset + 4, Length: 2, Info: "movable " + id + " offset", Type: Uint16le},
+				}...)
+				offset += 6
+
+			case 0xfe:
+				panic("  TODO   refer to constant defined within module")
+
+				// struct entry_tab_fixed_s
+				// unsigned char flags;
+				// unsigned short offset;
+
+			default:
+				panic("xxx")
+				if entries > 1 {
+					// panic("sample please! entries > 1")
+				}
+				//Log("  TODO segment index " + nSegNumber);
+				//NOTE: only sample i seen was empty here
+			}
+		}
+	}
+
+	return &res
+}
+
 /*
 
-private Chunk ParseNEEntryTable(long baseOffset, uint length)
-{
-    //Log("EntryTable at 0x" + OffsetToEntryTableValue.ToString("x4") + ", Length " + EntryTableLengthValue.ToString("x4"));
-    // Log(" XXXX TODO care about MovableEntryPointsInEntryTableValue = " + MovableEntryPointsInEntryTableValue);
-    var chunk = new Chunk("Entry Table");
-    chunk.offset = baseOffset;
-    chunk.length = length;
-
-    BaseStream.Position = baseOffset;
-
-
-    // The entry-table data is organized  by bundle,  each of which
-    // begins with a 2-byte header. The first  byte of the header specifies the number
-    // of entries in the bundle (a value of  00h designates the end of the table). The
-    // second byte specifies whether the corresponding segment is movable or fixed. If
-    // the value in  this byte is 0FFh, the  segment is movable. If the  value in this
-    // byte is 0FEh, the  entry does not refer to a segment  but refers, instead, to a
-    // constant defined within  the module. If the value in  this byte is neither 0FFh
-    // nor 0FEh, it is a segment index.
-
-    int entryTableLen = 0;
-    do {
-        var currOffset = BaseStream.Position;
-        var nEntries = ReadByte();
-        entryTableLen += 1;
-
-        // Log("   entry point entries = " + nEntries);
-
-        if (nEntries == 0) {
-            // Log("   this is end of table marker");
-            var sub2 = new Chunk("End Marker");
-            sub2.offset = currOffset;
-            sub2.length = 1;
-            chunk.Nodes.Add(sub2);
-
-            continue;
-        }
-
-        var nSegNumber = ReadByte();
-        entryTableLen += 1;
-
-
-        var sub = new Chunk("Header: " + nEntries + " items, segment number 0x" + nSegNumber.ToString("x2"));
-        sub.offset = currOffset;
-        sub.length = 2;
-        chunk.Nodes.Add(sub);
-
-
-        for (int i = 0; i < nEntries; i++) {
-            currOffset = BaseStream.Position;
-            if (nSegNumber == 0xFF) {
-                byte flags = ReadByte();
-                ushort int3f = ReadUInt16();
-                byte segment = ReadByte();
-                ushort offset = ReadUInt16();
-                entryTableLen += 6;
-                if (int3f != 0x3fcd) {
-                    Log("PARSE ERROR in NE - entry points. int3f == " + int3f.ToString("x4"));
-                    break;
-                }
-
-                //Log("[" + currOffset.ToString("x4") + "] movable segment, flags = " + flags.ToString("x2") + " , offset = " + segment.ToString("x4") + ":" + offset.ToString("x4"));
-
-                var sub2 = new Chunk("Movable segment at " + segment.ToString("x4") + ":" + offset.ToString("x4") + ", flags = " + flags.ToString("x2"));
-                sub2.offset = currOffset;
-                sub2.length = 6;
-                chunk.Nodes.Add(sub2);
-            } else if (nSegNumber == 0xFE) {
-                Log("  TODO   refer to constant defined within module");
-
-                // struct entry_tab_fixed_s
-                // unsigned char flags;
-                // unsigned short offset;
-
-            } else {
-                if (nEntries > 1)
-                    throw new Exception("sample please! entries = " + nEntries);
-                //Log("  TODO segment index " + nSegNumber);
-                //NOTE: only sample i seen was empty here
-            }
-        }
-
-    } while (entryTableLen < length);
-    return chunk;
-}
 
 private Chunk ParseNESegmentTable(long baseOffset, uint count)
 {

@@ -16,7 +16,24 @@ var (
 		2: "Windows",
 		3: "European MS-DOS 4.x",
 		4: "Windows 386",
-		5: "BOSS (Borland Operating System Services)",
+		5: "BOSS", // Borland Operating System Services
+	}
+
+	neResourceType = map[uint16]string{
+		0x8001: "cursor",
+		0x8002: "bitmap",
+		0x8003: "icon",
+		0x8004: "menu",
+		0x8005: "dialog box",
+		0x8006: "string table",
+		0x8007: "font directory",
+		0x8008: "font",
+		0x8009: "accelerator table",
+		0x800a: "resource data",
+		// b: "message table", // ?
+		0x800c: "cursor directory",
+		0x800e: "icon directory",
+		0x8010: "version",
 	}
 )
 
@@ -70,15 +87,15 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 			Layout{Offset: offset + 28, Length: 2, Info: "segment table entries", Type: Uint16le},
 			Layout{Offset: offset + 30, Length: 2, Info: "module reference entires", Type: Uint16le},
 			Layout{Offset: offset + 32, Length: 2, Info: "nonresident names table size", Type: Uint16le},
-			Layout{Offset: offset + 34, Length: 2, Info: "offset segment table", Type: Uint16le},
-			Layout{Offset: offset + 36, Length: 2, Info: "offset resource table", Type: Uint16le},
-			Layout{Offset: offset + 38, Length: 2, Info: "offset resident names table", Type: Uint16le},
-			Layout{Offset: offset + 40, Length: 2, Info: "offset module reference table", Type: Uint16le},
-			Layout{Offset: offset + 42, Length: 2, Info: "offset imported names table", Type: Uint16le},    // XXX (array of counted strings, terminated with a string of length 00h)
-			Layout{Offset: offset + 44, Length: 4, Info: "offset nonresident names table", Type: Uint32le}, // Offset from start of file to nonresident names table
+			Layout{Offset: offset + 34, Length: 2, Info: "segment table offset", Type: Uint16le},
+			Layout{Offset: offset + 36, Length: 2, Info: "resource table offset", Type: Uint16le},
+			Layout{Offset: offset + 38, Length: 2, Info: "resident names table offset", Type: Uint16le},
+			Layout{Offset: offset + 40, Length: 2, Info: "module reference table offset", Type: Uint16le},
+			Layout{Offset: offset + 42, Length: 2, Info: "imported names table offset", Type: Uint16le},
+			Layout{Offset: offset + 44, Length: 4, Info: "nonresident names table offset", Type: Uint32le}, // Offset from start of file to nonresident names table
 			Layout{Offset: offset + 48, Length: 2, Info: "movable entry points in entry table", Type: Uint16le},
 			Layout{Offset: offset + 50, Length: 2, Info: "file alignment size shift", Type: Uint16le}, //  File alignment size shift count, 0 is equivalent to 9 (default 512-byte pages)
-			Layout{Offset: offset + 52, Length: 2, Info: "resources", Type: Uint16le},                 // Number of resource table entries
+			Layout{Offset: offset + 52, Length: 2, Info: "resource table entries", Type: Uint16le},
 			Layout{Offset: offset + 54, Length: 1, Info: "target os = " + targetOS, Type: Uint8},
 			Layout{Offset: offset + 55, Length: 1, Info: "extra flags", Type: Uint8, Masks: []Mask{
 				Mask{Low: 0, Length: 1, Info: "long filename support"},
@@ -104,17 +121,23 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 	segmentTableOffset, _ := readUint16le(file, offset+34)
 	segmentTableEntries, _ := readUint16le(file, offset+28)
 	res = append(res, *parseNESegmentTable(file, offset+int64(segmentTableOffset), segmentTableEntries))
+
+	importedNamesTableOffset, _ := readUint16le(file, offset+42)
+	res = append(res, *parseNEImportedTable(file, offset+int64(importedNamesTableOffset)))
+
+	residentNamesTableOffset, _ := readUint16le(file, offset+38)
+	res = append(res, *parseNEResidentTable(file, offset+int64(residentNamesTableOffset)))
+
 	/*
-
-
-	   neHead.Nodes.Add(ParseNEImportedTable(OffsetImportedNamesTableValue));
-
-	   neHead.Nodes.Add(ParseNEResidentTable(OffsetResidentNamesTableValue));
-
-	   neHead.Nodes.Add(ParseNENonResidentTable(OffsetNonresidentNamesTableValue));
-
-	   neHead.Nodes.Add(ParseNEResourceTable(OffsetResourceTableValue));
+	   XXX pretty broken: !?!
+	   	nonResidentNamesTableOffset, _ := readUint16le(file, offset+44)
+	   	nonresidentNamesTableSize, _ := readUint16le(file, offset+32)
+	   	res = append(res, *parseNENonResidentTable(file, offset+int64(nonResidentNamesTableOffset), nonresidentNamesTableSize))
 	*/
+
+	resourceTableOffset, _ := readUint16le(file, offset+36)
+	resourceTableEntries, _ := readUint16le(file, offset+52)
+	res = append(res, *parseNEResourceTable(file, offset+int64(resourceTableOffset), resourceTableEntries))
 
 	return res, nil
 }
@@ -168,6 +191,8 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 				Length: 2,
 				Info:   "end marker",
 				Type:   Uint16le})
+			entryTableLen += 2
+			offset += 2
 			continue
 		}
 
@@ -215,7 +240,7 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 				}
 				//Log("  TODO segment index " + nSegNumber);
 				//NOTE: only sample i seen was empty here
-				panic("xxx")
+				// panic("xxx")
 			}
 		}
 	}
@@ -261,248 +286,226 @@ func parseNESegmentTable(file *os.File, offset int64, count uint16) *Layout {
 	return &res
 }
 
-/*
+func parseNEImportedTable(file *os.File, offset int64) *Layout {
 
-private Chunk ParseNEImportedTable(long baseOffset)
-{
-    var chunk = new Chunk("Imported Names Table");
-    chunk.offset = baseOffset;
+	res := Layout{
+		Offset: offset,
+		Info:   "NE imported names table",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: offset, Length: 1, Info: "reserved", Type: Uint8}, // XXX ?
+		}}
 
-    //Log("Imported Names Table at 0x" + OffsetImportedNamesTableValue.ToString("x4"));
-    BaseStream.Position = baseOffset;
+	unknown, _ := readUint8(file, offset)
+	if unknown != 0 {
+		panic("sample plz")
+	}
 
-    var unknown = ReadByte(); // FIXME reserved??
-    if (unknown != 0)
-        throw new Exception("Sample plz");
+	offset++
 
-    byte len;
-    uint importLen = 1; // first unknown byte
-    do {
-        long currOffset = BaseStream.Position;
-        len = ReadByte();
+	var len byte
 
-        byte[] data = ReadBytes(len);
+	totLen := int64(1)
+	for {
 
-        var yo = new Chunk();
-        yo.offset = currOffset;
-        yo.length = (uint)(len + 1);
+		len, _ = readUint8(file, offset)
 
-        if (len == 1 && (data[0] == 0 || data[0] == 0xFF)) {
-            yo.Text = "End Marker";
-        } else {
-            string importName = ByteArrayToString(data);
-            //Log(currOffset.ToString("x6") + ": import of len " + len + ": " + importName);
-            yo.Text = importName;
-        }
-        chunk.Nodes.Add(yo);
+		b := readBytesFrom(file, offset+1, int64(len))
 
-        importLen += yo.length;
+		subLen := int64(len) + 1
+		info := string(b)
+		subType := ASCIIC
+		brk := false
+		if len <= 1 || b[0] == 0 || b[0] == 0xff {
+			info = "end marker"
+			subLen = 2
+			subType = Uint16le
+			brk = true
+		}
 
-    } while (len > 1);
+		res.Childs = append(res.Childs, Layout{
+			Offset: offset,
+			Length: subLen,
+			Info:   info,
+			Type:   subType,
+		})
 
-    chunk.length = importLen;
-    return chunk;
+		offset += subLen
+		totLen += subLen
+
+		if brk {
+			break
+		}
+	}
+
+	res.Length = totLen
+
+	return &res
 }
 
-private Chunk ParseNEResidentTable(long baseOffset)
-{
-    var chunk = new Chunk("Resident Names Table");
-    chunk.offset = baseOffset;
+func parseNEResidentTable(file *os.File, offset int64) *Layout {
 
-    //Log("Resident Names Table at 0x" + OffsetResidentNamesTableValue.ToString("x4"));
+	res := Layout{
+		Offset: offset,
+		Info:   "NE resident names table",
+		Type:   Group}
 
-    BaseStream.Position = baseOffset;
-    //format: [byte lenght, string name, word ord]
+	residentLen := int64(0)
+	var len byte
+	for {
 
-    uint residentLen = 0;
-    byte len;
-    do {
-        long currOffset = BaseStream.Position;
+		len, _ = readUint8(file, offset)
+		chunkLen := 1 + int64(len)
 
-        len = ReadByte();
+		if len == 0 {
+			res.Childs = append(res.Childs,
+				Layout{Offset: offset, Length: 1, Info: "end marker", Type: Uint8})
+		} else {
+			res.Childs = append(res.Childs, []Layout{
+				Layout{Offset: offset, Length: 1 + int64(len), Info: "data", Type: ASCIIC},
+				Layout{Offset: offset + 1 + int64(len), Length: 2, Info: "ord", Type: Uint16le}, // XXX ordinal value
+			}...)
+			chunkLen += 2
+		}
 
-        var yo = new Chunk();
-        yo.offset = currOffset;
-        yo.length = (uint)(1 + len);
+		offset += chunkLen
+		residentLen += chunkLen
 
-        if (len == 0) {
-            yo.Text = "End Marker";
-        } else {
-            yo.length += 2;
-            byte[] data = ReadBytes(len);
+		if len == 0 {
+			break
+		}
+	}
 
-            string name = ByteArrayToString(data);
-            short ord = ReadInt16();
-
-            // Log(currOffset.ToString("x6") + ": import of len " + len + ", ord " + ord.ToString("x4") + ": " + name);
-            yo.Text = name + " (ord " + ord.ToString("x4") + ")";
-        }
-        residentLen += yo.length;
-        chunk.Nodes.Add(yo);
-    } while (len > 0);
-
-    chunk.length = residentLen;
-
-    return chunk;
+	res.Length = residentLen
+	return &res
 }
 
-private Chunk ParseNENonResidentTable(long baseOffset)
-{
-    var chunk = new Chunk("Nonresident Names Table");
-    chunk.offset = baseOffset;
+func parseNENonResidentTable(file *os.File, offset int64, size uint16) *Layout {
 
-    // Log("Nonresident Names Table at 0x" + OffsetNonresidentNamesTableValue.ToString("x4"));
+	res := Layout{
+		Offset: offset,
+		Length: int64(size), // XXX
+		Info:   "NE nonresident names table",
+		Type:   Group}
 
-    uint nonresidentLen = 0;
-    BaseStream.Position = baseOffset;
-    //format: [byte lenght, string name, word ord]
+	return &res
+	/*
+	   var chunk = new Chunk("Nonresident Names Table");
+	   chunk.offset = baseOffset;
 
-    byte len;
-    do {
-        long currOffset = BaseStream.Position;
-        len = ReadByte();
+	   // Log("Nonresident Names Table at 0x" + OffsetNonresidentNamesTableValue.ToString("x4"));
 
-        var yo = new Chunk();
-        yo.offset = currOffset;
-        yo.length = (uint)(1 + len + 2);
+	   uint nonresidentLen = 0;
+	   BaseStream.Position = baseOffset;
+	   //format: [byte lenght, string name, word ord]
+
+	   byte len;
+	   do {
+	       long currOffset = BaseStream.Position;
+	       len = ReadByte();
+
+	       var yo = new Chunk();
+	       yo.offset = currOffset;
+	       yo.length = (uint)(1 + len + 2);
 
 
-        if (len == 0) {
-            yo.Text = "End Marker";
-        } else {
+	       if (len == 0) {
+	           yo.Text = "End Marker";
+	       } else {
 
-            byte[] data = ReadBytes(len);
+	           byte[] data = ReadBytes(len);
 
-            string name = ByteArrayToString(data);
-            short ord = ReadInt16();
+	           string name = ByteArrayToString(data);
+	           short ord = ReadInt16();
 
-            //Log(currOffset.ToString("x6") + ": import of len " + len + ", ord " + ord.ToString("x4") + ": " + xx);
-            yo.Text = name + " (ord " + ord.ToString("x4") + ")";
-        }
-        nonresidentLen += yo.length;
-        chunk.Nodes.Add(yo);
+	           //Log(currOffset.ToString("x6") + ": import of len " + len + ", ord " + ord.ToString("x4") + ": " + xx);
+	           yo.Text = name + " (ord " + ord.ToString("x4") + ")";
+	       }
+	       nonresidentLen += yo.length;
+	       chunk.Nodes.Add(yo);
 
-    } while (len > 0);
+	   } while (len > 0);
 
-    chunk.length = nonresidentLen;
+	   chunk.length = nonresidentLen;
 
-    return chunk;
+	   return chunk;
+	*/
 }
 
-private Chunk ParseNEResourceTable(long baseOffset)
-{
-    //Log("Resource Table at 0x" + OffsetResourceTableValue.ToString("x4"));
-    var chunk = new Chunk("Resource Table");
-    chunk.offset = baseOffset;
+func parseNEResourceTable(file *os.File, offset int64, count uint16) *Layout {
 
-    BaseStream.Position = baseOffset;
-    ushort shift = ReadUInt16();
+	res := Layout{
+		Offset: offset,
+		Info:   "NE resource table",
+		Type:   Group,
+		Childs: []Layout{
+			Layout{Offset: offset, Length: 2, Info: "shift", Type: Uint16le},
+		}}
 
-    uint resourceLen = 2; // shift len
+	len := int64(2)
+	offset += 2
 
-    do {
-        long currOffset = BaseStream.Position;
-        ushort type = ReadUInt16();
+	for {
 
-        string typeName = "UNKNOWN 0x" + type.ToString("x4");
+		resourceType, _ := readUint16le(file, offset)
 
-        var yo = new Chunk();
-        yo.offset = currOffset;
-        yo.length = 2;
+		if resourceType == 0 {
+			len += 2
+			res.Childs = append(res.Childs, Layout{
+				Offset: offset, Length: 2, Info: "end marker", Type: Uint16le})
+			break
+		}
 
-        if (type == 0) {
-            yo.Text = "End Marker";
+		count, _ = readUint16le(file, offset+2)
 
-            resourceLen += yo.length;
-            chunk.Nodes.Add(yo);
-            break;
-        }
+		info := "type"
+		if val, ok := neResourceType[resourceType]; ok {
+			info += " = " + val
+		}
 
-        ushort count = ReadUInt16();
-        yo.length += 2;
+		tnameInfoStructsLen := int64(count) * 12 // XXX
+		res.Childs = append(res.Childs, []Layout{
+			// TYPEINFO:
+			Layout{Offset: offset, Length: 2, Info: info, Type: Uint16le},
+			Layout{Offset: offset + 2, Length: 2, Info: "resource count", Type: Uint16le},
+			Layout{Offset: offset + 4, Length: 4, Info: "reserved", Type: Uint32le},
+			Layout{Offset: offset + 8, Length: tnameInfoStructsLen, Info: "TNAMEINFO structs", Type: Bytes},
+		}...)
 
-        switch (type) {
-        case 0x8001:
-            typeName = "Cursor";
-            break;
-        case 0x8002:
-            typeName = "Bitmap";
-            break;
-        case 0x8003:
-            typeName = "Icon";
-            break;
-        case 0x8004:
-            typeName = "Menu";
-            break;
-        case 0x8005:
-            typeName = "Dialog box";
-            break;
-        case 0x8006:
-            typeName = "String table";
-            break;
-        case 0x8007:
-            typeName = "Font directory";
-            break;
-        case 0x8008:
-            typeName = "Font component";
-            break;
-        case 0x8009:
-            typeName = "Accelerator table";
-            break;
-        case 0x800A:
-            typeName = "Resource data";
-            break;
-        case 0x800C:
-            typeName = "Cursor directory";
-            break;
-        case 0x800E:
-                //tells wich icon to use for 16 colors and wich for 256 colors
-            typeName = "Icon directory";
-            break;
-        case 0x8010:
-            typeName = "Version";
-            break;
-        }
-        yo.Text = typeName;
+		len += 8 + tnameInfoStructsLen
+		offset += 8 + tnameInfoStructsLen
 
-        //Log("Resource: " + typeName + ", " + count + " items");
+		//Log("Resource: " + typeName + ", " + count + " items");
 
-        // skip unknown bytes (reserved?) bytes
-        var r1 = ReadInt16();
-        var r2 = ReadInt16();
-        yo.length += 4;
-        if (r1 != 0 || r2 != 0)
-            throw new Exception("TODO sample-please: reserved assumed to be zero but wasnt #1: " + r1 + ", " + r2);
+		/*
 
+		   for (int i = 0; i < count; i++) {
+		       var offset = ReadUInt16() << shift;
+		       var size = (uint)(ReadUInt16() << shift);
+		       var flags = ReadUInt16();
+		       var resource = ReadUInt16();
 
-        for (int i = 0; i < count; i++) {
-            var offset = ReadUInt16() << shift;
-            var size = (uint)(ReadUInt16() << shift);
-            var flags = ReadUInt16();
-            var resource = ReadUInt16();
+		       //Log("   resource " + resource.ToString("x4") + ", offset=" + offset.ToString("x8") + ", size=" + size.ToString("x8") + ", flags=" + flags);
+		       var yoSub = new Chunk("resource " + resource.ToString("x4") + ", flags=" + flags.ToString("x4"));
+		       yoSub.offset = offset;
+		       yoSub.length = size;
+		       yo.Nodes.Add(yoSub);
 
-            //Log("   resource " + resource.ToString("x4") + ", offset=" + offset.ToString("x8") + ", size=" + size.ToString("x8") + ", flags=" + flags);
-            var yoSub = new Chunk("resource " + resource.ToString("x4") + ", flags=" + flags.ToString("x4"));
-            yoSub.offset = offset;
-            yoSub.length = size;
-            yo.Nodes.Add(yoSub);
+		       var res1 = ReadUInt16(); // skip 2 unknown bytes, 00
+		       var res2 = ReadUInt16(); // skip 2 more unknown bytes, 00
+		       if (res1 != 0 || res2 != 0)
+		           throw new Exception("TODO sample-please: reserved assumed to be zero wasnt #2: " + res1 + ", " + res2);
 
-            var res1 = ReadUInt16(); // skip 2 unknown bytes, 00
-            var res2 = ReadUInt16(); // skip 2 more unknown bytes, 00
-            if (res1 != 0 || res2 != 0)
-                throw new Exception("TODO sample-please: reserved assumed to be zero wasnt #2: " + res1 + ", " + res2);
+		       yo.length += 12;
+		   }
 
-            yo.length += 12;
-        }
+		   resourceLen += yo.length;
+		   chunk.Nodes.Add(yo);
+		*/
 
-        resourceLen += yo.length;
-        chunk.Nodes.Add(yo);
+	}
 
+	res.Length = len
+	return &res
 
-    } while (true);
-
-    chunk.length = resourceLen;
-
-    return chunk;
 }
-*/

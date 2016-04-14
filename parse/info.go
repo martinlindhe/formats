@@ -134,6 +134,20 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		}
 		res += string(buf)
 
+	case ASCIIC:
+		// len (byte) + ASCII
+		var len byte
+		if err := binary.Read(f, binary.LittleEndian, &len); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+
+		buf := make([]byte, len)
+		_, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += string(buf)
+
 	case RGB:
 		buf := make([]byte, field.Length)
 		_, err := f.Read(buf)

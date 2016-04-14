@@ -93,7 +93,7 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 			Layout{Offset: offset + 38, Length: 2, Info: "resident names table offset", Type: Uint16le},
 			Layout{Offset: offset + 40, Length: 2, Info: "module reference table offset", Type: Uint16le},
 			Layout{Offset: offset + 42, Length: 2, Info: "imported names table offset", Type: Uint16le},
-			Layout{Offset: offset + 44, Length: 4, Info: "nonresident names table offset", Type: Uint32le}, // Offset from start of file to nonresident names table
+			Layout{Offset: offset + 44, Length: 4, Info: "nonresident names table offset", Type: Uint32le},
 			Layout{Offset: offset + 48, Length: 2, Info: "movable entry points in entry table", Type: Uint16le},
 			Layout{Offset: offset + 50, Length: 2, Info: "file alignment size shift", Type: Uint16le}, //  File alignment size shift count, 0 is equivalent to 9 (default 512-byte pages)
 			Layout{Offset: offset + 52, Length: 2, Info: "resource table entries", Type: Uint16le},
@@ -129,12 +129,9 @@ func parseMZ_NEHeader(file *os.File) ([]Layout, error) {
 	residentNamesTableOffset, _ := readUint16le(file, offset+38)
 	res = append(res, *parseNEResidentTable(file, offset+int64(residentNamesTableOffset)))
 
-	/*
-	   XXX pretty broken: !?!
-	   	nonResidentNamesTableOffset, _ := readUint16le(file, offset+44)
-	   	nonresidentNamesTableSize, _ := readUint16le(file, offset+32)
-	   	res = append(res, *parseNENonResidentTable(file, offset+int64(nonResidentNamesTableOffset), nonresidentNamesTableSize))
-	*/
+	nonResidentNamesTableOffset, _ := readUint32le(file, offset+44)
+	nonresidentNamesTableSize, _ := readUint16le(file, offset+32)
+	res = append(res, *parseNENonResidentTable(file, int64(nonResidentNamesTableOffset), nonresidentNamesTableSize))
 
 	resourceTableOffset, _ := readUint16le(file, offset+36)
 	resourceTableEntries, _ := readUint16le(file, offset+52)
@@ -384,52 +381,35 @@ func parseNENonResidentTable(file *os.File, offset int64, size uint16) *Layout {
 
 	res := Layout{
 		Offset: offset,
-		Length: int64(size), // XXX
 		Info:   "NE nonresident names table",
 		Type:   Group}
 
+	nonresidentLen := int64(0)
+
+	var len byte
+	for {
+		len, _ = readUint8(file, offset)
+		if len == 0 {
+			res.Childs = append(res.Childs,
+				Layout{Offset: offset, Length: 1, Info: "end marker", Type: Uint8})
+			nonresidentLen += 1
+		} else {
+			res.Childs = append(res.Childs, []Layout{
+				Layout{Offset: offset, Length: 1 + int64(len), Info: "name", Type: ASCIIC},
+				Layout{Offset: offset + 1 + int64(len), Length: 2, Info: "ord", Type: Uint16le},
+			}...)
+		}
+		if len == 0 {
+			break
+		}
+		nonresidentLen += 1 + int64(len) + 2
+		offset += 1 + int64(len) + 2
+	}
+	if int64(size) != nonresidentLen {
+		fmt.Println("warning: NE nonresident table length not expected")
+	}
+	res.Length = nonresidentLen
 	return &res
-	/*
-	   var chunk = new Chunk("Nonresident Names Table");
-	   chunk.offset = baseOffset;
-
-	   // Log("Nonresident Names Table at 0x" + OffsetNonresidentNamesTableValue.ToString("x4"));
-
-	   uint nonresidentLen = 0;
-	   BaseStream.Position = baseOffset;
-	   //format: [byte lenght, string name, word ord]
-
-	   byte len;
-	   do {
-	       long currOffset = BaseStream.Position;
-	       len = ReadByte();
-
-	       var yo = new Chunk();
-	       yo.offset = currOffset;
-	       yo.length = (uint)(1 + len + 2);
-
-
-	       if (len == 0) {
-	           yo.Text = "End Marker";
-	       } else {
-
-	           byte[] data = ReadBytes(len);
-
-	           string name = ByteArrayToString(data);
-	           short ord = ReadInt16();
-
-	           //Log(currOffset.ToString("x6") + ": import of len " + len + ", ord " + ord.ToString("x4") + ": " + xx);
-	           yo.Text = name + " (ord " + ord.ToString("x4") + ")";
-	       }
-	       nonresidentLen += yo.length;
-	       chunk.Nodes.Add(yo);
-
-	   } while (len > 0);
-
-	   chunk.length = nonresidentLen;
-
-	   return chunk;
-	*/
 }
 
 func parseNEResourceTable(file *os.File, offset int64, count uint16) *Layout {

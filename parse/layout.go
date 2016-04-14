@@ -26,6 +26,7 @@ const (
 	Uint32be
 
 	// version
+	MajorMinor8  // high nibble = major, low = minor
 	MajorMinor16 // first byte = major, last = minor
 	MinorMajor16 // first byte = minor, last = major
 
@@ -48,6 +49,7 @@ var (
 		Uint32le:     "uint32-le",
 		Uint16be:     "uint16-be",
 		Uint32be:     "uint32-be",
+		MajorMinor8:  "major.minor-8",
 		MajorMinor16: "major.minor-16",
 		MinorMajor16: "minor.major-16",
 		Bytes:        "bytes",

@@ -111,11 +111,10 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 }
 func findCustomDOSHeaders(file *os.File) *Layout {
 
-	tok, _ := knownLengthASCII(file, 0x1e, 9)
-	if tok == "PKLITE Co" {
-		offset := int64(0x1c)
+	offset := int64(0x1c)
 
-		file.Seek(offset+2, os.SEEK_SET)
+	tok, _ := knownLengthASCII(file, offset+2, 9)
+	if tok == "PKLITE Co" {
 
 		return &Layout{
 			Offset: offset,
@@ -131,6 +130,24 @@ func findCustomDOSHeaders(file *os.File) *Layout {
 				// 4 - Extra compression
 				// 5 - Multi-segment file
 			}}
+	}
+
+	tok, _ = knownLengthASCII(file, 0x1c, 4)
+	if tok == "LZ09" || tok == "LZ91" {
+
+		return &Layout{
+			Offset: offset,
+			Length: 6, // XXX
+			Info:   "LZEXE header",
+			Type:   Group,
+			Childs: []Layout{
+				Layout{Offset: offset, Length: 4, Info: "identifier", Type: ASCII},
+				Layout{Offset: offset + 4, Length: 2, Info: "exe version", Type: MajorMinor16},
+			}}
+
+		// XXX
+		// "LZ09" = v 0.9
+		// "LZ91" = v 0.91
 	}
 
 	return nil
@@ -161,30 +178,6 @@ func findCustomDOSHeaders(file *os.File) *Layout {
 	       header.Nodes.Add(tlink);
 	   }
 
-
-	   BaseStream.Position = 0x001C;
-	   var lzexeId = ReadStringZ();
-	   if (lzexeId.Length >= 4 && lzexeId.Substring(0, 2) == "LZ") {
-	       var lzexe = overlay.RelativeTo("LZEXE compressed executable header", 4);
-
-	       var lzexeIdentifier = overlay.RelativeTo("Identifier", 2);
-	       lzexe.Nodes.Add(lzexeIdentifier);
-
-	       string lzexeVerName = "UNKNOWN VERSION";
-	       switch (lzexeId.Substring(2, 2)) {
-	       case "09":
-	           lzexeVerName = "0.9";
-	           break;
-	       case "91":
-	           lzexeVerName = "0.91";
-	           break;
-	       }
-
-	       var lzexeVersion = lzexeIdentifier.RelativeTo("Version " + lzexeVerName, 2);
-	       lzexe.Nodes.Add(lzexeVersion);
-
-	       header.Nodes.Add(lzexe);
-	   }
 
 	*/
 

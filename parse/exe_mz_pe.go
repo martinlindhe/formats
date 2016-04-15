@@ -1,7 +1,7 @@
 package parse
 
 // PE exe (Win32, Win64)
-// STATUS: 30%
+// STATUS: 50%
 
 // http://wiki.osdev.org/PE
 
@@ -41,7 +41,9 @@ var (
 func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 
 	peHeaderLen := int64(24)
+	sectionHeaderLen := int64(40)
 	optHeaderSize, _ := readUint16le(file, offset+20)
+	numberOfSections, _ := readUint16le(file, offset+6)
 
 	machine, _ := readUint16le(file, offset+4)
 
@@ -68,8 +70,62 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 	offset += peHeaderLen
 
 	if optHeaderSize > 0 {
-		res = append(res, parsePEOptHeader(file, offset, optHeaderSize))
+		optHeader := parsePEOptHeader(file, offset, optHeaderSize)
+		res = append(res, optHeader)
+		offset += optHeader.Length
 	}
+
+	sectionHeader := Layout{
+		Offset: offset,
+		Length: int64(numberOfSections) * sectionHeaderLen,
+		Info:   "section header",
+		Type:   Group,
+	}
+
+	for i := 0; i < int(numberOfSections); i++ {
+
+		sectionName, _, _ := readZeroTerminatedASCII(file, offset)
+		rawDataSize, _ := readUint32le(file, offset+16)
+		rawDataOffset, _ := readUint32le(file, offset+20)
+
+		res = append(res, Layout{
+			Offset: int64(rawDataOffset),
+			Length: int64(rawDataSize),
+			Info:   "section " + sectionName,
+			Type:   Group,
+			Childs: []Layout{
+				// XXX decode sections
+				{Offset: int64(rawDataOffset), Length: int64(rawDataSize), Info: "data", Type: Bytes},
+			}})
+
+		chunk := []Layout{
+			{Offset: offset, Length: 8, Info: "name", Type: ASCIIZ},
+			{Offset: offset + 8, Length: 4, Info: "virtual size", Type: Uint32le},
+			{Offset: offset + 12, Length: 4, Info: "virtual address", Type: Uint32le},
+			{Offset: offset + 16, Length: 4, Info: "raw data size", Type: Uint32le},
+			{Offset: offset + 20, Length: 4, Info: "raw data offset", Type: Uint32le},
+			{Offset: offset + 24, Length: 4, Info: "reallocations offset", Type: Uint32le},
+			{Offset: offset + 28, Length: 4, Info: "linenumbers offset", Type: Uint32le},
+			{Offset: offset + 32, Length: 2, Info: "reallocations count", Type: Uint16le},
+			{Offset: offset + 34, Length: 2, Info: "linenumbers count", Type: Uint16le},
+			{Offset: offset + 36, Length: 4, Info: "flags", Type: Uint32le, Masks: []Mask{
+				// XXX fix bit map
+				{Low: 0, Length: 1, Info: "0x00000020 = Code"},
+				{Low: 0, Length: 1, Info: "0x00000040 = Initialized data"},
+				{Low: 0, Length: 1, Info: "0x00000080 = Uninitialized data"},
+				{Low: 0, Length: 1, Info: "0x00000200 = Info"},
+				{Low: 0, Length: 1, Info: "0x02000000 = Discardable"},
+				{Low: 0, Length: 1, Info: "0x10000000 = Shared"},
+				{Low: 0, Length: 1, Info: "0x20000000 = Executable"},
+				{Low: 0, Length: 1, Info: "0x40000000 = Readable"},
+				{Low: 0, Length: 1, Info: "0x80000000 = Writeable"},
+			}},
+		}
+		sectionHeader.Childs = append(sectionHeader.Childs, chunk...)
+		offset += sectionHeaderLen
+	}
+
+	res = append(res, sectionHeader)
 
 	return res, nil
 }
@@ -153,154 +209,3 @@ func parsePEOptHeader(file *os.File, offset int64, size uint16) Layout {
 
 	return optHeader
 }
-
-/*
-
-private Chunk ParsePEHeader()
-{
-
-...
-
-
-    var SectionsOverview = new Chunk();
-    SectionsOverview.length = NumberOfSectionsValue * 40;
-    SectionsOverview.offset = peHead.offset + peHead.length;
-    SectionsOverview.Text = "Sections";
-
-    if (SizeOfOptionalHeaderValue > 0)
-        peHead.Nodes.Add(optHead);
-
-    if (NumberOfSectionsValue > 0)
-        peHead.Nodes.Add(SectionsOverview);
-
-    for (int i = 0; i < NumberOfSectionsValue; i++) {
-        var SectionChunk = new Chunk();
-        SectionChunk.length = 40;
-        SectionChunk.offset = peHead.offset + peHead.length + (i * SectionChunk.length);
-
-        // Section Name - common names are .text .data .bss
-        var SectionName = new ZeroTerminatedStringChunk("Section name", 8);
-        SectionName.offset = SectionChunk.offset;
-        SectionChunk.Nodes.Add(SectionName);
-
-        var SectioNameValue = "XXX FIXME AGAIN"; // SectionName.GetString(d);
-
-        SectionChunk.Text = "Section " + SectioNameValue;
-
-        // Size of the section once it is loaded to memory
-        var SectionSize = SectionName.RelativeToLittleEndian32("Section size loaded");
-        SectionChunk.Nodes.Add(SectionSize);
-
-        // RVA (location) of section once it is loaded to memory
-        var RVALocation = SectionSize.RelativeToLittleEndian32("RVA location of section");
-        BaseStream.Position = RVALocation.offset;
-        int RVALocationValue = ReadInt32();
-        SectionChunk.Nodes.Add(RVALocation);
-
-        // Physical size of section on disk
-        var PhysSize = RVALocation.RelativeToLittleEndian32("Physical size of section");
-        BaseStream.Position = PhysSize.offset;
-        var PhysSizeValue = (uint)ReadInt32();
-        SectionChunk.Nodes.Add(PhysSize);
-
-        // Physical location of section on disk (from start of disk image)
-        var PhysOffset = PhysSize.RelativeToLittleEndian32("Physical offset of section");
-        BaseStream.Position = PhysOffset.offset;
-        int PhysOffsetValue = ReadInt32();
-        SectionChunk.Nodes.Add(PhysOffset);
-
-        // Reserved (usually zero) (used in object formats)
-        var Reserved12 = PhysOffset.RelativeTo("Reserved", 12);
-        SectionChunk.Nodes.Add(Reserved12);
-
-        // Section flags
-        var SectionFlags = Reserved12.RelativeToLittleEndian32("Section flags");
-        BaseStream.Position = SectionFlags.offset;
-        int SectionFlagsValue = ReadInt32();
-
-        if ((SectionFlagsValue & 0x00000020) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x00000020 = Code";
-            SectionFlags.Nodes.Add(note);
-        }
-        if ((SectionFlagsValue & 0x00000040) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x00000040 = Initialized data";
-            SectionFlags.Nodes.Add(note);
-        }
-        if ((SectionFlagsValue & 0x00000080) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x00000080 = Uninitialized data";
-            SectionFlags.Nodes.Add(note);
-        }
-
-        if ((SectionFlagsValue & 0x00000200) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x00000200 = Info";
-            SectionFlags.Nodes.Add(note);
-        }
-
-        if ((SectionFlagsValue & 0x02000000) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x02000000 = Discardable";
-            SectionFlags.Nodes.Add(note);
-        }
-
-        if ((SectionFlagsValue & 0x10000000) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x10000000 = Shared";
-            SectionFlags.Nodes.Add(note);
-        }
-        if ((SectionFlagsValue & 0x20000000) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x20000000 = Executable";
-            SectionFlags.Nodes.Add(note);
-        }
-        if ((SectionFlagsValue & 0x40000000) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x40000000 = Readable";
-            SectionFlags.Nodes.Add(note);
-        }
-        if ((SectionFlagsValue & 0x80000000) != 0) {
-            var note = new Chunk();
-            note.offset = SectionFlags.offset;
-            note.length = SectionFlags.length;
-            note.Text = "0x80000000 = Writeable";
-            SectionFlags.Nodes.Add(note);
-        }
-
-        SectionChunk.Nodes.Add(SectionFlags);
-
-
-        var sectionPointer = new SectionPointer();
-        sectionPointer.length = PhysSizeValue;
-        sectionPointer.realOffset = PhysOffsetValue;
-        sectionPointer.virtualOffset = RVALocationValue;
-        sectionPointer.Text = SectioNameValue;
-        if (sectionPointer.length > 0)
-            sections.Add(sectionPointer);
-
-        SectionsOverview.Nodes.Add(SectionChunk);
-    }
-
-    peHead.length += SectionsOverview.length;
-
-    return peHead;
-}
-*/

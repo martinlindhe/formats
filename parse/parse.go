@@ -50,6 +50,12 @@ func countInitiatedASCII(r io.Reader) (string, int, error) {
 	return s, readCnt, nil
 }
 
+func readZeroTerminatedASCII(file *os.File, offset int64) (string, int, error) {
+
+	file.Seek(offset, os.SEEK_SET)
+	return zeroTerminatedASCII(file)
+}
+
 // return string, bytes read, error
 func zeroTerminatedASCII(r io.Reader) (string, int, error) {
 

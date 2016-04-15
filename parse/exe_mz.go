@@ -97,18 +97,22 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 
 		switch newHeaderId {
 		case "LX":
-			// OS/2
+			// OS/2 (32-bit)
 			header, _ := parseMZ_LXHeader(file, offset)
 			res.Layout = append(res.Layout, header...)
+		case "LE":
+			// OS/2 (mixed 16/32-bit)
+			panic("LE")
 		case "NE":
 			// Win16, OS/2
 			header, _ := parseMZ_NEHeader(file, offset)
 			res.Layout = append(res.Layout, header...)
 		case "PE":
 			// Win32, Win64
-			panic("PE")
+			header, _ := parseMZ_PEHeader(file, offset)
+			res.Layout = append(res.Layout, header...)
 		default:
-			// XXX get samples of LE, LX, W3 files
+			// XXX get samples of LE, W3 files
 			panic("unknown newHeaderId =" + newHeaderId)
 		}
 	} else {

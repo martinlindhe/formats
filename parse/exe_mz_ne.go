@@ -108,7 +108,9 @@ func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
 
 	moduleReferenceEntries, _ := readUint16le(file, offset+30)
 	moduleReferenceOffset, _ := readUint16le(file, offset+40)
-	res = append(res, *parseNEModuleReferenceTable(offset+int64(moduleReferenceOffset), moduleReferenceEntries))
+	if moduleReferenceEntries > 0 {
+		res = append(res, *parseNEModuleReferenceTable(offset+int64(moduleReferenceOffset), moduleReferenceEntries))
+	}
 
 	entryTableOffset, _ := readUint16le(file, offset+4)
 	entryTableLength, _ := readUint16le(file, offset+6)
@@ -116,7 +118,9 @@ func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
 
 	segmentTableOffset, _ := readUint16le(file, offset+34)
 	segmentTableEntries, _ := readUint16le(file, offset+28)
-	res = append(res, *parseNESegmentTable(file, offset+int64(segmentTableOffset), segmentTableEntries))
+	if segmentTableEntries > 0 {
+		res = append(res, *parseNESegmentTable(file, offset+int64(segmentTableOffset), segmentTableEntries))
+	}
 
 	importedNamesTableOffset, _ := readUint16le(file, offset+42)
 	res = append(res, *parseNEImportedTable(file, offset+int64(importedNamesTableOffset)))

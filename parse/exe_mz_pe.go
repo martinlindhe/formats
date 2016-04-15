@@ -1,184 +1,123 @@
 package parse
 
 // PE exe (Win32, Win64)
-// STATUS: 0%
+// STATUS: 30%
+
+// http://wiki.osdev.org/PE
+
+import (
+	"fmt"
+	"os"
+)
+
+var (
+	peMachines = map[uint16]string{
+		0x14c: "Intel 386",
+	}
+	peSubsystems = map[uint16]string{
+		0x0001: "Native",
+		0x0002: "GUI",
+		0x0003: "Console",
+		0x0005: "OS/2",
+		0x0007: "POSIX",
+	}
+
+	peRvaChunks = map[int]string{
+		0:  "Exports",
+		1:  "Imports",
+		2:  "Resources",
+		5:  "Base reolcations",
+		9:  "Thread Local Storage",
+		12: "Import Address Table",
+		14: "CLR Header",
+	}
+)
+
+// parses 32/64-bit Windows executables
+func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
+
+	peHeaderLen := int64(24) // XXX
+	optHeaderSize, _ := readUint16le(file, offset+20)
+
+	machine, _ := readUint16le(file, offset+4)
+
+	machineName := "?"
+	if val, ok := peMachines[machine]; ok {
+		machineName = val
+	}
+
+	res := []Layout{{
+		Offset: offset,
+		Length: peHeaderLen,
+		Info:   "PE header",
+		Type:   Group,
+		Childs: []Layout{
+			{Offset: offset, Length: 4, Info: "identifier", Type: ASCIIZ},
+			{Offset: offset + 4, Length: 2, Info: "machine = " + machineName, Type: Uint16le},
+			{Offset: offset + 6, Length: 2, Info: "number of sections", Type: Uint16le},
+			{Offset: offset + 8, Length: 4, Info: "timestamp", Type: Uint32le}, // XXX format, convert, etc: var TimeDateStamp = NumberOfSections.RelativeToLittleEndianDateStamp("TimeDateStamp");
+			{Offset: offset + 12, Length: 4, Info: "symbol table offset", Type: Uint32le},
+			{Offset: offset + 16, Length: 4, Info: "symbol table entries", Type: Uint32le},
+			{Offset: offset + 20, Length: 2, Info: "optional header size", Type: Uint16le},
+			{Offset: offset + 22, Length: 2, Info: "characteristics", Type: Uint16le},
+		}}}
+	offset += peHeaderLen
+
+	if optHeaderSize > 0 {
+		fmt.Println("pe opt hdr size: ", int64(optHeaderSize))
+
+		subsystem, _ := readUint16le(file, offset+68)
+
+		subsystemName := "?"
+		if val, ok := peSubsystems[subsystem]; ok {
+			subsystemName = val
+		}
+
+		res = append(res, Layout{
+			Offset: offset,
+			Length: int64(optHeaderSize),
+			Info:   "NE optional header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: offset, Length: 2, Info: "type", Type: Uint16le}, // XXX 0x10b = PE32, 0x20b = PE32+ (64-bit)
+				{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
+				{Offset: offset + 4, Length: 4, Info: "size of code", Type: Uint32le},
+				{Offset: offset + 8, Length: 4, Info: "size of initialized data", Type: Uint32le},
+				{Offset: offset + 12, Length: 4, Info: "size of uninitialized data", Type: Uint32le},
+				{Offset: offset + 16, Length: 4, Info: "address of entry point", Type: Uint32le},
+				{Offset: offset + 20, Length: 4, Info: "base of code", Type: Uint32le},
+				{Offset: offset + 24, Length: 4, Info: "base of data", Type: Uint32le},
+				{Offset: offset + 28, Length: 4, Info: "image base", Type: Uint32le},
+				{Offset: offset + 32, Length: 4, Info: "section alignment", Type: Uint32le},
+				{Offset: offset + 36, Length: 4, Info: "file alignment", Type: Uint32le},
+				{Offset: offset + 40, Length: 4, Info: "os version", Type: MajorMinor32le},
+				{Offset: offset + 44, Length: 4, Info: "image version", Type: MajorMinor32le},
+				{Offset: offset + 48, Length: 4, Info: "subsystem version", Type: MajorMinor32le},
+				{Offset: offset + 52, Length: 4, Info: "win32 version value", Type: Uint32le},
+				{Offset: offset + 56, Length: 4, Info: "size of image", Type: Uint32le},
+				{Offset: offset + 60, Length: 4, Info: "size of headers", Type: Uint32le},
+				{Offset: offset + 64, Length: 4, Info: "checksum", Type: Uint32le},
+				{Offset: offset + 68, Length: 2, Info: "subsystem = " + subsystemName, Type: Uint16le},
+				{Offset: offset + 70, Length: 2, Info: "dll characteristics", Type: Uint16le},
+
+				{Offset: offset + 72, Length: 4, Info: "size of stack reserve", Type: Uint32le},
+				{Offset: offset + 76, Length: 4, Info: "size of stack commit", Type: Uint32le},
+				{Offset: offset + 80, Length: 4, Info: "size of heap reserve", Type: Uint32le},
+				{Offset: offset + 84, Length: 4, Info: "size of heap commit", Type: Uint32le},
+				{Offset: offset + 88, Length: 4, Info: "loader flags", Type: Uint32le},
+				{Offset: offset + 92, Length: 4, Info: "number of rva and sizes", Type: Uint32le},
+			}})
+	}
+
+	return res, nil
+}
 
 /*
 
 private Chunk ParsePEHeader()
 {
-    Log("PE header found");
 
-    this.name = "PE executable (Win32)";
-
-    var peHead = new Chunk();
-    peHead.offset = ExtendedHeaderOffset;
-    peHead.Text = "PE header";
-    //                    peHead.childs = new List<Chunk>();
-
-    var peIdentifier = new LittleEndian32BitChunk("PE identifier");
-    peIdentifier.offset = ExtendedHeaderOffset;
-    peHead.Nodes.Add(peIdentifier);
-
-    // COFF header
-    var Machine = peIdentifier.RelativeToLittleEndian16("Machine = ");
-
-    BaseStream.Position = Machine.offset;
-    int MachineValue = ReadInt16();
-    switch (MachineValue) {
-    case 0x14c:
-        Machine.Text += "Intel 386";
-        break;
-
-    default:
-        Machine.Text += "Unknown";
-        throw new Exception("Unrecognized machine: " + MachineValue.ToString("x4"));
-    }
-    peHead.Nodes.Add(Machine);
-
-    // NumberOfSections
-    var NumberOfSections = Machine.RelativeToLittleEndian16("Sections");
-    peHead.Nodes.Add(NumberOfSections);
-
-    BaseStream.Position = NumberOfSections.offset;
-    var NumberOfSectionsValue = (uint)ReadInt16();
-
-    var TimeDateStamp = NumberOfSections.RelativeToLittleEndianDateStamp("TimeDateStamp");
-    peHead.Nodes.Add(TimeDateStamp);
-
-    var PointerToSymbolTable = TimeDateStamp.RelativeToLittleEndian32("Pointer To Symbol Table");
-    peHead.Nodes.Add(PointerToSymbolTable);
-
-    // NumberOfSymbols
-    var NumberOfSymbols = PointerToSymbolTable.RelativeToLittleEndian32("Symbols");
-    peHead.Nodes.Add(NumberOfSymbols);
-
-    var SizeOfOptionalHeader = NumberOfSymbols.RelativeToLittleEndian16("Size Of Optional Header");
-    peHead.Nodes.Add(SizeOfOptionalHeader);
-
-    BaseStream.Position = SizeOfOptionalHeader.offset;
-    var SizeOfOptionalHeaderValue = (uint)ReadInt16();
-
-    var Characteristics = SizeOfOptionalHeader.RelativeToLittleEndian16("Characteristics");
-    peHead.Nodes.Add(Characteristics);
-
-    var optHead = new Chunk("Optional header");
-    optHead.length = SizeOfOptionalHeaderValue;
-    optHead.offset = Characteristics.offset + Characteristics.length;
-
-    var optSignature = new Chunk("Optional signature");
-    optSignature.offset = optHead.offset;
-    optSignature.length = 2;
-    optHead.Nodes.Add(optSignature);
-
-    BaseStream.Position = optSignature.offset;
-
-    if (ReadByte() != 0x0b || ReadByte() != 0x01)
-        throw new Exception("Unrecognized optional header value found");
-
-    var LinkerVersion = optSignature.RelativeToVersionMajorMinor16("Linker version");
-    LinkerVersion.Text = "Linker version";
-    optHead.Nodes.Add(LinkerVersion);
-
-    var SizeOfCode = LinkerVersion.RelativeToLittleEndian32("Size of Code");
-    optHead.Nodes.Add(SizeOfCode);
-
-    var SizeOfInitializedData = SizeOfCode.RelativeToLittleEndian32("Size Of Initialized Data");
-    optHead.Nodes.Add(SizeOfInitializedData);
-
-    var SizeOfUninitializedData = SizeOfInitializedData.RelativeToLittleEndian32("Size Of Uninitialized Data");
-    optHead.Nodes.Add(SizeOfUninitializedData);
-
-    //The RVA of the code entry point
-    var AddressOfEntryPoint = SizeOfUninitializedData.RelativeToLittleEndian32("Address Of Entry Point");
-    BaseStream.Position = AddressOfEntryPoint.offset;
-    int AddressOfEntryPointValue = ReadInt32();
-    Log("XXXXX entry offset = " + AddressOfEntryPointValue.ToString("x6"));
-    this.EntryPoint = AddressOfEntryPointValue;
-
-    optHead.Nodes.Add(AddressOfEntryPoint);
-
-    var BaseOfCode = AddressOfEntryPoint.RelativeToLittleEndian32("Base of Code");
-    optHead.Nodes.Add(BaseOfCode);
-
-    var BaseOfData = BaseOfCode.RelativeToLittleEndian32("Base of Data");
-    optHead.Nodes.Add(BaseOfData);
-
-    var ImageBase = BaseOfData.RelativeToLittleEndian32("Image Base");
-    optHead.Nodes.Add(ImageBase);
-
-    var SectionAlignment = ImageBase.RelativeToLittleEndian32("Section Alignment");
-    optHead.Nodes.Add(SectionAlignment);
-
-    var FileAlignment = SectionAlignment.RelativeToLittleEndian32("File Alignment");
-    optHead.Nodes.Add(FileAlignment);
-
-    var OSVersion = FileAlignment.RelativeToVersionMajorMinor32("OS Version");
-    optHead.Nodes.Add(OSVersion);
-
-    var ImageVersion = OSVersion.RelativeToVersionMajorMinor32("Image Version");
-    optHead.Nodes.Add(ImageVersion);
-
-    var SubsystemVersion = ImageVersion.RelativeToVersionMajorMinor32("Subsystem Version");
-    optHead.Nodes.Add(SubsystemVersion);
-
-    var Reserved = SubsystemVersion.RelativeToLittleEndian32("Reserved");
-    optHead.Nodes.Add(Reserved);
-
-    var SizeOfImage = Reserved.RelativeToLittleEndian32("Size of Image");
-    optHead.Nodes.Add(SizeOfImage);
-
-    var SizeOfHeaders = SizeOfImage.RelativeToLittleEndian32("Size of Headers");
-    optHead.Nodes.Add(SizeOfHeaders);
-
-
-    var Checksum = SizeOfHeaders.RelativeToLittleEndian32("Checksum");
-    optHead.Nodes.Add(Checksum);
-
-    var Subsystem = Checksum.RelativeToLittleEndian16("Subsystem = ");
-    optHead.Nodes.Add(Subsystem);
-
-    BaseStream.Position = Subsystem.offset;
-    int SubsystemValue = ReadInt16();
-
-    switch (SubsystemValue) {
-    case 0x0001:
-        Subsystem.Text += "Native";
-        break;
-    case 0x0002:
-        Subsystem.Text += "GUI";
-        break;
-    case 0x0003:
-        Subsystem.Text += "Console";
-        break;
-    case 0x0005:
-        Subsystem.Text += "OS/2";
-        break;
-    case 0x0007:
-        Subsystem.Text += "POSIX";
-        break;
-    default:
-        Log("Unknown " + SubsystemValue.ToString("x4"));
-        break;
-    }
-
-    var DLLCharacteristics = Subsystem.RelativeToLittleEndian16("DLL Characteristics");
-    optHead.Nodes.Add(DLLCharacteristics);
-
-    var SizeOfStackReserve = DLLCharacteristics.RelativeToLittleEndian32("Size Of Stack Reserve");
-    optHead.Nodes.Add(SizeOfStackReserve);
-
-    var SizeOfStackCommit = SizeOfStackReserve.RelativeToLittleEndian32("Size Of Stack Commit");
-    optHead.Nodes.Add(SizeOfStackCommit);
-
-    var SizeOfHeapReserve = SizeOfStackCommit.RelativeToLittleEndian32("Size Of Heap Reserve");
-    optHead.Nodes.Add(SizeOfHeapReserve);
-
-    var SizeOfHeapCommit = SizeOfHeapReserve.RelativeToLittleEndian32("Size Of Heap Commit");
-    optHead.Nodes.Add(SizeOfHeapCommit);
-
-    var LoaderFlags = SizeOfHeapCommit.RelativeToLittleEndian32("Loader Flags");
-    optHead.Nodes.Add(LoaderFlags);
+...
 
     var NumberOfRvaAndSizes = LoaderFlags.RelativeToLittleEndian32("Number of RVA");
     optHead.Nodes.Add(NumberOfRvaAndSizes);

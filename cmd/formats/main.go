@@ -21,11 +21,8 @@ var (
 	statsPar   *termui.Par
 	boxFooter  *termui.Par
 	hexView    = parse.HexViewState{
-		BrowseMode:   parse.ByGroup,
-		StartingRow:  0,
-		RowWidth:     16,
-		CurrentGroup: 0,
-		CurrentField: 0,
+		BrowseMode: parse.ByGroup,
+		RowWidth:   16,
 	}
 )
 
@@ -202,7 +199,8 @@ func focusAtCurrentField() {
 		offset = field.Childs[hexView.CurrentField].Offset
 	}
 
-	base := hexView.StartingRow * int64(hexView.RowWidth)
+	rowWidth := int64(hexView.RowWidth)
+	base := hexView.StartingRow * rowWidth
 	ceil := base + int64(hexView.VisibleRows*hexView.RowWidth)
 
 	if offset >= base && offset < ceil {
@@ -210,10 +208,22 @@ func focusAtCurrentField() {
 		return
 	}
 
-	// XXX forward scroll is jerky.
-	// instead figure out least needed change from current starting row
+	// make scrolling more natural by doing smaller adjustments if possible
+	for i := int64(1); i < 10; i++ {
+		newOffset := offset + (i * rowWidth)
+		if newOffset >= base && newOffset < ceil {
+			hexView.StartingRow -= i
+			return
+		}
 
-	hexView.StartingRow = int64(offset / 16)
+		newOffset = offset - (i * rowWidth)
+		if newOffset >= base && newOffset < ceil {
+			hexView.StartingRow += i
+			return
+		}
+	}
+
+	hexView.StartingRow = int64(offset / rowWidth)
 }
 
 func refreshUI(file *os.File) {

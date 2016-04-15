@@ -68,86 +68,90 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 	offset += peHeaderLen
 
 	if optHeaderSize > 0 {
-
-		typeId, _ := readUint16le(file, offset)
-		typeName := "?"
-		if val, ok := peTypes[typeId]; ok {
-			typeName = val
-		}
-
-		subsystem, _ := readUint16le(file, offset+68)
-		subsystemName := "?"
-		if val, ok := peSubsystems[subsystem]; ok {
-			subsystemName = val
-		}
-
-		numberOfRva, _ := readUint32le(file, offset+92)
-
-		optHeaderMainLen := int64(96)
-
-		optHeader := Layout{
-			Offset: offset,
-			Info:   "PE optional header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: offset, Length: 2, Info: "type = " + typeName, Type: Uint16le},
-				{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
-				{Offset: offset + 4, Length: 4, Info: "size of code", Type: Uint32le},
-				{Offset: offset + 8, Length: 4, Info: "size of initialized data", Type: Uint32le},
-				{Offset: offset + 12, Length: 4, Info: "size of uninitialized data", Type: Uint32le},
-				{Offset: offset + 16, Length: 4, Info: "address of entry point", Type: Uint32le},
-				{Offset: offset + 20, Length: 4, Info: "base of code", Type: Uint32le},
-				{Offset: offset + 24, Length: 4, Info: "base of data", Type: Uint32le},
-				{Offset: offset + 28, Length: 4, Info: "image base", Type: Uint32le},
-				{Offset: offset + 32, Length: 4, Info: "section alignment", Type: Uint32le},
-				{Offset: offset + 36, Length: 4, Info: "file alignment", Type: Uint32le},
-				{Offset: offset + 40, Length: 4, Info: "os version", Type: MajorMinor32le},
-				{Offset: offset + 44, Length: 4, Info: "image version", Type: MajorMinor32le},
-				{Offset: offset + 48, Length: 4, Info: "subsystem version", Type: MajorMinor32le},
-				{Offset: offset + 52, Length: 4, Info: "win32 version value", Type: Uint32le},
-				{Offset: offset + 56, Length: 4, Info: "size of image", Type: Uint32le},
-				{Offset: offset + 60, Length: 4, Info: "size of headers", Type: Uint32le},
-				{Offset: offset + 64, Length: 4, Info: "checksum", Type: Uint32le},
-				{Offset: offset + 68, Length: 2, Info: "subsystem = " + subsystemName, Type: Uint16le},
-				{Offset: offset + 70, Length: 2, Info: "dll characteristics", Type: Uint16le},
-				{Offset: offset + 72, Length: 4, Info: "size of stack reserve", Type: Uint32le},
-				{Offset: offset + 76, Length: 4, Info: "size of stack commit", Type: Uint32le},
-				{Offset: offset + 80, Length: 4, Info: "size of heap reserve", Type: Uint32le},
-				{Offset: offset + 84, Length: 4, Info: "size of heap commit", Type: Uint32le},
-				{Offset: offset + 88, Length: 4, Info: "loader flags", Type: Uint32le},
-				{Offset: offset + 92, Length: 4, Info: "number of rva and sizes", Type: Uint32le},
-			}}
-		offset += optHeaderMainLen
-
-		if numberOfRva != 16 {
-			panic("odd number of RVA:s = " + fmt.Sprintf("%d", numberOfRva))
-		}
-
-		ddLen := int64(8)
-
-		optHeader.Length = optHeaderMainLen + (int64(numberOfRva) * ddLen)
-		if optHeader.Length != int64(optHeaderSize) {
-			fmt.Println("error: PE unexpected opt header len. expected ", optHeaderSize, " actual =", optHeader.Length)
-		}
-
-		for i := int64(0); i < int64(numberOfRva); i++ {
-
-			info := "data directory " + fmt.Sprintf("%d", i)
-			if val, ok := peRvaChunks[i]; ok {
-				info = val
-			}
-
-			optHeader.Childs = append(optHeader.Childs, []Layout{
-				{Offset: offset, Length: 4, Info: info + " RVA", Type: Uint32le},
-				{Offset: offset + 4, Length: 4, Info: info + " size", Type: Uint32le},
-			}...)
-			offset += 8
-		}
-
-		res = append(res, optHeader)
+		res = append(res, parsePEOptHeader(file, offset, optHeaderSize))
 	}
 
 	return res, nil
+}
+
+func parsePEOptHeader(file *os.File, offset int64, size uint16) Layout {
+
+	typeId, _ := readUint16le(file, offset)
+	typeName := "?"
+	if val, ok := peTypes[typeId]; ok {
+		typeName = val
+	}
+
+	subsystem, _ := readUint16le(file, offset+68)
+	subsystemName := "?"
+	if val, ok := peSubsystems[subsystem]; ok {
+		subsystemName = val
+	}
+
+	numberOfRva, _ := readUint32le(file, offset+92)
+
+	optHeaderMainLen := int64(96)
+
+	optHeader := Layout{
+		Offset: offset,
+		Info:   "PE optional header",
+		Type:   Group,
+		Childs: []Layout{
+			{Offset: offset, Length: 2, Info: "type = " + typeName, Type: Uint16le},
+			{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
+			{Offset: offset + 4, Length: 4, Info: "size of code", Type: Uint32le},
+			{Offset: offset + 8, Length: 4, Info: "size of initialized data", Type: Uint32le},
+			{Offset: offset + 12, Length: 4, Info: "size of uninitialized data", Type: Uint32le},
+			{Offset: offset + 16, Length: 4, Info: "address of entry point", Type: Uint32le},
+			{Offset: offset + 20, Length: 4, Info: "base of code", Type: Uint32le},
+			{Offset: offset + 24, Length: 4, Info: "base of data", Type: Uint32le},
+			{Offset: offset + 28, Length: 4, Info: "image base", Type: Uint32le},
+			{Offset: offset + 32, Length: 4, Info: "section alignment", Type: Uint32le},
+			{Offset: offset + 36, Length: 4, Info: "file alignment", Type: Uint32le},
+			{Offset: offset + 40, Length: 4, Info: "os version", Type: MajorMinor32le},
+			{Offset: offset + 44, Length: 4, Info: "image version", Type: MajorMinor32le},
+			{Offset: offset + 48, Length: 4, Info: "subsystem version", Type: MajorMinor32le},
+			{Offset: offset + 52, Length: 4, Info: "win32 version value", Type: Uint32le},
+			{Offset: offset + 56, Length: 4, Info: "size of image", Type: Uint32le},
+			{Offset: offset + 60, Length: 4, Info: "size of headers", Type: Uint32le},
+			{Offset: offset + 64, Length: 4, Info: "checksum", Type: Uint32le},
+			{Offset: offset + 68, Length: 2, Info: "subsystem = " + subsystemName, Type: Uint16le},
+			{Offset: offset + 70, Length: 2, Info: "dll characteristics", Type: Uint16le},
+			{Offset: offset + 72, Length: 4, Info: "size of stack reserve", Type: Uint32le},
+			{Offset: offset + 76, Length: 4, Info: "size of stack commit", Type: Uint32le},
+			{Offset: offset + 80, Length: 4, Info: "size of heap reserve", Type: Uint32le},
+			{Offset: offset + 84, Length: 4, Info: "size of heap commit", Type: Uint32le},
+			{Offset: offset + 88, Length: 4, Info: "loader flags", Type: Uint32le},
+			{Offset: offset + 92, Length: 4, Info: "number of rva and sizes", Type: Uint32le},
+		}}
+	offset += optHeaderMainLen
+
+	if numberOfRva != 16 {
+		panic("odd number of RVA:s = " + fmt.Sprintf("%d", numberOfRva))
+	}
+
+	ddLen := int64(8)
+
+	optHeader.Length = optHeaderMainLen + (int64(numberOfRva) * ddLen)
+	if optHeader.Length != int64(size) {
+		fmt.Println("error: PE unexpected opt header len. expected ", size, " actual =", optHeader.Length)
+	}
+
+	for i := int64(0); i < int64(numberOfRva); i++ {
+
+		info := "data directory " + fmt.Sprintf("%d", i)
+		if val, ok := peRvaChunks[i]; ok {
+			info = val
+		}
+
+		optHeader.Childs = append(optHeader.Childs, []Layout{
+			{Offset: offset, Length: 4, Info: info + " RVA", Type: Uint32le},
+			{Offset: offset + 4, Length: 4, Info: info + " size", Type: Uint32le},
+		}...)
+		offset += 8
+	}
+
+	return optHeader
 }
 
 /*

@@ -11,32 +11,36 @@ import (
 )
 
 var (
+	peTypes = map[uint16]string{
+		0x10b: "PE32",
+		0x20b: "PE32+ (64-bit)",
+	}
 	peMachines = map[uint16]string{
-		0x14c: "Intel 386",
+		0x14c:  "Intel 386",
+		0x8664: "AMD64",
 	}
 	peSubsystems = map[uint16]string{
-		0x0001: "Native",
-		0x0002: "GUI",
-		0x0003: "Console",
-		0x0005: "OS/2",
-		0x0007: "POSIX",
+		1: "Native",
+		2: "GUI",
+		3: "Console",
+		5: "OS/2",
+		7: "POSIX",
 	}
-
-	peRvaChunks = map[int]string{
-		0:  "Exports",
-		1:  "Imports",
-		2:  "Resources",
-		5:  "Base reolcations",
-		9:  "Thread Local Storage",
-		12: "Import Address Table",
-		14: "CLR Header",
+	peRvaChunks = map[int64]string{
+		0:  "exports",
+		1:  "imports",
+		2:  "resources",
+		5:  "base reolcations",
+		9:  "thread local storage",
+		12: "import address table",
+		14: "CLR header",
 	}
 )
 
 // parses 32/64-bit Windows executables
 func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 
-	peHeaderLen := int64(24) // XXX
+	peHeaderLen := int64(24)
 	optHeaderSize, _ := readUint16le(file, offset+20)
 
 	machine, _ := readUint16le(file, offset+4)
@@ -64,22 +68,29 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 	offset += peHeaderLen
 
 	if optHeaderSize > 0 {
-		fmt.Println("pe opt hdr size: ", int64(optHeaderSize))
+
+		typeId, _ := readUint16le(file, offset)
+		typeName := "?"
+		if val, ok := peTypes[typeId]; ok {
+			typeName = val
+		}
 
 		subsystem, _ := readUint16le(file, offset+68)
-
 		subsystemName := "?"
 		if val, ok := peSubsystems[subsystem]; ok {
 			subsystemName = val
 		}
 
-		res = append(res, Layout{
+		numberOfRva, _ := readUint32le(file, offset+92)
+
+		optHeaderMainLen := int64(96)
+
+		optHeader := Layout{
 			Offset: offset,
-			Length: int64(optHeaderSize),
-			Info:   "NE optional header",
+			Info:   "PE optional header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 2, Info: "type", Type: Uint16le}, // XXX 0x10b = PE32, 0x20b = PE32+ (64-bit)
+				{Offset: offset, Length: 2, Info: "type = " + typeName, Type: Uint16le},
 				{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
 				{Offset: offset + 4, Length: 4, Info: "size of code", Type: Uint32le},
 				{Offset: offset + 8, Length: 4, Info: "size of initialized data", Type: Uint32le},
@@ -99,14 +110,55 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 				{Offset: offset + 64, Length: 4, Info: "checksum", Type: Uint32le},
 				{Offset: offset + 68, Length: 2, Info: "subsystem = " + subsystemName, Type: Uint16le},
 				{Offset: offset + 70, Length: 2, Info: "dll characteristics", Type: Uint16le},
-
 				{Offset: offset + 72, Length: 4, Info: "size of stack reserve", Type: Uint32le},
 				{Offset: offset + 76, Length: 4, Info: "size of stack commit", Type: Uint32le},
 				{Offset: offset + 80, Length: 4, Info: "size of heap reserve", Type: Uint32le},
 				{Offset: offset + 84, Length: 4, Info: "size of heap commit", Type: Uint32le},
 				{Offset: offset + 88, Length: 4, Info: "loader flags", Type: Uint32le},
 				{Offset: offset + 92, Length: 4, Info: "number of rva and sizes", Type: Uint32le},
-			}})
+			}}
+
+		if numberOfRva != 16 {
+			panic("odd number of RVA:s = " + fmt.Sprintf("%d", numberOfRva))
+		}
+
+		// parse data directories
+
+		ddLen := int64(8)
+
+		optHeader.Length = optHeaderMainLen + (int64(numberOfRva) * ddLen)
+		if optHeader.Length != int64(optHeaderSize) {
+			fmt.Println("error: PE unexpected opt header len. expected ", optHeaderSize, " actual =", optHeader.Length)
+		}
+
+		offset += optHeaderMainLen
+
+		res = append(res, optHeader)
+
+		dd := []Layout{}
+
+		for i := int64(0); i < int64(numberOfRva); i++ {
+
+			info := "data directory " + fmt.Sprintf("%d", i)
+			if val, ok := peRvaChunks[i]; ok {
+				info = val
+			}
+
+			group := Layout{
+				Offset: offset,
+				Length: ddLen,
+				Info:   info,
+				Type:   Group,
+				Childs: []Layout{
+					{Offset: offset, Length: 4, Info: "relative virtual address", Type: Uint32le},
+					{Offset: offset + 4, Length: 4, Info: "rva size", Type: Uint32le},
+				}}
+			offset += 8
+
+			dd = append(dd, group)
+		}
+
+		res = append(res, dd...)
 	}
 
 	return res, nil
@@ -118,85 +170,6 @@ private Chunk ParsePEHeader()
 {
 
 ...
-
-    var NumberOfRvaAndSizes = LoaderFlags.RelativeToLittleEndian32("Number of RVA");
-    optHead.Nodes.Add(NumberOfRvaAndSizes);
-
-    BaseStream.Position = NumberOfRvaAndSizes.offset;
-    var NumberOfRvaAndSizesValue = (uint)ReadInt32();
-    Log("NumberOfRvaAndSizesValue = " + NumberOfRvaAndSizesValue);
-
-    if (NumberOfRvaAndSizesValue != 16)
-        throw new Exception("odd number of RVA:s = " + NumberOfRvaAndSizesValue);
-
-    var DataDirectory = new Chunk("Data Directory");
-    DataDirectory.offset = NumberOfRvaAndSizes.offset + NumberOfRvaAndSizes.length;
-    DataDirectory.length = NumberOfRvaAndSizesValue * 8;
-
-    for (int i = 0; i < NumberOfRvaAndSizesValue; i++) {
-        var RVAChunk = new Chunk();
-        RVAChunk.length = 8;
-        RVAChunk.offset = DataDirectory.offset + (i * RVAChunk.length);
-        switch (i) {
-        case 0:
-            RVAChunk.Text = "Exports";
-            break;
-        case 1:
-            RVAChunk.Text = "Imports";
-            break;
-        case 2:
-            RVAChunk.Text = "Resources";
-            break;
-        case 5:
-            RVAChunk.Text = "Base reolcations";
-            break;
-        case 9:
-            RVAChunk.Text = "Thread Local Storage";
-            break;
-        case 12:
-            RVAChunk.Text = "Import Address Table";
-            break;
-        case 14:
-            RVAChunk.Text = "CLR Header";
-            break;
-        default:
-            RVAChunk.Text = "Data Directory # " + i;
-            break;
-        }
-
-        var VirtualAddress = new Chunk();
-        VirtualAddress.length = 4;
-        VirtualAddress.offset = RVAChunk.offset;
-        BaseStream.Position = VirtualAddress.offset;
-        int VirtualAddressValue = ReadInt32();
-        VirtualAddress.Text = "Virtual Address = " + VirtualAddressValue.ToString("x8");
-        RVAChunk.Nodes.Add(VirtualAddress);
-
-        var RVASize = new Chunk();
-        RVASize.length = 4;
-        RVASize.offset = VirtualAddress.offset + VirtualAddress.length;
-        BaseStream.Position = RVASize.offset;
-        var RVASizeValue = (uint)ReadInt32();
-
-        if (RVASizeValue == 0)
-            RVAChunk.Text = "Empty";
-
-        RVASize.Text = "Size = " + RVASizeValue;
-        RVAChunk.Nodes.Add(RVASize);
-
-        // TODO: create list of DataDirectory entries. later; calculate their physical offsets from virtual offsets
-
-        var dd = new SectionPointer();
-        dd.Text = RVAChunk.Text;
-        dd.virtualOffset = VirtualAddressValue;
-        dd.length = RVASizeValue;
-        dd.realOffset = 0; // TODO calc later
-
-        if (RVASizeValue > 0) {
-            dataDirectory.Add(dd);
-            DataDirectory.Nodes.Add(RVAChunk);
-        }
-    }
 
     optHead.Nodes.Add(DataDirectory);
 

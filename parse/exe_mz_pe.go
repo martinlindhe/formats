@@ -117,12 +117,11 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 				{Offset: offset + 88, Length: 4, Info: "loader flags", Type: Uint32le},
 				{Offset: offset + 92, Length: 4, Info: "number of rva and sizes", Type: Uint32le},
 			}}
+		offset += optHeaderMainLen
 
 		if numberOfRva != 16 {
 			panic("odd number of RVA:s = " + fmt.Sprintf("%d", numberOfRva))
 		}
-
-		// parse data directories
 
 		ddLen := int64(8)
 
@@ -131,12 +130,6 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 			fmt.Println("error: PE unexpected opt header len. expected ", optHeaderSize, " actual =", optHeader.Length)
 		}
 
-		offset += optHeaderMainLen
-
-		res = append(res, optHeader)
-
-		dd := []Layout{}
-
 		for i := int64(0); i < int64(numberOfRva); i++ {
 
 			info := "data directory " + fmt.Sprintf("%d", i)
@@ -144,21 +137,14 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 				info = val
 			}
 
-			group := Layout{
-				Offset: offset,
-				Length: ddLen,
-				Info:   info,
-				Type:   Group,
-				Childs: []Layout{
-					{Offset: offset, Length: 4, Info: "relative virtual address", Type: Uint32le},
-					{Offset: offset + 4, Length: 4, Info: "rva size", Type: Uint32le},
-				}}
+			optHeader.Childs = append(optHeader.Childs, []Layout{
+				{Offset: offset, Length: 4, Info: info + " RVA", Type: Uint32le},
+				{Offset: offset + 4, Length: 4, Info: info + " size", Type: Uint32le},
+			}...)
 			offset += 8
-
-			dd = append(dd, group)
 		}
 
-		res = append(res, dd...)
+		res = append(res, optHeader)
 	}
 
 	return res, nil
@@ -171,9 +157,6 @@ private Chunk ParsePEHeader()
 
 ...
 
-    optHead.Nodes.Add(DataDirectory);
-
-    peHead.length = (uint)((optHead.offset + optHead.length) - peHead.offset);
 
     var SectionsOverview = new Chunk();
     SectionsOverview.length = NumberOfSectionsValue * 40;

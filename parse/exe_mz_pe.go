@@ -94,7 +94,6 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 			Info:   "section " + sectionName,
 			Type:   Group,
 			Childs: []Layout{
-				// XXX decode sections
 				{Offset: int64(rawDataOffset), Length: int64(rawDataSize), Info: "data", Type: Bytes},
 			}})
 

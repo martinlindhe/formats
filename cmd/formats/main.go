@@ -192,20 +192,27 @@ func uiLoop(file *os.File) {
 
 func focusAtCurrentField() {
 
-	// XXX care if we are in subgroup mode
+	var offset int64
+	field := fileLayout.Layout[hexView.CurrentGroup]
 
-	// get current field offset
-	offset := fileLayout.Layout[hexView.CurrentGroup].Offset
+	switch hexView.BrowseMode {
+	case parse.ByGroup:
+		offset = field.Offset
+	case parse.ByFieldInGroup:
+		offset = field.Childs[hexView.CurrentField].Offset
+	}
 
 	base := hexView.StartingRow * int64(hexView.RowWidth)
 	ceil := base + int64(hexView.VisibleRows*hexView.RowWidth)
 
-	// see if it is view with current row selection
-	if offset >= base && offset <= ceil {
+	if offset >= base && offset < ceil {
+		// we are in view
 		return
 	}
 
-	// if not, change current row
+	// XXX forward scroll is jerky.
+	// instead figure out least needed change from current starting row
+
 	hexView.StartingRow = int64(offset / 16)
 }
 

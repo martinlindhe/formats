@@ -30,17 +30,16 @@ func isGZIP(file *os.File) bool {
 
 func parseGZIP(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 2,
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 2, Info: "magic", Type: Uint16le}, // XXX le/be ?
-		},
-	})
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 2,
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 2, Info: "magic", Type: Uint16le}, // XXX le/be ?
+			}}}}
 
 	return &res, nil
 }

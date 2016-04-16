@@ -56,7 +56,9 @@ func isJPEG(file *os.File) bool {
 
 func parseJPEG(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Image,
+	}
 
 	offset := int64(0)
 
@@ -78,7 +80,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 				Length: 2,
 				Info:   jpegChunkTypes[marker],
 				Childs: []Layout{
-					Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16le},
+					{Offset: offset, Length: 2, Info: "type", Type: Uint16le},
 				},
 			})
 			offset += 2
@@ -91,7 +93,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 				Length: 2,
 				Info:   jpegChunkTypes[marker],
 				Childs: []Layout{
-					Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16le},
+					{Offset: offset, Length: 2, Info: "type", Type: Uint16le},
 				},
 			})
 			// fmt.Println("Ending parser since EOI marker was detected")
@@ -107,28 +109,28 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 				Length: 5,
 				Info:   jpegChunkTypes[marker],
 				Childs: []Layout{
-					Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
-					Layout{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
-					Layout{Offset: offset + 4, Length: 1, Info: "color components", Type: Uint8},
+					{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
+					{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
+					{Offset: offset + 4, Length: 1, Info: "color components", Type: Uint8},
 				},
 			}
 			offset += chunk.Length
 
 			for i := 0; i < int(components); i++ {
 				chunk.Childs = append(chunk.Childs, []Layout{
-					Layout{Offset: offset, Length: 1, Info: "color id", Type: Uint8},
+					{Offset: offset, Length: 1, Info: "color id", Type: Uint8},
 
 					// XXX decode values:
 					// An AC table # (Low Nibble)
 					// An DC table # (High Nibble)
-					Layout{Offset: offset + 1, Length: 1, Info: "ac,dc tables", Type: Uint8}, // XXX hi/lo nibbles type
+					{Offset: offset + 1, Length: 1, Info: "ac,dc tables", Type: Uint8}, // XXX hi/lo nibbles type
 				}...)
 				chunk.Length += 2
 				offset += 2
 			}
 
 			chunk.Childs = append(chunk.Childs, []Layout{
-				Layout{Offset: offset, Length: 3, Info: "unknown", Type: Bytes},
+				{Offset: offset, Length: 3, Info: "unknown", Type: Bytes},
 			}...)
 			chunk.Length += 3
 			offset += 3
@@ -162,7 +164,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 						Type:   Group,
 						Info:   "image data",
 						Childs: []Layout{
-							Layout{Offset: dataStart, Length: dataLen, Info: "image data", Type: Bytes},
+							{Offset: dataStart, Length: dataLen, Info: "image data", Type: Bytes},
 						}})
 
 					rewind = true
@@ -187,15 +189,15 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 				Length: 18,
 				Info:   jpegChunkTypes[marker],
 				Childs: []Layout{
-					Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
-					Layout{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
-					Layout{Offset: offset + 4, Length: 5, Info: "identifier", Type: ASCII},
-					Layout{Offset: offset + 9, Length: 2, Info: "revision", Type: MajorMinor16be},
-					Layout{Offset: offset + 11, Length: 1, Info: "units used", Type: Uint8},
-					Layout{Offset: offset + 12, Length: 2, Info: "width", Type: Uint16be},
-					Layout{Offset: offset + 14, Length: 2, Info: "height", Type: Uint16be},
-					Layout{Offset: offset + 16, Length: 1, Info: "horizontal pixels", Type: Uint8},
-					Layout{Offset: offset + 17, Length: 1, Info: "vertical pixels", Type: Uint8},
+					{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
+					{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
+					{Offset: offset + 4, Length: 5, Info: "identifier", Type: ASCII},
+					{Offset: offset + 9, Length: 2, Info: "revision", Type: MajorMinor16be},
+					{Offset: offset + 11, Length: 1, Info: "units used", Type: Uint8},
+					{Offset: offset + 12, Length: 2, Info: "width", Type: Uint16be},
+					{Offset: offset + 14, Length: 2, Info: "height", Type: Uint16be},
+					{Offset: offset + 16, Length: 1, Info: "horizontal pixels", Type: Uint8},
+					{Offset: offset + 17, Length: 1, Info: "vertical pixels", Type: Uint8},
 				}})
 			offset += 18
 			continue
@@ -209,9 +211,9 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 			Length: 2 + int64(chunkLen),
 			Info:   jpegChunkTypes[marker],
 			Childs: []Layout{
-				Layout{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
-				Layout{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
-				Layout{Offset: offset + 4, Length: int64(chunkLen) - 2, Info: "data", Type: Bytes}, // XXX
+				{Offset: offset, Length: 2, Info: "type", Type: Uint16be},
+				{Offset: offset + 2, Length: 2, Info: "length", Type: Uint16be},
+				{Offset: offset + 4, Length: int64(chunkLen) - 2, Info: "data", Type: Bytes}, // XXX
 			}})
 		offset += 2 + int64(chunkLen)
 	}

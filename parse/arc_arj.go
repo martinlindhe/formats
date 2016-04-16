@@ -29,17 +29,13 @@ func ARJ(file *os.File) (*ParsedLayout, error) {
 		return nil, nil
 	}
 
-	res := ParsedLayout{}
-
-	var err error
-	res.Layout, err = parseARJMainHeader(file)
-
-	if err != nil {
-		return nil, err
-	}
+	mainHeader, err := parseARJMainHeader(file)
 
 	// XXX rest of arj
-	return &res, nil
+
+	return &ParsedLayout{
+		FileKind: Archive,
+		Layout:   mainHeader}, err
 }
 
 func parseARJMainHeader(f *os.File) ([]Layout, error) {
@@ -60,43 +56,58 @@ func parseARJMainHeader(f *os.File) ([]Layout, error) {
 	if archiveName, _, err = zeroTerminatedASCII(f); err != nil {
 		return nil, err
 	}
+	archiveNameLen := int64(len(archiveName)) + 1 // including terminating zero
+
 	if comment, _, err = zeroTerminatedASCII(f); err != nil {
 		return nil, err
 	}
+	commentLen := int64(len(comment)) + 1
 
-	return []Layout{
-		Layout{
-			Offset: offset,
-			Length: mainHeaderLen,
-			Type:   Group,
-			Info:   "main header",
-			Childs: []Layout{
-				// XXX convert arjMainHeader into []Layout and add to Childs in return
-				Layout{Offset: offset, Length: 2, Type: Uint16le, Info: "magic"},
-				Layout{Offset: offset + 2, Length: 2, Type: Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
-				Layout{Offset: offset + 4, Length: 1, Type: Uint8, Info: "size up to and including 'extra data'"},
-				Layout{Offset: offset + 5, Length: 1, Type: Uint8, Info: "archiver version number"},
-				Layout{Offset: offset + 6, Length: 1, Type: Uint8, Info: "minimum archiver version to extract"},
-				Layout{Offset: offset + 7, Length: 1, Type: Uint8, Info: "host OS"},   // XXX map hostOSes
-				Layout{Offset: offset + 8, Length: 1, Type: Uint8, Info: "arj flags"}, // XXX show bitfield
-				Layout{Offset: offset + 9, Length: 1, Type: Uint8, Info: "security version"},
-				Layout{Offset: offset + 10, Length: 1, Type: Uint8, Info: "file type"},        // XXX map fileTypes
-				Layout{Offset: offset + 11, Length: 4, Type: Uint32le, Info: "created time"},  // XXX time in "msdos-format"
-				Layout{Offset: offset + 15, Length: 4, Type: Uint32le, Info: "modified time"}, // XXX time in "msdos-format"
-				Layout{Offset: offset + 19, Length: 4, Type: Uint32le, Info: "archive size for secured archive"},
-				Layout{Offset: offset + 23, Length: 4, Type: Uint32le, Info: "security envelope file position"},
-				Layout{Offset: offset + 27, Length: 4, Type: Uint32le, Info: "filespec position in filename"},
-				Layout{Offset: offset + 31, Length: 2, Type: Uint16le, Info: "length in bytes of security envelope data"},
-				Layout{Offset: offset + 33, Length: 1, Type: Uint8, Info: "encryption version"},
-				Layout{Offset: offset + 34, Length: 1, Type: Uint8, Info: "last chapter"}, // XXX
-
-				Layout{Offset: offset, Length: int64(len(archiveName)), Type: ASCIIZ, Info: "archive name"},
-				Layout{Offset: offset + int64(len(archiveName)), Length: int64(len(comment)), Type: ASCIIZ, Info: "comment"},
-				Layout{Offset: offset + int64(len(archiveName)+len(comment)), Length: 4, Type: Uint32le, Info: "crc32"},
-				Layout{Offset: offset + int64(len(archiveName)+len(comment)) + 4, Length: 4, Type: Uint32le, Info: "ext header size"},
-			},
+	chunk := Layout{
+		Offset: offset,
+		Length: mainHeaderLen + int64(len(archiveName)+len(comment)) + 8,
+		Type:   Group,
+		Info:   "main header",
+		Childs: []Layout{
+			// XXX convert arjMainHeader into []Layout and add to Childs in return
+			{Offset: offset, Length: 2, Type: Uint16le, Info: "magic"},
+			{Offset: offset + 2, Length: 2, Type: Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
+			{Offset: offset + 4, Length: 1, Type: Uint8, Info: "size up to and including 'extra data'"},
+			{Offset: offset + 5, Length: 1, Type: Uint8, Info: "archiver version number"},
+			{Offset: offset + 6, Length: 1, Type: Uint8, Info: "minimum archiver version to extract"},
+			{Offset: offset + 7, Length: 1, Type: Uint8, Info: "host OS"},   // XXX map hostOSes
+			{Offset: offset + 8, Length: 1, Type: Uint8, Info: "arj flags"}, // XXX show bitfield
+			{Offset: offset + 9, Length: 1, Type: Uint8, Info: "security version"},
+			{Offset: offset + 10, Length: 1, Type: Uint8, Info: "file type"},        // XXX map fileTypes
+			{Offset: offset + 11, Length: 4, Type: Uint32le, Info: "created time"},  // XXX time in "msdos-format"
+			{Offset: offset + 15, Length: 4, Type: Uint32le, Info: "modified time"}, // XXX time in "msdos-format"
+			{Offset: offset + 19, Length: 4, Type: Uint32le, Info: "archive size for secured archive"},
+			{Offset: offset + 23, Length: 4, Type: Uint32le, Info: "security envelope file position"},
+			{Offset: offset + 27, Length: 4, Type: Uint32le, Info: "filespec position in filename"},
+			{Offset: offset + 31, Length: 2, Type: Uint16le, Info: "length in bytes of security envelope data"},
+			{Offset: offset + 33, Length: 1, Type: Uint8, Info: "encryption version"},
+			{Offset: offset + 34, Length: 1, Type: Uint8, Info: "last chapter"}, // XXX
 		},
-	}, nil
+	}
+	offset += mainHeaderLen
+
+	chunk.Childs = append(chunk.Childs, []Layout{
+		{Offset: offset, Length: archiveNameLen, Type: ASCIIZ, Info: "archive name"},
+	}...)
+	offset += archiveNameLen
+
+	chunk.Childs = append(chunk.Childs, []Layout{
+		{Offset: offset, Length: commentLen, Type: ASCIIZ, Info: "comment"},
+	}...)
+	offset += commentLen
+
+	chunk.Childs = append(chunk.Childs, []Layout{
+		{Offset: offset, Length: 4, Type: Uint32le, Info: "crc32"},
+		{Offset: offset + 4, Length: 4, Type: Uint32le, Info: "ext header size"},
+	}...)
+	offset += 8
+
+	return []Layout{chunk}, nil
 
 	/*
 	   XXX dont understand to parse 0x22, is 0 in both my samples

@@ -34,7 +34,9 @@ func isMZ(file *os.File) bool {
 
 func parseMZ(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Executable,
+	}
 
 	offset := int64(0)
 	mzHeaderLen := int64(28) // XXX
@@ -44,20 +46,20 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: offset, Length: 2, Info: "magic", Type: ASCII},
-			Layout{Offset: offset + 2, Length: 2, Info: "extra bytes", Type: Uint16le},
-			Layout{Offset: offset + 4, Length: 2, Info: "pages", Type: Uint16le},
-			Layout{Offset: offset + 6, Length: 2, Info: "relocation items", Type: Uint16le},
-			Layout{Offset: offset + 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
-			Layout{Offset: offset + 10, Length: 2, Info: "min allocation", Type: Uint16le},
-			Layout{Offset: offset + 12, Length: 2, Info: "max allocation", Type: Uint16le},
-			Layout{Offset: offset + 14, Length: 2, Info: "initial ss", Type: Uint16le},
-			Layout{Offset: offset + 16, Length: 2, Info: "initial sp", Type: Uint16le},
-			Layout{Offset: offset + 18, Length: 2, Info: "checksum", Type: Uint16le},
-			Layout{Offset: offset + 20, Length: 2, Info: "initial ip", Type: Uint16le},
-			Layout{Offset: offset + 22, Length: 2, Info: "initial cs", Type: Uint16le},
-			Layout{Offset: offset + 24, Length: 2, Info: "relocation offset", Type: Uint16le},
-			Layout{Offset: offset + 26, Length: 2, Info: "overlay", Type: Uint16le},
+			{Offset: offset, Length: 2, Info: "magic", Type: ASCII},
+			{Offset: offset + 2, Length: 2, Info: "extra bytes", Type: Uint16le},
+			{Offset: offset + 4, Length: 2, Info: "pages", Type: Uint16le},
+			{Offset: offset + 6, Length: 2, Info: "relocation items", Type: Uint16le},
+			{Offset: offset + 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
+			{Offset: offset + 10, Length: 2, Info: "min allocation", Type: Uint16le},
+			{Offset: offset + 12, Length: 2, Info: "max allocation", Type: Uint16le},
+			{Offset: offset + 14, Length: 2, Info: "initial ss", Type: Uint16le},
+			{Offset: offset + 16, Length: 2, Info: "initial sp", Type: Uint16le},
+			{Offset: offset + 18, Length: 2, Info: "checksum", Type: Uint16le},
+			{Offset: offset + 20, Length: 2, Info: "initial ip", Type: Uint16le},
+			{Offset: offset + 22, Length: 2, Info: "initial cs", Type: Uint16le},
+			{Offset: offset + 24, Length: 2, Info: "relocation offset", Type: Uint16le},
+			{Offset: offset + 26, Length: 2, Info: "overlay", Type: Uint16le},
 		}}
 
 	res.Layout = append(res.Layout, mz)
@@ -83,11 +85,11 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 			Info:   "sub header", // XXX name
 			Type:   Group,
 			Childs: []Layout{
-				Layout{Offset: offset, Length: 8, Info: "reserved", Type: Bytes},
-				Layout{Offset: offset + 8, Length: 2, Info: "oem id", Type: Uint16le},
-				Layout{Offset: offset + 10, Length: 2, Info: "oem info", Type: Uint16le},
-				Layout{Offset: offset + 12, Length: 20, Info: "reserved 2", Type: Uint16le},
-				Layout{Offset: offset + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
+				{Offset: offset, Length: 8, Info: "reserved", Type: Bytes},
+				{Offset: offset + 8, Length: 2, Info: "oem id", Type: Uint16le},
+				{Offset: offset + 10, Length: 2, Info: "oem info", Type: Uint16le},
+				{Offset: offset + 12, Length: 20, Info: "reserved 2", Type: Uint16le},
+				{Offset: offset + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
 			}})
 
 		newHeaderPos, _ := readUint32le(file, offset+32)
@@ -127,8 +129,8 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 
 			for i := 1; i <= int(relocItems); i++ {
 				reloc.Childs = append(reloc.Childs, []Layout{
-					Layout{Offset: offset, Length: 2, Info: "offset " + fmt.Sprintf("%d", i), Type: Uint16le},
-					Layout{Offset: offset + 2, Length: 2, Info: "segment " + fmt.Sprintf("%d", i), Type: Uint16le},
+					{Offset: offset, Length: 2, Info: "offset " + fmt.Sprintf("%d", i), Type: Uint16le},
+					{Offset: offset + 2, Length: 2, Info: "segment " + fmt.Sprintf("%d", i), Type: Uint16le},
 				}...)
 				offset += 4
 			}
@@ -146,7 +148,7 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		Info:   "dos entry point",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: offset, Length: 4, Info: "XXX", Type: Bytes},
+			{Offset: offset, Length: 4, Info: "XXX", Type: Bytes},
 		}}
 
 	res.Layout = append(res.Layout, codeChunk)

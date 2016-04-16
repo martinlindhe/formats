@@ -28,16 +28,16 @@ func isZIP(file *os.File) bool {
 
 func parseZIP(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 6, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
-		}})
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 6, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
+			}}}}
 	return &res, nil
 }
 

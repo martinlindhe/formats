@@ -26,7 +26,8 @@ func isWINIMG(file *os.File) bool {
 		return false
 	}
 
-	if b[3] != 'W' || b[4] != 'I' || b[5] != 'N' || b[6] != 'I' || b[7] != 'M' || b[8] != 'A' || b[9] != 'G' || b[10] != 'E' {
+	if b[3] != 'W' || b[4] != 'I' || b[5] != 'N' || b[6] != 'I' ||
+		b[7] != 'M' || b[8] != 'A' || b[9] != 'G' || b[10] != 'E' {
 		return false
 	}
 
@@ -35,17 +36,16 @@ func isWINIMG(file *os.File) bool {
 
 func parseWINIMG(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 2,
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 2, Info: "magic", Type: Uint16le}, // XXX le/be ?
-		},
-	})
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 2,
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 2, Info: "magic", Type: Uint16le}, // XXX le/be ?
+			}}}}
 
 	return &res, nil
 }

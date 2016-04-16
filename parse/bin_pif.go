@@ -1,7 +1,6 @@
 package parse
 
-// Program Information File (PIF)
-// Used in Windows
+// Windows Program Information File (PIF)
 // STATUS: 1%
 
 import (
@@ -30,15 +29,16 @@ func isPIF(file *os.File) bool {
 
 func parsePIF(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Binary,
+		Layout: []Layout{{
+			Offset: 0x171,
+			Length: 15, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0x171, Length: 15, Info: "magic", Type: Uint32le},
+			}}}}
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0x171,
-		Length: 15, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0x171, Length: 15, Info: "magic", Type: Uint32le},
-		}})
 	return &res, nil
 }

@@ -1,6 +1,6 @@
 package parse
 
-// STATUS 1% , XXX
+// STATUS 1%
 
 import (
 	"encoding/binary"
@@ -23,7 +23,8 @@ func isSEVENZIP(file *os.File) bool {
 		return false
 	}
 
-	if b[0] != '7' || b[1] != 'z' || b[2] != 0xbc || b[3] != 0xaf || b[4] != 0x27 || b[5] != 0x1c {
+	if b[0] != '7' || b[1] != 'z' || b[2] != 0xbc || b[3] != 0xaf ||
+		b[4] != 0x27 || b[5] != 0x1c {
 		return false
 	}
 
@@ -32,17 +33,16 @@ func isSEVENZIP(file *os.File) bool {
 
 func parseSEVENZIP(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 6,
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
-		},
-	})
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 6,
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
+			}}}}
 
 	return &res, nil
 }

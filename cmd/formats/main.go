@@ -51,6 +51,10 @@ func main() {
 	uiLoop(file)
 }
 
+func calcVisibleRows() {
+	hexView.VisibleRows = termui.TermHeight() - 2
+}
+
 func uiLoop(file *os.File) {
 
 	fileLen, _ := file.Seek(0, os.SEEK_END)
@@ -61,7 +65,7 @@ func uiLoop(file *os.File) {
 	}
 	defer termui.Close()
 
-	hexView.VisibleRows = termui.TermHeight() - 2
+	calcVisibleRows()
 
 	offsetsPar = termui.NewPar("")
 	offsetsPar.BorderLeft = false
@@ -87,12 +91,17 @@ func uiLoop(file *os.File) {
 	asciiPar.BorderLabel = "ascii"
 	asciiPar.BorderFg = termui.ColorCyan
 
+	formatKind := ""
+	if val, ok := parse.FileKinds[fileLayout.FileKind]; ok {
+		formatKind = val
+	}
+
 	boxPar = termui.NewPar("")
 	boxPar.Height = 8
 	boxPar.Width = 28
 	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite
-	boxPar.BorderLabel = fileLayout.FormatName
+	boxPar.BorderLabel = fileLayout.FormatName + " " + formatKind
 	boxPar.BorderFg = termui.ColorCyan
 
 	boxFooter = termui.NewPar("")
@@ -192,6 +201,12 @@ func uiLoop(file *os.File) {
 		if hexView.StartingRow > (fileLen / 16) {
 			hexView.StartingRow = fileLen / 16
 		}
+		refreshUI(file)
+	})
+
+	termui.Handle("/sys/wnd/resize", func(termui.Event) {
+		// XXX resize is bugged on some heights...
+		calcVisibleRows()
 		refreshUI(file)
 	})
 

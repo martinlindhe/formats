@@ -35,15 +35,16 @@ func isWRI(file *os.File) bool {
 
 func parseWRI(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Document,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 4, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+			}}}}
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 4, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
-		}})
 	return &res, nil
 }

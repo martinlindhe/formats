@@ -33,30 +33,29 @@ func isCAB(file *os.File) bool {
 
 func parseCAB(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
 	offset := int64(0)
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: offset,
-		Length: 36, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: offset, Length: 4, Info: "magic", Type: ASCII},
-			Layout{Offset: offset + 4, Length: 4, Info: "reserved 1", Type: Uint32le},
-			Layout{Offset: offset + 8, Length: 4, Info: "file size", Type: Uint32le},
-			Layout{Offset: offset + 12, Length: 4, Info: "reserved 2", Type: Uint32le},
-			Layout{Offset: offset + 16, Length: 4, Info: "offset to CFFILE", Type: Uint32le},
-			Layout{Offset: offset + 20, Length: 4, Info: "reserved 3", Type: Uint32le},
-			Layout{Offset: offset + 24, Length: 2, Info: "format version", Type: MinorMajor16le},
-			Layout{Offset: offset + 26, Length: 2, Info: "CFFOLDER entries", Type: Uint16le},
-			Layout{Offset: offset + 28, Length: 2, Info: "CFFILE entries", Type: Uint16le},
-			Layout{Offset: offset + 30, Length: 2, Info: "flags", Type: Uint16le},
-			Layout{Offset: offset + 32, Length: 2, Info: "set id", Type: Uint16le},
-			Layout{Offset: offset + 34, Length: 2, Info: "cabinet number", Type: Uint16le},
-		},
-	})
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: offset,
+			Length: 36, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: offset, Length: 4, Info: "magic", Type: ASCII},
+				{Offset: offset + 4, Length: 4, Info: "reserved 1", Type: Uint32le},
+				{Offset: offset + 8, Length: 4, Info: "file size", Type: Uint32le},
+				{Offset: offset + 12, Length: 4, Info: "reserved 2", Type: Uint32le},
+				{Offset: offset + 16, Length: 4, Info: "offset to CFFILE", Type: Uint32le},
+				{Offset: offset + 20, Length: 4, Info: "reserved 3", Type: Uint32le},
+				{Offset: offset + 24, Length: 2, Info: "format version", Type: MinorMajor16le},
+				{Offset: offset + 26, Length: 2, Info: "CFFOLDER entries", Type: Uint16le},
+				{Offset: offset + 28, Length: 2, Info: "CFFILE entries", Type: Uint16le},
+				{Offset: offset + 30, Length: 2, Info: "flags", Type: Uint16le},
+				{Offset: offset + 32, Length: 2, Info: "set id", Type: Uint16le},
+				{Offset: offset + 34, Length: 2, Info: "cabinet number", Type: Uint16le},
+			}}}}
 
 	/* XXX
 	   u2  cbCFHeader;       // (optional) size of per-cabinet reserved area
@@ -82,9 +81,9 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 			Info:   "CFFOLDER " + fmt.Sprintf("%d", i+1),
 			Type:   Group,
 			Childs: []Layout{
-				Layout{Offset: offset, Length: 4, Info: "offset of first CFDATA block", Type: Uint32le},
-				Layout{Offset: offset + 4, Length: 2, Info: "CFDATA blocks", Type: Uint16le},
-				Layout{Offset: offset + 6, Length: 2, Info: "compression type", Type: Uint16le},
+				{Offset: offset, Length: 4, Info: "offset of first CFDATA block", Type: Uint32le},
+				{Offset: offset + 4, Length: 2, Info: "CFDATA blocks", Type: Uint16le},
+				{Offset: offset + 6, Length: 2, Info: "compression type", Type: Uint16le},
 				// XXX:
 				// u1  abReserve[];   /* (optional) per-folder reserved area */
 			}}
@@ -118,13 +117,13 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 			Info:   "CFFILE " + fmt.Sprintf("%d", i+1),
 			Type:   Group,
 			Childs: []Layout{
-				Layout{Offset: offset, Length: 4, Info: "uncompressed size", Type: Uint32le},
-				Layout{Offset: offset + 4, Length: 4, Info: "uncompressed offset in folder", Type: Uint32le},
-				Layout{Offset: offset + 8, Length: 2, Info: "index in CFFOLDER", Type: Uint16le},
-				Layout{Offset: offset + 10, Length: 2, Info: "date stamp", Type: Uint16le},
-				Layout{Offset: offset + 12, Length: 2, Info: "time stamp", Type: Uint16le},
-				Layout{Offset: offset + 14, Length: 2, Info: "attributes", Type: Uint16le},
-				Layout{Offset: offset + 16, Length: int64(nameLen), Info: "name", Type: ASCIIZ},
+				{Offset: offset, Length: 4, Info: "uncompressed size", Type: Uint32le},
+				{Offset: offset + 4, Length: 4, Info: "uncompressed offset in folder", Type: Uint32le},
+				{Offset: offset + 8, Length: 2, Info: "index in CFFOLDER", Type: Uint16le},
+				{Offset: offset + 10, Length: 2, Info: "date stamp", Type: Uint16le},
+				{Offset: offset + 12, Length: 2, Info: "time stamp", Type: Uint16le},
+				{Offset: offset + 14, Length: 2, Info: "attributes", Type: Uint16le},
+				{Offset: offset + 16, Length: int64(nameLen), Info: "name", Type: ASCIIZ},
 			}}
 
 		offset += chunk.Length
@@ -142,10 +141,10 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 				Info:   "CFDATA " + fmt.Sprintf("%d", i),
 				Type:   Group,
 				Childs: []Layout{
-					Layout{Offset: offset, Length: 4, Info: "checksum", Type: Uint32le},
-					Layout{Offset: offset + 4, Length: 2, Info: "compressed len", Type: Uint16le},
-					Layout{Offset: offset + 6, Length: 2, Info: "uncompressed len", Type: Uint16le},
-					Layout{Offset: offset + 8, Length: int64(cbLen), Info: "compressed data", Type: Bytes},
+					{Offset: offset, Length: 4, Info: "checksum", Type: Uint32le},
+					{Offset: offset + 4, Length: 2, Info: "compressed len", Type: Uint16le},
+					{Offset: offset + 6, Length: 2, Info: "uncompressed len", Type: Uint16le},
+					{Offset: offset + 8, Length: int64(cbLen), Info: "compressed data", Type: Bytes},
 				}})
 			offset += 8 + int64(cbLen)
 		}

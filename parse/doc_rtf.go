@@ -33,15 +33,16 @@ func isRTF(file *os.File) bool {
 
 func parseRTF(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Document,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 5, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 5, Info: "magic", Type: ASCII},
+			}}}}
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 5, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 5, Info: "magic", Type: ASCII},
-		}})
 	return &res, nil
 }

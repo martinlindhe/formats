@@ -37,17 +37,16 @@ func isISO(file *os.File) bool {
 
 func parseISO(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0x8000,
-		Length: 3,
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0x8000, Length: 3, Info: "magic", Type: Bytes},
-		},
-	})
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: 0x8000,
+			Length: 3,
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0x8000, Length: 3, Info: "magic", Type: Bytes},
+			}}}}
 
 	return &res, nil
 }

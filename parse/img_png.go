@@ -48,7 +48,9 @@ func isPNG(file *os.File) bool {
 func parsePNG(file *os.File) (*ParsedLayout, error) {
 
 	offset := int64(0)
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Image,
+	}
 
 	b, err := getPNGHeader(file)
 	if err != nil {
@@ -65,7 +67,7 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: 0, Length: 8, Info: "magic = " + fileType, Type: Bytes},
+			{Offset: 0, Length: 8, Info: "magic = " + fileType, Type: Bytes},
 		},
 	}
 
@@ -80,8 +82,8 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 			Length: 8,
 			Type:   Group,
 			Childs: []Layout{
-				Layout{Offset: offset, Length: 4, Info: "length", Type: Uint32be},
-				Layout{Offset: offset + 4, Length: 4, Info: "type", Type: ASCII},
+				{Offset: offset, Length: 4, Info: "length", Type: Uint32be},
+				{Offset: offset + 4, Length: 4, Info: "type", Type: ASCII},
 			},
 		}
 		chunkLength, err := readUint32be(file, offset)
@@ -108,17 +110,17 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 				fmt.Println("warning: IHDR size must be 13")
 			}
 			l.Childs = append(l.Childs, []Layout{
-				Layout{Offset: offset, Length: 4, Info: "width", Type: Uint32be},
-				Layout{Offset: offset + 4, Length: 4, Info: "height", Type: Uint32be},
-				Layout{Offset: offset + 8, Length: 1, Info: "bit depth", Type: Uint8},
-				Layout{Offset: offset + 9, Length: 1, Info: "color type", Type: Uint8},
-				Layout{Offset: offset + 10, Length: 1, Info: "compression method", Type: Uint8}, // XXX show meaning of value
-				Layout{Offset: offset + 11, Length: 1, Info: "filter method", Type: Uint8},
-				Layout{Offset: offset + 12, Length: 1, Info: "interlace method", Type: Uint8},
+				{Offset: offset, Length: 4, Info: "width", Type: Uint32be},
+				{Offset: offset + 4, Length: 4, Info: "height", Type: Uint32be},
+				{Offset: offset + 8, Length: 1, Info: "bit depth", Type: Uint8},
+				{Offset: offset + 9, Length: 1, Info: "color type", Type: Uint8},
+				{Offset: offset + 10, Length: 1, Info: "compression method", Type: Uint8}, // XXX show meaning of value
+				{Offset: offset + 11, Length: 1, Info: "filter method", Type: Uint8},
+				{Offset: offset + 12, Length: 1, Info: "interlace method", Type: Uint8},
 			}...)
 		} else {
 			l.Childs = append(l.Childs, []Layout{
-				Layout{Offset: offset, Length: int64(chunkLength), Info: typeCode + " data", Type: Bytes},
+				{Offset: offset, Length: int64(chunkLength), Info: typeCode + " data", Type: Bytes},
 			}...)
 		}
 
@@ -126,7 +128,7 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 		l.Length += int64(chunkLength)
 
 		l.Childs = append(l.Childs, []Layout{
-			Layout{Offset: offset, Length: 4, Info: "crc", Type: Uint32be},
+			{Offset: offset, Length: 4, Info: "crc", Type: Uint32be},
 		}...)
 		l.Length += 4
 		offset += 4

@@ -32,19 +32,16 @@ func isTIFF(file *os.File) bool {
 
 func parseTIFF(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
-
-	fileHeader := Layout{
-		Offset: 0,
-		Length: 4,
-		Info:   "file header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
-		},
-	}
-
-	res.Layout = append(res.Layout, fileHeader)
+	res := ParsedLayout{
+		FileKind: Image,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 4,
+			Info:   "file header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+			}}}}
 
 	return &res, nil
 }

@@ -72,7 +72,9 @@ func isGIF(file *os.File) bool {
 
 func parseGIF(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Image,
+	}
 
 	res.Layout = append(res.Layout, gifHeader(file))
 	res.Layout = append(res.Layout, gifLogicalDescriptor(file))
@@ -147,8 +149,8 @@ func gifHeader(file *os.File) Layout {
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: 0, Length: 3, Info: "signature", Type: ASCII},
-			Layout{Offset: 3, Length: 3, Info: "version", Type: ASCII},
+			{Offset: 0, Length: 3, Info: "signature", Type: ASCII},
+			{Offset: 3, Length: 3, Info: "version", Type: ASCII},
 		},
 	}
 }
@@ -161,18 +163,18 @@ func gifImageDescriptor(file *os.File, baseOffset int64) *Layout {
 		Info:   "image descriptor",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: baseOffset, Length: 1, Info: "image separator", Type: Uint8},
-			Layout{Offset: baseOffset + 1, Length: 2, Info: "image left", Type: Uint16le},
-			Layout{Offset: baseOffset + 3, Length: 2, Info: "image top", Type: Uint16le},
-			Layout{Offset: baseOffset + 5, Length: 2, Info: "image width", Type: Uint16le},
-			Layout{Offset: baseOffset + 7, Length: 2, Info: "image height", Type: Uint16le},
+			{Offset: baseOffset, Length: 1, Info: "image separator", Type: Uint8},
+			{Offset: baseOffset + 1, Length: 2, Info: "image left", Type: Uint16le},
+			{Offset: baseOffset + 3, Length: 2, Info: "image top", Type: Uint16le},
+			{Offset: baseOffset + 5, Length: 2, Info: "image width", Type: Uint16le},
+			{Offset: baseOffset + 7, Length: 2, Info: "image height", Type: Uint16le},
 
-			Layout{Offset: baseOffset + 9, Length: 1, Info: "packed #3", Type: Uint8, Masks: []Mask{
-				Mask{Low: 0, Length: 2, Info: "size of local color table"},
-				Mask{Low: 3, Length: 2, Info: "reserved"},
-				Mask{Low: 5, Length: 1, Info: "sort flag"},
-				Mask{Low: 6, Length: 1, Info: "interlace flag"},
-				Mask{Low: 7, Length: 1, Info: "local color table flag"},
+			{Offset: baseOffset + 9, Length: 1, Info: "packed #3", Type: Uint8, Masks: []Mask{
+				{Low: 0, Length: 2, Info: "size of local color table"},
+				{Low: 3, Length: 2, Info: "reserved"},
+				{Low: 5, Length: 1, Info: "sort flag"},
+				{Low: 6, Length: 1, Info: "interlace flag"},
+				{Low: 7, Length: 1, Info: "local color table flag"},
 			}},
 		},
 	}
@@ -239,11 +241,11 @@ func gifExtension(file *os.File, baseOffset int64) (*Layout, error) {
 		size = 7
 		typeInfo = "graphic control"
 		typeSpecific = []Layout{
-			Layout{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
-			Layout{Offset: baseOffset + 3, Length: 1, Info: "packed #2", Type: Uint8},
-			Layout{Offset: baseOffset + 4, Length: 2, Info: "delay time", Type: Uint16le},
-			Layout{Offset: baseOffset + 6, Length: 1, Info: "transparent color index", Type: Uint8},
-			Layout{Offset: baseOffset + 7, Length: 1, Info: "block terminator", Type: Uint8},
+			{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
+			{Offset: baseOffset + 3, Length: 1, Info: "packed #2", Type: Uint8},
+			{Offset: baseOffset + 4, Length: 2, Info: "delay time", Type: Uint16le},
+			{Offset: baseOffset + 6, Length: 1, Info: "transparent color index", Type: Uint8},
+			{Offset: baseOffset + 7, Length: 1, Info: "block terminator", Type: Uint8},
 		}
 
 	case eComment:
@@ -258,8 +260,8 @@ func gifExtension(file *os.File, baseOffset int64) (*Layout, error) {
 		size = 2 + int64(lenByte) + 1 // including terminating 0
 
 		typeSpecific = []Layout{
-			Layout{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
-			Layout{Offset: baseOffset + 3, Length: size - 2, Info: "data", Type: ASCIIZ},
+			{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
+			{Offset: baseOffset + 3, Length: size - 2, Info: "data", Type: ASCIIZ},
 		}
 
 	case eApplication:
@@ -272,8 +274,8 @@ func gifExtension(file *os.File, baseOffset int64) (*Layout, error) {
 		size = 2 + int64(lenByte)
 
 		typeSpecific = []Layout{
-			Layout{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
-			Layout{Offset: baseOffset + 3, Length: size - 2, Info: "data", Type: Uint8},
+			{Offset: baseOffset + 2, Length: 1, Info: "byte size", Type: Uint8},
+			{Offset: baseOffset + 3, Length: size - 2, Info: "data", Type: Uint8},
 		}
 
 		extData := readBytesFrom(file, baseOffset+3, size-2)
@@ -303,8 +305,8 @@ func gifExtension(file *os.File, baseOffset int64) (*Layout, error) {
 		Info:   "extension",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: baseOffset, Length: 1, Info: "block id (extension)", Type: Uint8},
-			Layout{Offset: baseOffset + 1, Length: 1, Info: typeInfo, Type: Uint8},
+			{Offset: baseOffset, Length: 1, Info: "block id (extension)", Type: Uint8},
+			{Offset: baseOffset + 1, Length: 1, Info: typeInfo, Type: Uint8},
 		},
 	}
 
@@ -332,16 +334,16 @@ func gifLogicalDescriptor(file *os.File) Layout {
 		Info:   "logical screen descriptor",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: base, Length: 2, Info: "width", Type: Uint16le},
-			Layout{Offset: base + 2, Length: 2, Info: "height", Type: Uint16le},
-			Layout{Offset: base + 4, Length: 1, Info: "packed", Type: Uint8, Masks: []Mask{
-				Mask{Low: 0, Length: 3, Info: "size of global color table"},
-				Mask{Low: 3, Length: 1, Info: "color table sort flag"},
-				Mask{Low: 4, Length: 3, Info: "color resolution"},
-				Mask{Low: 7, Length: 1, Info: "global color table flag"},
+			{Offset: base, Length: 2, Info: "width", Type: Uint16le},
+			{Offset: base + 2, Length: 2, Info: "height", Type: Uint16le},
+			{Offset: base + 4, Length: 1, Info: "packed", Type: Uint8, Masks: []Mask{
+				{Low: 0, Length: 3, Info: "size of global color table"},
+				{Low: 3, Length: 1, Info: "color table sort flag"},
+				{Low: 4, Length: 3, Info: "color resolution"},
+				{Low: 7, Length: 1, Info: "global color table flag"},
 			}},
-			Layout{Offset: base + 5, Length: 1, Info: "background color", Type: Uint8},
-			Layout{Offset: base + 6, Length: 1, Info: "aspect ratio", Type: Uint8},
+			{Offset: base + 5, Length: 1, Info: "background color", Type: Uint8},
+			{Offset: base + 6, Length: 1, Info: "aspect ratio", Type: Uint8},
 		},
 	}
 }
@@ -416,7 +418,7 @@ func gifTrailer(file *os.File, baseOffset int64) Layout {
 		Info:   "trailer",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: baseOffset, Length: 1, Info: "trailer", Type: Uint8},
+			{Offset: baseOffset, Length: 1, Info: "trailer", Type: Uint8},
 		},
 	}
 	return res

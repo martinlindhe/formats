@@ -60,16 +60,17 @@ func HasASFSignature(file *os.File, offset int64, sig []byte) bool {
 
 func parseASF(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: AudioVideo,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 16, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 16, Info: "magic", Type: Bytes},
+			}}}}
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 16, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 16, Info: "magic", Type: Bytes},
-		}})
 	return &res, nil
 }
 

@@ -40,9 +40,19 @@ const (
 	RGB
 )
 
+const (
+	Image FileKind = 1 + iota
+	Archive
+	AudioVideo
+	Binary
+	Executable
+	Document
+	Font
+)
+
 var (
 	dataTypes = map[DataType]string{
-		Group:          "Group",
+		Group:          "group",
 		Int8:           "int8",
 		Uint8:          "uint8",
 		Int16le:        "int16-le",
@@ -62,12 +72,30 @@ var (
 		ASCIIZ:         "ASCIIZ",
 		RGB:            "RGB",
 	}
+
+	FileKinds = map[FileKind]string{
+		Image:      "image",
+		Archive:    "archive",
+		AudioVideo: "a/v",
+		Binary:     "binary",
+		Executable: "executable",
+		Document:   "document",
+		Font:       "font",
+	}
 )
+
+// DataType ...
+type DataType int
+
+// FileKind ...
+type FileKind int
 
 // ParsedLayout ...
 type ParsedLayout struct {
 	FormatName string
+	FileName   string
 	FileSize   int64
+	FileKind   FileKind
 	Layout     []Layout
 }
 
@@ -87,9 +115,6 @@ type Mask struct {
 	Length int
 	Info   string
 }
-
-// DataType ...
-type DataType int
 
 func (dt DataType) String() string {
 
@@ -179,15 +204,29 @@ func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
 	return nil
 }
 
+// the output of cmd/prober --short
+func (pl *ParsedLayout) ShortPrint() string {
+
+	if val, ok := FileKinds[pl.FileKind]; ok {
+		return pl.FormatName + " " + val
+	}
+
+	return pl.FormatName
+}
+
 // the output of cmd/prober
 func (pl *ParsedLayout) PrettyPrint() string {
 
-	res := ""
+	res := "Format: " + pl.FormatName + " (" + pl.FileName +
+		", " + fmt.Sprintf("%d", pl.FileSize) + " bytes)\n\n"
+
 	for _, layout := range pl.Layout {
-		res += layout.Info + fmt.Sprintf(" (%04x)", layout.Offset) + ", " + layout.Type.String() + "\n"
+		res += layout.Info + fmt.Sprintf(" (%04x)", layout.Offset) +
+			", " + layout.Type.String() + "\n"
 
 		for _, child := range layout.Childs {
-			res += "  " + child.Info + fmt.Sprintf(" (%04x)", child.Offset) + ", " + child.Type.String() + "\n"
+			res += "  " + child.Info + fmt.Sprintf(" (%04x)", child.Offset) +
+				", " + child.Type.String() + "\n"
 		}
 	}
 

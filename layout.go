@@ -77,11 +77,17 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 		}
 		if parsed != nil {
 			parsed.FormatName = name
+			parsed.FileName = fileGetName(file)
 			parsed.FileSize = fileSize(file)
 			return parsed, nil
 		}
 	}
 	return nil, fmt.Errorf("no parser found")
+}
+
+func fileGetName(file *os.File) string {
+	stat, _ := file.Stat()
+	return stat.Name()
 }
 
 // ParseLayout returns a ParsedLayout for the file

@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/archives/cab"
+	searchDir := "./samples/archives"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -30,6 +30,8 @@ func TestParsedLayout(t *testing.T) {
 
 		layout, err := ParseLayout(f)
 		assert.Equal(t, nil, err)
+
+		assert.Equal(t, true, layout.FileKind != 0)
 
 		if layout == nil {
 			// NOTE since not all samples is currently supported

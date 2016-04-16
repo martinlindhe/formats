@@ -21,7 +21,8 @@ func isXZ(file *os.File) bool {
 		return false
 	}
 
-	if b[0] != 0xFD || b[1] != '7' || b[2] != 'z' || b[3] != 'X' || b[4] != 'Z' || b[5] != 0x00 {
+	if b[0] != 0xFD || b[1] != '7' || b[2] != 'z' || b[3] != 'X' ||
+		b[4] != 'Z' || b[5] != 0x00 {
 		return false
 	}
 
@@ -30,16 +31,17 @@ func isXZ(file *os.File) bool {
 
 func parseXZ(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Archive,
+		Layout: []Layout{{
+			Offset: 0,
+			Length: 6, // XXX
+			Info:   "header",
+			Type:   Group,
+			Childs: []Layout{
+				{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
+			}}}}
 
-	res.Layout = append(res.Layout, Layout{
-		Offset: 0,
-		Length: 6, // XXX
-		Info:   "header",
-		Type:   Group,
-		Childs: []Layout{
-			Layout{Offset: 0, Length: 6, Info: "magic", Type: Bytes},
-		}})
 	return &res, nil
 }
 

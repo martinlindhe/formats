@@ -48,7 +48,10 @@ func isICO(file *os.File) bool {
 
 func parseICO(file *os.File) (*ParsedLayout, error) {
 
-	res := ParsedLayout{}
+	res := ParsedLayout{
+		FileKind: Image,
+	}
+
 	typeName := ""
 
 	hdr, _ := readIconHeader(file)
@@ -69,9 +72,9 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: 0, Length: 2, Info: "magic", Type: Uint16le},
-			Layout{Offset: 2, Length: 2, Info: "type = " + typeName, Type: Uint16le},
-			Layout{Offset: 4, Length: 2, Info: "number of resources", Type: Uint16le},
+			{Offset: 0, Length: 2, Info: "magic", Type: Uint16le},
+			{Offset: 2, Length: 2, Info: "type = " + typeName, Type: Uint16le},
+			{Offset: 4, Length: 2, Info: "number of resources", Type: Uint16le},
 		},
 	}
 
@@ -90,14 +93,14 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 			Info:   "resource " + resNum + " header",
 			Type:   Group,
 			Childs: []Layout{
-				Layout{Offset: offset, Length: 1, Info: "width", Type: Uint8},
-				Layout{Offset: offset + 1, Length: 1, Info: "height", Type: Uint8},
-				Layout{Offset: offset + 2, Length: 1, Info: "max number of colors", Type: Uint8},
-				Layout{Offset: offset + 3, Length: 1, Info: "reserved", Type: Uint8},
-				Layout{Offset: offset + 4, Length: 2, Info: "planes", Type: Uint16le},
-				Layout{Offset: offset + 6, Length: 2, Info: "bit count", Type: Uint16le},
-				Layout{Offset: offset + 8, Length: 4, Info: "data size of resource " + resNum, Type: Uint32le},
-				Layout{Offset: offset + 12, Length: 4, Info: "offset to resource " + resNum, Type: Uint32le},
+				{Offset: offset, Length: 1, Info: "width", Type: Uint8},
+				{Offset: offset + 1, Length: 1, Info: "height", Type: Uint8},
+				{Offset: offset + 2, Length: 1, Info: "max number of colors", Type: Uint8},
+				{Offset: offset + 3, Length: 1, Info: "reserved", Type: Uint8},
+				{Offset: offset + 4, Length: 2, Info: "planes", Type: Uint16le},
+				{Offset: offset + 6, Length: 2, Info: "bit count", Type: Uint16le},
+				{Offset: offset + 8, Length: 4, Info: "data size of resource " + resNum, Type: Uint32le},
+				{Offset: offset + 12, Length: 4, Info: "offset to resource " + resNum, Type: Uint32le},
 			}}
 
 		res.Layout = append(res.Layout, resource)
@@ -123,7 +126,7 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 			Info:   "resource " + resNum + " data",
 			Length: int64(dataSize),
 			Childs: []Layout{
-				Layout{Offset: int64(dataOffset), Length: int64(dataSize), Info: "image data", Type: Bytes},
+				{Offset: int64(dataOffset), Length: int64(dataSize), Info: "image data", Type: Bytes},
 			}})
 	}
 

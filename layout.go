@@ -14,6 +14,7 @@ var (
 		"cab":   parse.CAB,
 		"gzip":  parse.GZIP,
 		"iso":   parse.ISO,
+		"lzma":  parse.LZMA,
 		"rar":   parse.RAR,
 		// "tar": parse.TAR, // XXX
 		"td2":    parse.TD2,

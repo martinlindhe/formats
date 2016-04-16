@@ -157,6 +157,18 @@ func uiLoop(file *os.File) {
 		refreshUI(file)
 	})
 
+	termui.Handle("/sys/kbd/o", func(termui.Event) {
+		// home. TODO: map to cmd-UP on osx, "HOME" button otherwise
+		hexView.StartingRow = 0
+		refreshUI(file)
+	})
+
+	termui.Handle("/sys/kbd/p", func(termui.Event) {
+		// end. TODO: map to cmd-DOWN on osx, "END" button otherwise
+		hexView.StartingRow = (fileLen / 16) - int64(hexView.VisibleRows) + 1
+		refreshUI(file)
+	})
+
 	termui.Handle("/sys/kbd/<down>", func(termui.Event) {
 		hexView.StartingRow++
 		if hexView.StartingRow > (fileLen / 16) {
@@ -229,7 +241,7 @@ func focusAtCurrentField() {
 func refreshUI(file *os.File) {
 
 	// recalc, to work with resizing of terminal window
-	hexView.VisibleRows = termui.TermHeight() - 3
+	hexView.VisibleRows = termui.TermHeight() - 2
 
 	offsetsPar.Text = fileLayout.PrettyOffsetView(file, hexView)
 	hexPar.Text = fileLayout.PrettyHexView(file, hexView)

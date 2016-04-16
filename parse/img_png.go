@@ -1,7 +1,8 @@
 package parse
 
 // handles PNG and MNG images
-// STATUS: 80% PNG, 20% MNG. parsing gives up after first IEND, should continue...
+// STATUS: 80% PNG/APNG
+// STATUS: 20% MNG. parsing gives up after first IEND, should continue...
 
 import (
 	"encoding/binary"

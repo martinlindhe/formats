@@ -50,10 +50,39 @@ func countInitiatedASCII(r io.Reader) (string, int, error) {
 	return s, readCnt, nil
 }
 
+func readZeroTerminatedASCIIUntil(file *os.File, offset int64, maxLen int) (string, int, error) {
+
+	file.Seek(offset, os.SEEK_SET)
+	return zeroTerminatedASCIIUntil(file, maxLen)
+}
+
 func readZeroTerminatedASCII(file *os.File, offset int64) (string, int, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	return zeroTerminatedASCII(file)
+}
+
+// return string, bytes read, error
+func zeroTerminatedASCIIUntil(r io.Reader, maxLen int) (string, int, error) {
+
+	var c byte
+	s := ""
+
+	readCnt := 0
+	for {
+		if err := binary.Read(r, binary.LittleEndian, &c); err != nil {
+			return s, 0, err
+		}
+		readCnt++
+		if c == 0 {
+			break
+		}
+		s += string(c)
+		if readCnt == maxLen {
+			break
+		}
+	}
+	return s, readCnt, nil
 }
 
 // return string, bytes read, error

@@ -1,14 +1,13 @@
 package formats
 
 import (
-	"fmt"
 	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
 var (
 	parsers = map[string]func(*os.File) (*parse.ParsedLayout, error){
-		// compression
+		// archive
 		"7z":    parse.SEVENZIP,
 		"arj":   parse.ARJ,
 		"bzip2": parse.BZIP2,
@@ -56,16 +55,16 @@ var (
 		"ttf": parse.TTF,
 
 		// exe
-		"mz":     parse.MZ,
-		"lua":    parse.LUA,
-		"python": parse.PYTHON,
+		"mz":         parse.MZ,
+		"lua":        parse.LUA,
+		"python":     parse.PYTHON,
+		"java class": parse.JAVA,
 
-		// windows
-		"pif": parse.PIF,
-
-		// emu
+		// bin
 		"gba-rom": parse.GBAROM,
 		"n64-rom": parse.N64ROM,
+		"pif":     parse.PIF,
+		"sqlite3": parse.SQLITE3,
 	}
 )
 
@@ -82,7 +81,9 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 			return parsed, nil
 		}
 	}
-	return nil, fmt.Errorf("no parser found")
+
+	raw, _ := parse.RAW(file)
+	return raw, nil
 }
 
 func fileGetName(file *os.File) string {

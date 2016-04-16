@@ -107,14 +107,12 @@ func uiLoop(file *os.File) {
 	boxFooter = termui.NewPar("")
 	boxFooter.Border = false
 	boxFooter.Height = 1
-	boxFooter.Width = 14
 	boxFooter.X = 75
 	boxFooter.Y = 7
 
 	statsPar = termui.NewPar("")
 	statsPar.Border = false
 	statsPar.Height = 1
-	statsPar.Width = 35
 	statsPar.X = 10
 	statsPar.Y = hexView.VisibleRows + 1
 
@@ -267,8 +265,10 @@ func refreshUI(file *os.File) {
 	if mappedPct < 100.0 {
 		boxFooter.Text = fmt.Sprintf("%.1f%%", mappedPct) + " mapped"
 	}
+	boxFooter.Width = len(boxFooter.Text)
 
 	statsPar.Text = prettyStatString()
+	statsPar.Width = len(statsPar.Text)
 
 	termui.Render(offsetsPar, hexPar, asciiPar, boxPar, boxFooter, statsPar)
 }

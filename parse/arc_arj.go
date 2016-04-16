@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	arjHeaderSize    = 0x22 // XXX what is size?1
 	arjBlockSizeMin  = 30
 	arjBlockSizeMax  = 2600
 	arjMaxSFX        = 500000 // size of self-extracting prefix
@@ -40,7 +39,6 @@ func ARJ(file *os.File) (*ParsedLayout, error) {
 
 func parseARJMainHeader(f *os.File) ([]Layout, error) {
 
-	var err error
 	offset, err := findARJHeader(f)
 	if err != nil {
 		return nil, err
@@ -50,22 +48,15 @@ func parseARJMainHeader(f *os.File) ([]Layout, error) {
 
 	f.Seek(mainHeaderLen, os.SEEK_SET)
 
-	archiveName := ""
-	comment := ""
-
-	if archiveName, _, err = zeroTerminatedASCII(f); err != nil {
-		return nil, err
-	}
+	archiveName, _, _ := zeroTerminatedASCII(f)
 	archiveNameLen := int64(len(archiveName)) + 1 // including terminating zero
 
-	if comment, _, err = zeroTerminatedASCII(f); err != nil {
-		return nil, err
-	}
+	comment, _, _ := zeroTerminatedASCII(f)
 	commentLen := int64(len(comment)) + 1
 
 	chunk := Layout{
 		Offset: offset,
-		Length: mainHeaderLen + int64(len(archiveName)+len(comment)) + 8,
+		Length: mainHeaderLen + archiveNameLen + commentLen + 8,
 		Type:   Group,
 		Info:   "main header",
 		Childs: []Layout{
@@ -147,10 +138,10 @@ func findARJHeader(file *os.File) (int64, error) {
 		lastpos = arjMaxSFX
 	}
 	for ; pos < lastpos; pos++ {
-		fmt.Printf("setting pos to %04x\n", pos)
+		// fmt.Printf("setting pos to %04x\n", pos)
 		pos2, _ := file.Seek(pos, os.SEEK_SET)
 		if pos != pos2 {
-			fmt.Printf("expected %d, got %d\n", pos, pos2)
+			fmt.Printf("warning: expected %d, got %d\n", pos, pos2)
 		}
 
 		var c byte

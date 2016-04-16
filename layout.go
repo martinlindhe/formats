@@ -51,20 +51,24 @@ var (
 		"wri":  parse.WRI,
 
 		// font
-		"otf": parse.OTF,
-		"ttf": parse.TTF,
+		"otf":   parse.OTF,
+		"ttf":   parse.TTF,
+		"woff":  parse.WOFF,
+		"woff2": parse.WOFF2,
 
 		// exe
 		"mz":         parse.MZ,
 		"lua":        parse.LUA,
 		"python":     parse.PYTHON,
 		"java class": parse.JAVA,
+		"swf":        parse.SWF,
 
 		// bin
 		"gba-rom": parse.GBAROM,
 		"n64-rom": parse.N64ROM,
-		"pif":     parse.PIF,
 		"sqlite3": parse.SQLITE3,
+		"pif":     parse.PIF, // windows
+		"lnk":     parse.LNK, // windows
 	}
 )
 

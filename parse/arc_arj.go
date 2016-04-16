@@ -187,15 +187,7 @@ func findARJHeader(file *os.File) (int64, error) {
 		// fmt.Printf("header size %02x\n", headerSize)
 
 		if headerSize <= arjHeaderSizeMax {
-			// fmt.Printf("arcpos %04x\n", arcpos)
-
-			// XXX implement crc check?
-			//crc = crcMask
-			//fread_crc(header, headersize, fd)
-			//if (crc ^ crcMask) == fget_crc(fd) {
-			file.Seek(pos, os.SEEK_SET)
 			return pos, nil
-			//}
 		}
 	}
 

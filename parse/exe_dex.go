@@ -39,7 +39,7 @@ func parseDEX(file *os.File) (*ParsedLayout, error) {
 	res := ParsedLayout{
 		FileKind: Executable,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: offset,
 			Length: 112, // XXX
 			Info:   "header",
 			Type:   Group,

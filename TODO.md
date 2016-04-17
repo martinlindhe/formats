@@ -1,7 +1,5 @@
 # TODO cmd/formats
 
-
-ELF exec
 MSI exec
 PDB debug info
 

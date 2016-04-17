@@ -64,6 +64,7 @@ var (
 		// exe
 		"mz":         parse.MZ,
 		"macho":      parse.MachO,
+		"elf":        parse.ELF,
 		"lua":        parse.LUA,
 		"python":     parse.PYTHON,
 		"dex":        parse.DEX,

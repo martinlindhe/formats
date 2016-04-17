@@ -54,6 +54,7 @@ var (
 		// font
 		"eot":   parse.EOT,
 		"otf":   parse.OTF,
+		"pfb":   parse.PFB,
 		"ttf":   parse.TTF,
 		"woff":  parse.WOFF,
 		"woff2": parse.WOFF2,

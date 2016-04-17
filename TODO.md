@@ -6,8 +6,8 @@ ELF,
 MSI, PDB, XLS
 
 lo:
-AXML, EOT, JSE,
-PFB, RAW, T1, T2, TTC, VBE
+AXML
+, RAW, T1, T2, TTC, VBE
 
 
 XXX PPT

@@ -22,10 +22,9 @@ func isEOT(file *os.File) bool {
 	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
 		return false
 	}
-	if b == 0x4c50 {
+	if b != 0x504c {
 		return false
 	}
-
 	return true
 }
 

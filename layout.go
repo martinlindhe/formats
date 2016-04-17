@@ -52,6 +52,7 @@ var (
 		"wri":  parse.WRI,
 
 		// font
+		"eot":   parse.EOT,
 		"otf":   parse.OTF,
 		"ttf":   parse.TTF,
 		"woff":  parse.WOFF,
@@ -62,6 +63,7 @@ var (
 		"macho":      parse.MachO,
 		"lua":        parse.LUA,
 		"python":     parse.PYTHON,
+		"dex":        parse.DEX,
 		"java class": parse.JAVA,
 		"swf":        parse.SWF,
 

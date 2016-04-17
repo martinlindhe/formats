@@ -70,11 +70,9 @@ func uiLoop(file *os.File) {
 	offsetsPar = termui.NewPar("")
 	offsetsPar.BorderLeft = false
 	offsetsPar.Width = 10
-	offsetsPar.Height = hexView.VisibleRows + 2
 	offsetsPar.BorderLabel = "offset"
 
 	hexPar = termui.NewPar("")
-	hexPar.Height = hexView.VisibleRows + 2
 	hexPar.Width = 49
 	hexPar.X = 8
 	hexPar.Y = 0
@@ -82,7 +80,6 @@ func uiLoop(file *os.File) {
 	hexPar.BorderFg = termui.ColorCyan
 
 	asciiPar = termui.NewPar("")
-	asciiPar.Height = hexView.VisibleRows + 2
 	asciiPar.Width = 18
 	asciiPar.X = 56
 	asciiPar.Y = 0
@@ -114,7 +111,8 @@ func uiLoop(file *os.File) {
 	statsPar.Border = false
 	statsPar.Height = 1
 	statsPar.X = 10
-	statsPar.Y = hexView.VisibleRows + 1
+
+	updateUIPositions()
 
 	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit
@@ -205,6 +203,7 @@ func uiLoop(file *os.File) {
 	termui.Handle("/sys/wnd/resize", func(termui.Event) {
 		// XXX resize is bugged on some heights...
 		calcVisibleRows()
+		updateUIPositions()
 		refreshUI(file)
 	})
 
@@ -249,6 +248,14 @@ func focusAtCurrentField() {
 	}
 
 	hexView.StartingRow = int64(offset / rowWidth)
+}
+
+func updateUIPositions() {
+
+	statsPar.Y = hexView.VisibleRows + 1
+	asciiPar.Height = hexView.VisibleRows + 2
+	offsetsPar.Height = hexView.VisibleRows + 2
+	hexPar.Height = hexView.VisibleRows + 2
 }
 
 func refreshUI(file *os.File) {

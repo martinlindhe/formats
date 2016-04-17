@@ -1,6 +1,6 @@
 package parse
 
-// MS Word document (.doc)
+// MS Word document (.doc, .pps, .ppt, .xls)
 // STATUS: 1%
 
 import (

@@ -123,7 +123,7 @@ func uiLoop(file *os.File) {
 
 	termui.Handle("/sys/kbd/<enter>", func(termui.Event) {
 		hexView.BrowseMode = parse.ByFieldInGroup
-		//		hexView.CurrentField = 0
+		focusAtCurrentField()
 		refreshUI(file)
 	})
 

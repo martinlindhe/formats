@@ -27,6 +27,7 @@ var (
 		"gif":  parse.GIF,
 		"ico":  parse.ICO,
 		"jpeg": parse.JPEG,
+		"pcx":  parse.PCX,
 		"png":  parse.PNG,
 		"tiff": parse.TIFF,
 
@@ -55,6 +56,7 @@ var (
 		"eot":   parse.EOT,
 		"otf":   parse.OTF,
 		"pfb":   parse.PFB,
+		"ttc":   parse.TTC,
 		"ttf":   parse.TTF,
 		"woff":  parse.WOFF,
 		"woff2": parse.WOFF2,

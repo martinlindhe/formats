@@ -1,17 +1,13 @@
 # TODO cmd/formats
 
 
-hi:
-ELF,
-MSI, PDB, XLS
+ELF exec
+MSI exec
+PDB debug info
 
-lo:
-AXML
-, RAW, T1, T2, TTC, VBE
+VBE "VBScript Encoded Script File" (need samples)
 
-
-XXX PPT
-XXX PPS
+RAW image
 
 
 # TODO zip-based formats:
@@ -27,6 +23,11 @@ APK (android application package, JAR-based)
 
 JAR (java archive)
     https://en.wikipedia.org/wiki/JAR_%28file_format%29
+
+
+# TODO
+    .doc, .pps, .ppt, .xls: all are detected as "word" documents now.
+        improve parser to distinguish between them
 
 
 # TODO cmd/prober

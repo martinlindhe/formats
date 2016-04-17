@@ -59,6 +59,7 @@ var (
 
 		// exe
 		"mz":         parse.MZ,
+		"macho":      parse.MachO,
 		"lua":        parse.LUA,
 		"python":     parse.PYTHON,
 		"java class": parse.JAVA,

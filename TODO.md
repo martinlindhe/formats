@@ -1,6 +1,15 @@
 # TODO cmd/formats
 
 
+hi:
+DOCX, ELF,
+APK, JAR, MSI, ODT, PDB
+PPS, PPT, PPTX, XLS, XLSX
+
+lo:
+AXML, DEX, EOT, JSE,
+PFB, RAW, T1, T2, TTC, VBE
+
 
 
 # TODO cmd/prober
@@ -12,11 +21,3 @@
         - ARCHIVES: files in archive, total expanded size
 
     1st: mark all parsers of format group:
-
-
-
-# XXX
-
-investigate:
-
-APK, AXML, DEX, DOCX, ELF, EOT, JAR, JSE, MACH-O, MSI, O, ODT, PDB, PFB, PPS, PPT, PPTX, PRX, PUFF, RAW, SO, T1, T2, TORRENT, TTC, VBE, XLS, XLSX

@@ -36,15 +36,16 @@ func isAIFF(file *os.File) bool {
 
 func parseAIFF(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: AudioVideo,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 4, Info: "magic", Type: Bytes},
+				{Offset: pos, Length: 4, Info: "magic", Type: Bytes},
 			}}}}
 
 	return &res, nil

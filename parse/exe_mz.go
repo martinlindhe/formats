@@ -38,28 +38,28 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		FileKind: Executable,
 	}
 
-	offset := int64(0)
+	pos := int64(0)
 	mzHeaderLen := int64(28) // XXX
 	mz := Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: mzHeaderLen,
 		Info:   "header",
 		Type:   Group,
 		Childs: []Layout{
-			{Offset: offset, Length: 2, Info: "magic", Type: ASCII},
-			{Offset: offset + 2, Length: 2, Info: "extra bytes", Type: Uint16le},
-			{Offset: offset + 4, Length: 2, Info: "pages", Type: Uint16le},
-			{Offset: offset + 6, Length: 2, Info: "relocation items", Type: Uint16le},
-			{Offset: offset + 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
-			{Offset: offset + 10, Length: 2, Info: "min allocation", Type: Uint16le},
-			{Offset: offset + 12, Length: 2, Info: "max allocation", Type: Uint16le},
-			{Offset: offset + 14, Length: 2, Info: "initial ss", Type: Uint16le},
-			{Offset: offset + 16, Length: 2, Info: "initial sp", Type: Uint16le},
-			{Offset: offset + 18, Length: 2, Info: "checksum", Type: Uint16le},
-			{Offset: offset + 20, Length: 2, Info: "initial ip", Type: Uint16le},
-			{Offset: offset + 22, Length: 2, Info: "initial cs", Type: Uint16le},
-			{Offset: offset + 24, Length: 2, Info: "relocation offset", Type: Uint16le},
-			{Offset: offset + 26, Length: 2, Info: "overlay", Type: Uint16le},
+			{Offset: pos, Length: 2, Info: "magic", Type: ASCII},
+			{Offset: pos + 2, Length: 2, Info: "extra bytes", Type: Uint16le},
+			{Offset: pos + 4, Length: 2, Info: "pages", Type: Uint16le},
+			{Offset: pos + 6, Length: 2, Info: "relocation items", Type: Uint16le},
+			{Offset: pos + 8, Length: 2, Info: "header size in paragraphs", Type: Uint16le}, // 1 paragraph = group of 16 bytes
+			{Offset: pos + 10, Length: 2, Info: "min allocation", Type: Uint16le},
+			{Offset: pos + 12, Length: 2, Info: "max allocation", Type: Uint16le},
+			{Offset: pos + 14, Length: 2, Info: "initial ss", Type: Uint16le},
+			{Offset: pos + 16, Length: 2, Info: "initial sp", Type: Uint16le},
+			{Offset: pos + 18, Length: 2, Info: "checksum", Type: Uint16le},
+			{Offset: pos + 20, Length: 2, Info: "initial ip", Type: Uint16le},
+			{Offset: pos + 22, Length: 2, Info: "initial cs", Type: Uint16le},
+			{Offset: pos + 24, Length: 2, Info: "relocation offset", Type: Uint16le},
+			{Offset: pos + 26, Length: 2, Info: "overlay", Type: Uint16le},
 		}}
 
 	res.Layout = append(res.Layout, mz)
@@ -69,70 +69,70 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		res.Layout = append(res.Layout, *custom)
 	}
 
-	hdrSizeInParagraphs, _ := readUint16le(file, offset+8)
-	ip, _ := readUint16le(file, offset+20)
-	cs, _ := readUint16le(file, offset+22)
-	relocOffset, _ := readUint16le(file, offset+24)
+	hdrSizeInParagraphs, _ := readUint16le(file, pos+8)
+	ip, _ := readUint16le(file, pos+20)
+	cs, _ := readUint16le(file, pos+22)
+	relocOffset, _ := readUint16le(file, pos+24)
 
 	if relocOffset == 0x40 {
 		// 0x40 for new-(NE,LE,LX,W3,PE etc.) executable
-		offset += mzHeaderLen
+		pos += mzHeaderLen
 
 		subHeaderLen := int64(36) // XXX
 		res.Layout = append(res.Layout, Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: subHeaderLen,
 			Info:   "sub header", // XXX name
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 8, Info: "reserved", Type: Bytes},
-				{Offset: offset + 8, Length: 2, Info: "oem id", Type: Uint16le},
-				{Offset: offset + 10, Length: 2, Info: "oem info", Type: Uint16le},
-				{Offset: offset + 12, Length: 20, Info: "reserved 2", Type: Uint16le},
-				{Offset: offset + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
+				{Offset: pos, Length: 8, Info: "reserved", Type: Bytes},
+				{Offset: pos + 8, Length: 2, Info: "oem id", Type: Uint16le},
+				{Offset: pos + 10, Length: 2, Info: "oem info", Type: Uint16le},
+				{Offset: pos + 12, Length: 20, Info: "reserved 2", Type: Uint16le},
+				{Offset: pos + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
 			}})
 
-		newHeaderPos, _ := readUint32le(file, offset+32)
+		newHeaderPos, _ := readUint32le(file, pos+32)
 
-		offset = int64(newHeaderPos)
-		newHeaderId, _ := knownLengthASCII(file, offset, 2)
+		pos = int64(newHeaderPos)
+		newHeaderId, _ := knownLengthASCII(file, pos, 2)
 
 		switch newHeaderId {
 		case "LX":
 			// OS/2 (32-bit)
-			header, _ := parseMZ_LXHeader(file, offset)
+			header, _ := parseMZ_LXHeader(file, pos)
 			res.Layout = append(res.Layout, header...)
 		case "LE":
 			// OS/2 (mixed 16/32-bit)
 			panic("LE")
 		case "NE":
 			// Win16, OS/2
-			header, _ := parseMZ_NEHeader(file, offset)
+			header, _ := parseMZ_NEHeader(file, pos)
 			res.Layout = append(res.Layout, header...)
 		case "PE":
 			// Win32, Win64
-			header, _ := parseMZ_PEHeader(file, offset)
+			header, _ := parseMZ_PEHeader(file, pos)
 			res.Layout = append(res.Layout, header...)
 		default:
 			// XXX get samples of LE, W3 files
 			panic("unknown newHeaderId =" + newHeaderId)
 		}
 	} else {
-		relocItems, _ := readUint16le(file, offset+6)
+		relocItems, _ := readUint16le(file, pos+6)
 		if relocItems > 0 {
-			offset = int64(relocOffset)
+			pos = int64(relocOffset)
 			reloc := Layout{
-				Offset: offset,
+				Offset: pos,
 				Length: int64(relocItems) * 4,
 				Info:   "relocation table",
 				Type:   Group}
 
 			for i := 1; i <= int(relocItems); i++ {
 				reloc.Childs = append(reloc.Childs, []Layout{
-					{Offset: offset, Length: 2, Info: "offset " + fmt.Sprintf("%d", i), Type: Uint16le},
-					{Offset: offset + 2, Length: 2, Info: "segment " + fmt.Sprintf("%d", i), Type: Uint16le},
+					{Offset: pos, Length: 2, Info: "offset " + fmt.Sprintf("%d", i), Type: Uint16le},
+					{Offset: pos + 2, Length: 2, Info: "segment " + fmt.Sprintf("%d", i), Type: Uint16le},
 				}...)
-				offset += 4
+				pos += 4
 			}
 			res.Layout = append(res.Layout, reloc)
 		}
@@ -141,14 +141,14 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 	exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)
 
 	// XXX disasm until first ret or sth ???
-	offset = exeStart
+	pos = exeStart
 	codeChunk := Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: 4, // XXX
 		Info:   "dos entry point",
 		Type:   Group,
 		Childs: []Layout{
-			{Offset: offset, Length: 4, Info: "XXX", Type: Bytes},
+			{Offset: pos, Length: 4, Info: "XXX", Type: Bytes},
 		}}
 
 	res.Layout = append(res.Layout, codeChunk)

@@ -33,15 +33,16 @@ func isMP4(file *os.File) bool {
 
 func parseMP4(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: AudioVideo,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+				{Offset: pos, Length: 4, Info: "magic", Type: ASCII},
 			}}}}
 
 	return &res, nil

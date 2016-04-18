@@ -34,25 +34,24 @@ func isDSSTORE(file *os.File) bool {
 
 func parseDSSTORE(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
-
+	pos := int64(0)
 	header := Layout{
-		Offset: offset,
+		Offset: pos,
 		Info:   "header",
 		Type:   Group}
 
 	for {
 
-		p, _ := readUint32be(file, offset)
+		p, _ := readUint32be(file, pos)
 		//count, _ := readUint32be(file, offset+4)
 
 		header.Childs = append(header.Childs, []Layout{
 			// XXX: Each node starts with two integers, P and count.
-			{Offset: offset, Length: 4, Info: "p (rightmost child)", Type: Uint32be},
-			{Offset: offset + 4, Length: 4, Info: "count", Type: Uint32be},
+			{Offset: pos, Length: 4, Info: "p (rightmost child)", Type: Uint32be},
+			{Offset: pos + 4, Length: 4, Info: "count", Type: Uint32be},
 		}...)
 
-		offset += 8        // XXX
+		pos += 8           // XXX
 		header.Length += 8 // XXX
 
 		if p == 0 {
@@ -68,10 +67,10 @@ func parseDSSTORE(file *os.File) (*ParsedLayout, error) {
 			// pointer, that is, it is logically at the end of the node.
 			//for j := uint32(0); j < count; j++ {
 			header.Childs = append(header.Childs, []Layout{
-				{Offset: offset, Length: 4, Info: "block num of leftmost child", Type: Uint32be},
-				{Offset: offset + 4, Length: 4, Info: "record", Type: Uint32be},
+				{Offset: pos, Length: 4, Info: "block num of leftmost child", Type: Uint32be},
+				{Offset: pos + 4, Length: 4, Info: "record", Type: Uint32be},
 			}...)
-			offset += 8        // XXX
+			pos += 8           // XXX
 			header.Length += 8 // XXX
 			//}
 		}

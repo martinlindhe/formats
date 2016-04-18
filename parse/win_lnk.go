@@ -31,33 +31,32 @@ func isLNK(file *os.File) bool {
 
 func parseLNK(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
-
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: WindowsResource,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 76, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "magic", Type: Uint32le},
+				{Offset: pos, Length: 4, Info: "magic", Type: Uint32le},
 
 				// XXX type GUID / CLSID  GUID: {00021401-0000-0000-c000-000000000046}
-				{Offset: offset + 4, Length: 16, Info: "guid", Type: Bytes},
+				{Offset: pos + 4, Length: 16, Info: "guid", Type: Bytes},
 
-				{Offset: offset + 20, Length: 4, Info: "data flags", Type: Uint32le},
-				{Offset: offset + 24, Length: 4, Info: "file attribute flags", Type: Uint32le},
-				{Offset: offset + 28, Length: 8, Info: "created FILETIME", Type: Bytes},  // XXX decode type
-				{Offset: offset + 36, Length: 8, Info: "accessed FILETIME", Type: Bytes}, // XXX decode type
-				{Offset: offset + 44, Length: 8, Info: "modified FILETIME", Type: Bytes}, // XXX decode type
-				{Offset: offset + 52, Length: 4, Info: "file size", Type: Uint32le},
-				{Offset: offset + 56, Length: 4, Info: "icon index", Type: Uint32le},
-				{Offset: offset + 60, Length: 4, Info: "show window", Type: Uint32le},
-				{Offset: offset + 64, Length: 2, Info: "hot key", Type: Uint16le},
-				{Offset: offset + 66, Length: 2, Info: "reserved", Type: Uint16le},
-				{Offset: offset + 68, Length: 4, Info: "reserved", Type: Uint32le},
-				{Offset: offset + 72, Length: 4, Info: "reserved", Type: Uint32le},
+				{Offset: pos + 20, Length: 4, Info: "data flags", Type: Uint32le},
+				{Offset: pos + 24, Length: 4, Info: "file attribute flags", Type: Uint32le},
+				{Offset: pos + 28, Length: 8, Info: "created FILETIME", Type: Bytes},  // XXX decode type
+				{Offset: pos + 36, Length: 8, Info: "accessed FILETIME", Type: Bytes}, // XXX decode type
+				{Offset: pos + 44, Length: 8, Info: "modified FILETIME", Type: Bytes}, // XXX decode type
+				{Offset: pos + 52, Length: 4, Info: "file size", Type: Uint32le},
+				{Offset: pos + 56, Length: 4, Info: "icon index", Type: Uint32le},
+				{Offset: pos + 60, Length: 4, Info: "show window", Type: Uint32le},
+				{Offset: pos + 64, Length: 2, Info: "hot key", Type: Uint16le},
+				{Offset: pos + 66, Length: 2, Info: "reserved", Type: Uint16le},
+				{Offset: pos + 68, Length: 4, Info: "reserved", Type: Uint32le},
+				{Offset: pos + 72, Length: 4, Info: "reserved", Type: Uint32le},
 			}}}}
 
 	return &res, nil

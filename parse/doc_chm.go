@@ -34,15 +34,16 @@ func isCHM(file *os.File) bool {
 
 func parseCHM(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Document,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 4, Info: "magic", Type: ASCII},
+				{Offset: pos, Length: 4, Info: "magic", Type: ASCII},
 			}}}}
 
 	return &res, nil

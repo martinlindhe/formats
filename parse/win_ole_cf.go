@@ -40,7 +40,6 @@ func isOLECF(file *os.File) bool {
 func parseOLECF(file *os.File) (*ParsedLayout, error) {
 
 	pos := int64(0)
-
 	res := ParsedLayout{
 		FileKind: WindowsResource,
 		Layout: []Layout{{

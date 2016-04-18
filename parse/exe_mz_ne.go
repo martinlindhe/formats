@@ -37,10 +37,10 @@ var (
 )
 
 // parses 16-bit Windows and OS/2 executables
-func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
+func parseMZ_NEHeader(file *os.File, pos int64) ([]Layout, error) {
 
 	res := []Layout{}
-	targetOSId, _ := readUint8(file, offset+54)
+	targetOSId, _ := readUint8(file, pos+54)
 	targetOS := "unknown"
 
 	if val, ok := neTargetOS[targetOSId]; ok {
@@ -48,17 +48,17 @@ func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
 	}
 
 	res = append(res, Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: 64, // XXX
 		Info:   "NE header",
 		Type:   Group,
 		Childs: []Layout{
-			Layout{Offset: offset, Length: 2, Info: "identifier", Type: ASCII},
-			Layout{Offset: offset + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
-			Layout{Offset: offset + 4, Length: 2, Info: "entry table offset", Type: Uint16le},
-			Layout{Offset: offset + 6, Length: 2, Info: "entry table length", Type: Uint16le},
-			Layout{Offset: offset + 8, Length: 4, Info: "file load crc", Type: Uint32le},
-			Layout{Offset: offset + 12, Length: 1, Info: "program flags", Type: Uint8, Masks: []Mask{
+			Layout{Offset: pos, Length: 2, Info: "identifier", Type: ASCII},
+			Layout{Offset: pos + 2, Length: 2, Info: "linker version", Type: MajorMinor16le},
+			Layout{Offset: pos + 4, Length: 2, Info: "entry table offset", Type: Uint16le},
+			Layout{Offset: pos + 6, Length: 2, Info: "entry table length", Type: Uint16le},
+			Layout{Offset: pos + 8, Length: 4, Info: "file load crc", Type: Uint32le},
+			Layout{Offset: pos + 12, Length: 1, Info: "program flags", Type: Uint8, Masks: []Mask{
 				Mask{Low: 0, Length: 2, Info: "dgroup type"}, // XXX 0=none, 1=single shared, 2=multiple, 3=null
 				Mask{Low: 2, Length: 1, Info: "global initialization"},
 				Mask{Low: 3, Length: 1, Info: "protected mode only"},
@@ -67,7 +67,7 @@ func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
 				Mask{Low: 6, Length: 1, Info: "80386 instructions"},
 				Mask{Low: 7, Length: 1, Info: "80x87 instructions"},
 			}},
-			Layout{Offset: offset + 13, Length: 1, Info: "app flags", Type: Uint8, Masks: []Mask{
+			Layout{Offset: pos + 13, Length: 1, Info: "app flags", Type: Uint8, Masks: []Mask{
 				Mask{Low: 0, Length: 3, Info: "app type"},               // XXX 1=unaware of win api, 2=compatible with win api, 3=uses win api
 				Mask{Low: 3, Length: 1, Info: "OS/2 family app"},        // XXX
 				Mask{Low: 4, Length: 1, Info: "reserved"},               // XXX
@@ -75,69 +75,69 @@ func parseMZ_NEHeader(file *os.File, offset int64) ([]Layout, error) {
 				Mask{Low: 6, Length: 1, Info: "non-conforming program"}, // XXX
 				Mask{Low: 7, Length: 1, Info: "dll or driver"},          // XXX
 			}},
-			Layout{Offset: offset + 14, Length: 2, Info: "auto data segment index", Type: Uint16le},
-			Layout{Offset: offset + 16, Length: 2, Info: "initial local heap size", Type: Uint16le},
-			Layout{Offset: offset + 18, Length: 2, Info: "initial stack size", Type: Uint16le},
-			Layout{Offset: offset + 20, Length: 4, Info: "entry point CS:IP", Type: Uint32le},   // XXX type CS:IP,  XXX XFIXME READ PARSE DECODE
-			Layout{Offset: offset + 24, Length: 4, Info: "stack pointer SS:SP", Type: Uint32le}, // XXX type
-			Layout{Offset: offset + 28, Length: 2, Info: "segment table entries", Type: Uint16le},
-			Layout{Offset: offset + 30, Length: 2, Info: "module reference entires", Type: Uint16le},
-			Layout{Offset: offset + 32, Length: 2, Info: "nonresident names table size", Type: Uint16le},
-			Layout{Offset: offset + 34, Length: 2, Info: "segment table offset", Type: Uint16le},
-			Layout{Offset: offset + 36, Length: 2, Info: "resource table offset", Type: Uint16le},
-			Layout{Offset: offset + 38, Length: 2, Info: "resident names table offset", Type: Uint16le},
-			Layout{Offset: offset + 40, Length: 2, Info: "module reference table offset", Type: Uint16le},
-			Layout{Offset: offset + 42, Length: 2, Info: "imported names table offset", Type: Uint16le},
-			Layout{Offset: offset + 44, Length: 4, Info: "nonresident names table offset", Type: Uint32le},
-			Layout{Offset: offset + 48, Length: 2, Info: "movable entry points in entry table", Type: Uint16le},
-			Layout{Offset: offset + 50, Length: 2, Info: "file alignment size shift", Type: Uint16le}, //  File alignment size shift count, 0 is equivalent to 9 (default 512-byte pages)
-			Layout{Offset: offset + 52, Length: 2, Info: "resource table entries", Type: Uint16le},
-			Layout{Offset: offset + 54, Length: 1, Info: "target os = " + targetOS, Type: Uint8},
-			Layout{Offset: offset + 55, Length: 1, Info: "extra flags", Type: Uint8, Masks: []Mask{
+			Layout{Offset: pos + 14, Length: 2, Info: "auto data segment index", Type: Uint16le},
+			Layout{Offset: pos + 16, Length: 2, Info: "initial local heap size", Type: Uint16le},
+			Layout{Offset: pos + 18, Length: 2, Info: "initial stack size", Type: Uint16le},
+			Layout{Offset: pos + 20, Length: 4, Info: "entry point CS:IP", Type: Uint32le},   // XXX type CS:IP,  XXX XFIXME READ PARSE DECODE
+			Layout{Offset: pos + 24, Length: 4, Info: "stack pointer SS:SP", Type: Uint32le}, // XXX type
+			Layout{Offset: pos + 28, Length: 2, Info: "segment table entries", Type: Uint16le},
+			Layout{Offset: pos + 30, Length: 2, Info: "module reference entires", Type: Uint16le},
+			Layout{Offset: pos + 32, Length: 2, Info: "nonresident names table size", Type: Uint16le},
+			Layout{Offset: pos + 34, Length: 2, Info: "segment table offset", Type: Uint16le},
+			Layout{Offset: pos + 36, Length: 2, Info: "resource table offset", Type: Uint16le},
+			Layout{Offset: pos + 38, Length: 2, Info: "resident names table offset", Type: Uint16le},
+			Layout{Offset: pos + 40, Length: 2, Info: "module reference table offset", Type: Uint16le},
+			Layout{Offset: pos + 42, Length: 2, Info: "imported names table offset", Type: Uint16le},
+			Layout{Offset: pos + 44, Length: 4, Info: "nonresident names table offset", Type: Uint32le},
+			Layout{Offset: pos + 48, Length: 2, Info: "movable entry points in entry table", Type: Uint16le},
+			Layout{Offset: pos + 50, Length: 2, Info: "file alignment size shift", Type: Uint16le}, //  File alignment size shift count, 0 is equivalent to 9 (default 512-byte pages)
+			Layout{Offset: pos + 52, Length: 2, Info: "resource table entries", Type: Uint16le},
+			Layout{Offset: pos + 54, Length: 1, Info: "target os = " + targetOS, Type: Uint8},
+			Layout{Offset: pos + 55, Length: 1, Info: "extra flags", Type: Uint8, Masks: []Mask{
 				Mask{Low: 0, Length: 1, Info: "long filename support"},
 				Mask{Low: 1, Length: 1, Info: "win2 protected mode"},
 				Mask{Low: 2, Length: 1, Info: "win2 proportional fonts"},
 				Mask{Low: 3, Length: 1, Info: "fastload area"},
 				Mask{Low: 4, Length: 4, Info: "reserved"},
 			}},
-			Layout{Offset: offset + 56, Length: 2, Info: "offset to fastload", Type: Uint16le}, // XXX only used by windows
-			Layout{Offset: offset + 58, Length: 2, Info: "length of fastload", Type: Uint16le}, // XXX only used by windows, offset to segment reference thunks or length of gangload area.
-			Layout{Offset: offset + 60, Length: 2, Info: "reserved", Type: Uint16le},
-			Layout{Offset: offset + 62, Length: 2, Info: "expected windows version", Type: MinorMajor16le}, // XXX only used by windows
+			Layout{Offset: pos + 56, Length: 2, Info: "offset to fastload", Type: Uint16le}, // XXX only used by windows
+			Layout{Offset: pos + 58, Length: 2, Info: "length of fastload", Type: Uint16le}, // XXX only used by windows, offset to segment reference thunks or length of gangload area.
+			Layout{Offset: pos + 60, Length: 2, Info: "reserved", Type: Uint16le},
+			Layout{Offset: pos + 62, Length: 2, Info: "expected windows version", Type: MinorMajor16le}, // XXX only used by windows
 		}})
 
-	moduleReferenceEntries, _ := readUint16le(file, offset+30)
-	moduleReferenceOffset, _ := readUint16le(file, offset+40)
+	moduleReferenceEntries, _ := readUint16le(file, pos+30)
+	moduleReferenceOffset, _ := readUint16le(file, pos+40)
 	if moduleReferenceEntries > 0 {
-		res = append(res, *parseNEModuleReferenceTable(offset+int64(moduleReferenceOffset), moduleReferenceEntries))
+		res = append(res, *parseNEModuleReferenceTable(pos+int64(moduleReferenceOffset), moduleReferenceEntries))
 	}
 
-	entryTableOffset, _ := readUint16le(file, offset+4)
-	entryTableLength, _ := readUint16le(file, offset+6)
-	res = append(res, *parseNEEntryTable(file, offset+int64(entryTableOffset), entryTableLength))
+	entryTableOffset, _ := readUint16le(file, pos+4)
+	entryTableLength, _ := readUint16le(file, pos+6)
+	res = append(res, *parseNEEntryTable(file, pos+int64(entryTableOffset), entryTableLength))
 
-	segmentTableOffset, _ := readUint16le(file, offset+34)
-	segmentTableEntries, _ := readUint16le(file, offset+28)
+	segmentTableOffset, _ := readUint16le(file, pos+34)
+	segmentTableEntries, _ := readUint16le(file, pos+28)
 	if segmentTableEntries > 0 {
-		res = append(res, *parseNESegmentTable(file, offset+int64(segmentTableOffset), segmentTableEntries))
+		res = append(res, *parseNESegmentTable(file, pos+int64(segmentTableOffset), segmentTableEntries))
 	}
 
-	importedNamesTableOffset, _ := readUint16le(file, offset+42)
-	res = append(res, *parseNEImportedTable(file, offset+int64(importedNamesTableOffset)))
+	importedNamesTableOffset, _ := readUint16le(file, pos+42)
+	res = append(res, *parseNEImportedTable(file, pos+int64(importedNamesTableOffset)))
 
-	residentNamesTableOffset, _ := readUint16le(file, offset+38)
-	res = append(res, *parseNEResidentTable(file, offset+int64(residentNamesTableOffset)))
+	residentNamesTableOffset, _ := readUint16le(file, pos+38)
+	res = append(res, *parseNEResidentTable(file, pos+int64(residentNamesTableOffset)))
 
-	nonResidentNamesTableOffset, _ := readUint32le(file, offset+44)
-	nonresidentNamesTableSize, _ := readUint16le(file, offset+32)
+	nonResidentNamesTableOffset, _ := readUint32le(file, pos+44)
+	nonresidentNamesTableSize, _ := readUint16le(file, pos+32)
 	res = append(res, *parseNENonResidentTable(file, int64(nonResidentNamesTableOffset), nonresidentNamesTableSize))
 
-	resourceTableOffset, _ := readUint16le(file, offset+36)
-	resourceTableEntries, _ := readUint16le(file, offset+52)
-	res = append(res, *parseNEResourceTable(file, offset+int64(resourceTableOffset), resourceTableEntries))
+	resourceTableOffset, _ := readUint16le(file, pos+36)
+	resourceTableEntries, _ := readUint16le(file, pos+52)
+	res = append(res, *parseNEResourceTable(file, pos+int64(resourceTableOffset), resourceTableEntries))
 
-	fastloadAreaOffset, _ := readUint16le(file, offset+56)
-	fastloadAreaLength, _ := readUint16le(file, offset+58)
+	fastloadAreaOffset, _ := readUint16le(file, pos+56)
+	fastloadAreaLength, _ := readUint16le(file, pos+58)
 
 	// XXX how to parse this stuff
 	// XXX offset seems wrong

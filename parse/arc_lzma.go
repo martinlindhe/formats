@@ -31,20 +31,20 @@ func isLZMA(file *os.File) bool {
 
 func parseLZMA(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
+	pos := int64(0)
 
 	res := ParsedLayout{
 		FileKind: Archive,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 13, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
 				// XXX unsure of this stuff
-				{Offset: offset, Length: 1, Info: "properties", Type: Uint8},
-				{Offset: offset + 1, Length: 4, Info: "dict cap", Type: Uint32le},
-				{Offset: offset + 5, Length: 8, Info: "uncompressed size", Type: Uint64le},
+				{Offset: pos, Length: 1, Info: "properties", Type: Uint8},
+				{Offset: pos + 1, Length: 4, Info: "dict cap", Type: Uint32le},
+				{Offset: pos + 5, Length: 8, Info: "uncompressed size", Type: Uint64le},
 			}}}}
 
 	return &res, nil

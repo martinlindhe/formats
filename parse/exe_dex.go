@@ -34,40 +34,39 @@ func isDEX(file *os.File) bool {
 
 func parseDEX(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
-
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Executable,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 112, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "magic", Type: ASCII},
-				{Offset: offset + 4, Length: 4, Info: "version", Type: ASCII},
-				{Offset: offset + 8, Length: 4, Info: "checksum", Type: Uint32le},
-				{Offset: offset + 12, Length: 20, Info: "sha1", Type: Bytes},
-				{Offset: offset + 32, Length: 4, Info: "file size", Type: Uint32le},
-				{Offset: offset + 36, Length: 4, Info: "header size", Type: Uint32le},
-				{Offset: offset + 40, Length: 4, Info: "endian tag", Type: Uint32le},
-				{Offset: offset + 44, Length: 4, Info: "link size", Type: Uint32le},
-				{Offset: offset + 48, Length: 4, Info: "link offset", Type: Uint32le},
-				{Offset: offset + 52, Length: 4, Info: "map offset", Type: Uint32le},
-				{Offset: offset + 56, Length: 4, Info: "string ids size", Type: Uint32le},
-				{Offset: offset + 60, Length: 4, Info: "string ids offset", Type: Uint32le},
-				{Offset: offset + 64, Length: 4, Info: "type ids size", Type: Uint32le},
-				{Offset: offset + 68, Length: 4, Info: "type ids offset", Type: Uint32le},
-				{Offset: offset + 72, Length: 4, Info: "proto ids size", Type: Uint32le},
-				{Offset: offset + 76, Length: 4, Info: "proto ids offset", Type: Uint32le},
-				{Offset: offset + 80, Length: 4, Info: "field ids size", Type: Uint32le},
-				{Offset: offset + 84, Length: 4, Info: "field ids offset", Type: Uint32le},
-				{Offset: offset + 88, Length: 4, Info: "method ids size", Type: Uint32le},
-				{Offset: offset + 92, Length: 4, Info: "method ids offset", Type: Uint32le},
-				{Offset: offset + 96, Length: 4, Info: "class definition size", Type: Uint32le},
-				{Offset: offset + 100, Length: 4, Info: "class definition offset", Type: Uint32le},
-				{Offset: offset + 104, Length: 4, Info: "data size", Type: Uint32le},
-				{Offset: offset + 108, Length: 4, Info: "data offset", Type: Uint32le},
+				{Offset: pos, Length: 4, Info: "magic", Type: ASCII},
+				{Offset: pos + 4, Length: 4, Info: "version", Type: ASCII},
+				{Offset: pos + 8, Length: 4, Info: "checksum", Type: Uint32le},
+				{Offset: pos + 12, Length: 20, Info: "sha1", Type: Bytes},
+				{Offset: pos + 32, Length: 4, Info: "file size", Type: Uint32le},
+				{Offset: pos + 36, Length: 4, Info: "header size", Type: Uint32le},
+				{Offset: pos + 40, Length: 4, Info: "endian tag", Type: Uint32le},
+				{Offset: pos + 44, Length: 4, Info: "link size", Type: Uint32le},
+				{Offset: pos + 48, Length: 4, Info: "link offset", Type: Uint32le},
+				{Offset: pos + 52, Length: 4, Info: "map offset", Type: Uint32le},
+				{Offset: pos + 56, Length: 4, Info: "string ids size", Type: Uint32le},
+				{Offset: pos + 60, Length: 4, Info: "string ids offset", Type: Uint32le},
+				{Offset: pos + 64, Length: 4, Info: "type ids size", Type: Uint32le},
+				{Offset: pos + 68, Length: 4, Info: "type ids offset", Type: Uint32le},
+				{Offset: pos + 72, Length: 4, Info: "proto ids size", Type: Uint32le},
+				{Offset: pos + 76, Length: 4, Info: "proto ids offset", Type: Uint32le},
+				{Offset: pos + 80, Length: 4, Info: "field ids size", Type: Uint32le},
+				{Offset: pos + 84, Length: 4, Info: "field ids offset", Type: Uint32le},
+				{Offset: pos + 88, Length: 4, Info: "method ids size", Type: Uint32le},
+				{Offset: pos + 92, Length: 4, Info: "method ids offset", Type: Uint32le},
+				{Offset: pos + 96, Length: 4, Info: "class definition size", Type: Uint32le},
+				{Offset: pos + 100, Length: 4, Info: "class definition offset", Type: Uint32le},
+				{Offset: pos + 104, Length: 4, Info: "data size", Type: Uint32le},
+				{Offset: pos + 108, Length: 4, Info: "data offset", Type: Uint32le},
 			}}}}
 
 	return &res, nil

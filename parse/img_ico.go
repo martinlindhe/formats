@@ -48,6 +48,7 @@ func isICO(file *os.File) bool {
 
 func parseICO(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Image,
 	}
@@ -64,10 +65,8 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 		typeName = "unknown"
 	}
 
-	offset := int64(0)
-
 	fileHeader := Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: 6,
 		Info:   "header",
 		Type:   Group,
@@ -78,7 +77,7 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 		},
 	}
 
-	offset += fileHeader.Length
+	pos += fileHeader.Length
 
 	numIcons := hdr[2]
 	resourceEntryLength := int64(16)
@@ -88,24 +87,24 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 	for i := 0; i < int(numIcons); i++ {
 		resNum := fmt.Sprintf("%d", i+1)
 		resource := Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: resourceEntryLength,
 			Info:   "resource " + resNum + " header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 1, Info: "width", Type: Uint8},
-				{Offset: offset + 1, Length: 1, Info: "height", Type: Uint8},
-				{Offset: offset + 2, Length: 1, Info: "max number of colors", Type: Uint8},
-				{Offset: offset + 3, Length: 1, Info: "reserved", Type: Uint8},
-				{Offset: offset + 4, Length: 2, Info: "planes", Type: Uint16le},
-				{Offset: offset + 6, Length: 2, Info: "bit count", Type: Uint16le},
-				{Offset: offset + 8, Length: 4, Info: "data size of resource " + resNum, Type: Uint32le},
-				{Offset: offset + 12, Length: 4, Info: "offset to resource " + resNum, Type: Uint32le},
+				{Offset: pos, Length: 1, Info: "width", Type: Uint8},
+				{Offset: pos + 1, Length: 1, Info: "height", Type: Uint8},
+				{Offset: pos + 2, Length: 1, Info: "max number of colors", Type: Uint8},
+				{Offset: pos + 3, Length: 1, Info: "reserved", Type: Uint8},
+				{Offset: pos + 4, Length: 2, Info: "planes", Type: Uint16le},
+				{Offset: pos + 6, Length: 2, Info: "bit count", Type: Uint16le},
+				{Offset: pos + 8, Length: 4, Info: "data size of resource " + resNum, Type: Uint32le},
+				{Offset: pos + 12, Length: 4, Info: "offset to resource " + resNum, Type: Uint32le},
 			}}
 
 		res.Layout = append(res.Layout, resource)
 		fileHeader.Length += resourceEntryLength
-		offset += resourceEntryLength
+		pos += resourceEntryLength
 	}
 
 	for i := 0; i < int(numIcons); i++ {

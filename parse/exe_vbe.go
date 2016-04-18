@@ -36,17 +36,16 @@ func isVBE(file *os.File) bool {
 
 func parseVBE(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
-
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Executable,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "magic", Type: Uint32le},
+				{Offset: pos, Length: 4, Info: "magic", Type: Uint32le},
 			}}}}
 
 	return &res, nil

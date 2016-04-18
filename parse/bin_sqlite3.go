@@ -47,7 +47,7 @@ func parseSQLITE3(file *os.File) (*ParsedLayout, error) {
 	res := ParsedLayout{
 		FileKind: Binary,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 100, // XXX
 			Info:   "header",
 			Type:   Group,

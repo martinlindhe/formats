@@ -27,18 +27,17 @@ func isPFB(file *os.File) bool {
 
 func parsePFB(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
-
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Font,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 16, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 6, Info: "unknown", Type: Bytes},
-				{Offset: offset + 6, Length: 10, Info: "magic", Type: ASCII},
+				{Offset: pos, Length: 6, Info: "unknown", Type: Bytes},
+				{Offset: pos + 6, Length: 10, Info: "magic", Type: ASCII},
 			}}}}
 
 	return &res, nil

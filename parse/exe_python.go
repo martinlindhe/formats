@@ -57,15 +57,16 @@ func isPYTHON(file *os.File) bool {
 
 func parsePYTHON(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Executable,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 4, Info: "magic", Type: Uint32le}, // XXX decode to python version
+				{Offset: pos, Length: 4, Info: "magic", Type: Uint32le}, // XXX decode to python version
 			}}}}
 
 	return &res, nil

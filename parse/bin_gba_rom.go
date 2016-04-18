@@ -59,27 +59,28 @@ func hasGBALogo(file *os.File) bool {
 
 func parseGBAROM(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Binary,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 192, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
 				// 000h    4     ROM Entry Point  (32bit ARM branch opcode, eg. "B rom_start")
-				{Offset: 0, Length: 4, Info: "entry point", Type: Uint32le}, // XXX le/be
-				{Offset: 4, Length: 156, Info: "nintendo logo", Type: Bytes},
-				{Offset: 160, Length: 12, Info: "game title", Type: ASCIIZ},
-				{Offset: 172, Length: 4, Info: "game code", Type: ASCII},
-				{Offset: 176, Length: 2, Info: "maker code", Type: ASCII},
-				{Offset: 178, Length: 1, Info: "reserved (0x96)", Type: Uint8},
-				{Offset: 179, Length: 1, Info: "main unit code", Type: Uint8}, // XXX = 0 for all gba models?!?!
-				{Offset: 180, Length: 1, Info: "device type", Type: Uint8},
-				{Offset: 181, Length: 7, Info: "reserved area", Type: Bytes},
-				{Offset: 188, Length: 1, Info: "software version", Type: Uint8},
-				{Offset: 189, Length: 1, Info: "checksum", Type: Uint8},
-				{Offset: 190, Length: 2, Info: "reserved 2", Type: Bytes},
+				{Offset: pos, Length: 4, Info: "entry point", Type: Uint32le}, // XXX le/be
+				{Offset: pos + 4, Length: 156, Info: "nintendo logo", Type: Bytes},
+				{Offset: pos + 160, Length: 12, Info: "game title", Type: ASCIIZ},
+				{Offset: pos + 172, Length: 4, Info: "game code", Type: ASCII},
+				{Offset: pos + 176, Length: 2, Info: "maker code", Type: ASCII},
+				{Offset: pos + 178, Length: 1, Info: "reserved (0x96)", Type: Uint8},
+				{Offset: pos + 179, Length: 1, Info: "main unit code", Type: Uint8}, // XXX = 0 for all gba models?!?!
+				{Offset: pos + 180, Length: 1, Info: "device type", Type: Uint8},
+				{Offset: pos + 181, Length: 7, Info: "reserved area", Type: Bytes},
+				{Offset: pos + 188, Length: 1, Info: "software version", Type: Uint8},
+				{Offset: pos + 189, Length: 1, Info: "checksum", Type: Uint8},
+				{Offset: pos + 190, Length: 2, Info: "reserved 2", Type: Bytes},
 			}}}}
 
 	return &res, nil

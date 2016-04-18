@@ -29,7 +29,6 @@ func isPDB(file *os.File) bool {
 func parsePDB(file *os.File) (*ParsedLayout, error) {
 
 	pos := int64(0)
-
 	res := ParsedLayout{
 		FileKind: Binary,
 		Layout: []Layout{{

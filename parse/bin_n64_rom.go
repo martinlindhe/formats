@@ -31,15 +31,16 @@ func isN64ROM(file *os.File) bool {
 
 func parseN64ROM(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Binary,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 4, Info: "magic", Type: Uint32le}, // XXX le/be
+				{Offset: pos, Length: 4, Info: "magic", Type: Uint32le}, // XXX le/be
 			}}}}
 
 	return &res, nil

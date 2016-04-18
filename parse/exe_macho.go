@@ -59,9 +59,9 @@ func isMachO(file *os.File) bool {
 
 func parseMachO(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
+	pos := int64(0)
 
-	cpuType, _ := readUint32le(file, offset+4)
+	cpuType, _ := readUint32le(file, pos+4)
 	cpuTypeName := "?"
 	if val, ok := machoCpuTypes[cpuType]; ok {
 		cpuTypeName = val
@@ -70,18 +70,18 @@ func parseMachO(file *os.File) (*ParsedLayout, error) {
 	res := ParsedLayout{
 		FileKind: Executable,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 28, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "magic", Type: Uint32le},
-				{Offset: offset + 4, Length: 4, Info: "cpu type = " + cpuTypeName, Type: Uint32le},
-				{Offset: offset + 8, Length: 4, Info: "cpu subtype", Type: Uint32le}, // XXX map ...
-				{Offset: offset + 12, Length: 4, Info: "file type", Type: Uint32le},  // XXX ?
-				{Offset: offset + 16, Length: 4, Info: "n cmds", Type: Uint32le},
-				{Offset: offset + 20, Length: 4, Info: "size of cmds", Type: Uint32le},
-				{Offset: offset + 24, Length: 4, Info: "flags", Type: Uint32le},
+				{Offset: pos, Length: 4, Info: "magic", Type: Uint32le},
+				{Offset: pos + 4, Length: 4, Info: "cpu type = " + cpuTypeName, Type: Uint32le},
+				{Offset: pos + 8, Length: 4, Info: "cpu subtype", Type: Uint32le}, // XXX map ...
+				{Offset: pos + 12, Length: 4, Info: "file type", Type: Uint32le},  // XXX ?
+				{Offset: pos + 16, Length: 4, Info: "n cmds", Type: Uint32le},
+				{Offset: pos + 20, Length: 4, Info: "size of cmds", Type: Uint32le},
+				{Offset: pos + 24, Length: 4, Info: "flags", Type: Uint32le},
 			}}}}
 
 	/* XXX

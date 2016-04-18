@@ -45,19 +45,20 @@ func isBMP(file *os.File) bool {
 
 func parseBMP(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
 	fileHeaderLen := int64(14)
 	res := ParsedLayout{
 		FileKind: Image,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: fileHeaderLen,
 			Info:   "file header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 2, Info: "magic", Type: ASCII},
-				{Offset: 2, Length: 4, Info: "file size", Type: Uint32le},
-				{Offset: 6, Length: 4, Info: "reserved", Type: Uint32le},
-				{Offset: 10, Length: 4, Info: "image data offset", Type: Uint32le},
+				{Offset: pos, Length: 2, Info: "magic", Type: ASCII},
+				{Offset: pos + 2, Length: 4, Info: "file size", Type: Uint32le},
+				{Offset: pos + 6, Length: 4, Info: "reserved", Type: Uint32le},
+				{Offset: pos + 10, Length: 4, Info: "image data offset", Type: Uint32le},
 			}}}}
 
 	infoHeader, err := parseBMPInfoHeader(file)
@@ -144,66 +145,66 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 	return layout, nil
 }
 
-func parseBMPVersion1Header(file *os.File, baseOffset int64) []Layout {
+func parseBMPVersion1Header(file *os.File, pos int64) []Layout {
 
 	return []Layout{
-		{Offset: baseOffset, Length: 4, Type: Uint32le, Info: "info header size"},
-		{Offset: baseOffset + 4, Length: 2, Type: Uint16le, Info: "width"},
-		{Offset: baseOffset + 6, Length: 2, Type: Uint16le, Info: "height"},
-		{Offset: baseOffset + 8, Length: 2, Type: Uint16le, Info: "planes"},
-		{Offset: baseOffset + 10, Length: 2, Type: Uint16le, Info: "bpp"},
+		{Offset: pos, Length: 4, Type: Uint32le, Info: "info header size"},
+		{Offset: pos + 4, Length: 2, Type: Uint16le, Info: "width"},
+		{Offset: pos + 6, Length: 2, Type: Uint16le, Info: "height"},
+		{Offset: pos + 8, Length: 2, Type: Uint16le, Info: "planes"},
+		{Offset: pos + 10, Length: 2, Type: Uint16le, Info: "bpp"},
 	}
 }
 
-func parseBMPVersion2Header(file *os.File, baseOffset int64) []Layout {
+func parseBMPVersion2Header(file *os.File, pos int64) []Layout {
 
 	return []Layout{
-		{Offset: baseOffset, Length: 2, Type: Uint16le, Info: "units"},
-		{Offset: baseOffset + 2, Length: 2, Type: Uint16le, Info: "reserved"},
-		{Offset: baseOffset + 4, Length: 2, Type: Uint16le, Info: "recording"},
-		{Offset: baseOffset + 6, Length: 2, Type: Uint16le, Info: "rendering"},
-		{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "size1"},
-		{Offset: baseOffset + 12, Length: 4, Type: Uint32le, Info: "size2"},
-		{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "color encoding"},
-		{Offset: baseOffset + 20, Length: 4, Type: Uint32le, Info: "identifier"},
+		{Offset: pos, Length: 2, Type: Uint16le, Info: "units"},
+		{Offset: pos + 2, Length: 2, Type: Uint16le, Info: "reserved"},
+		{Offset: pos + 4, Length: 2, Type: Uint16le, Info: "recording"},
+		{Offset: pos + 6, Length: 2, Type: Uint16le, Info: "rendering"},
+		{Offset: pos + 8, Length: 4, Type: Uint32le, Info: "size1"},
+		{Offset: pos + 12, Length: 4, Type: Uint32le, Info: "size2"},
+		{Offset: pos + 16, Length: 4, Type: Uint32le, Info: "color encoding"},
+		{Offset: pos + 20, Length: 4, Type: Uint32le, Info: "identifier"},
 	}
 }
 
-func parseBMPVersion3Header(file *os.File, baseOffset int64) []Layout {
+func parseBMPVersion3Header(file *os.File, pos int64) []Layout {
 
 	return []Layout{
-		{Offset: baseOffset, Length: 4, Type: Uint32le, Info: "info header size"},
-		{Offset: baseOffset + 4, Length: 4, Type: Uint32le, Info: "width"},
-		{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "height"},
-		{Offset: baseOffset + 12, Length: 2, Type: Uint16le, Info: "planes"},
-		{Offset: baseOffset + 14, Length: 2, Type: Uint16le, Info: "bpp"},
-		{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "compression"},
-		{Offset: baseOffset + 20, Length: 4, Type: Uint32le, Info: "size of picture"},
-		{Offset: baseOffset + 24, Length: 4, Type: Uint32le, Info: "horizontal resolution"},
-		{Offset: baseOffset + 28, Length: 4, Type: Uint32le, Info: "vertical resolution"},
-		{Offset: baseOffset + 32, Length: 4, Type: Uint32le, Info: "number of used colors"},
-		{Offset: baseOffset + 36, Length: 4, Type: Uint32le, Info: "number of important colors"},
+		{Offset: pos, Length: 4, Type: Uint32le, Info: "info header size"},
+		{Offset: pos + 4, Length: 4, Type: Uint32le, Info: "width"},
+		{Offset: pos + 8, Length: 4, Type: Uint32le, Info: "height"},
+		{Offset: pos + 12, Length: 2, Type: Uint16le, Info: "planes"},
+		{Offset: pos + 14, Length: 2, Type: Uint16le, Info: "bpp"},
+		{Offset: pos + 16, Length: 4, Type: Uint32le, Info: "compression"},
+		{Offset: pos + 20, Length: 4, Type: Uint32le, Info: "size of picture"},
+		{Offset: pos + 24, Length: 4, Type: Uint32le, Info: "horizontal resolution"},
+		{Offset: pos + 28, Length: 4, Type: Uint32le, Info: "vertical resolution"},
+		{Offset: pos + 32, Length: 4, Type: Uint32le, Info: "number of used colors"},
+		{Offset: pos + 36, Length: 4, Type: Uint32le, Info: "number of important colors"},
 	}
 }
 
-func parseBMPVersion4Header(file *os.File, baseOffset int64) []Layout {
+func parseBMPVersion4Header(file *os.File, pos int64) []Layout {
 
 	return []Layout{
-		{Offset: baseOffset, Length: 4, Type: Uint32le, Info: "red mask"},
-		{Offset: baseOffset + 4, Length: 4, Type: Uint32le, Info: "green mask"},
-		{Offset: baseOffset + 8, Length: 4, Type: Uint32le, Info: "blue mask"},
-		{Offset: baseOffset + 12, Length: 4, Type: Uint32le, Info: "alpha mask"},
+		{Offset: pos, Length: 4, Type: Uint32le, Info: "red mask"},
+		{Offset: pos + 4, Length: 4, Type: Uint32le, Info: "green mask"},
+		{Offset: pos + 8, Length: 4, Type: Uint32le, Info: "blue mask"},
+		{Offset: pos + 12, Length: 4, Type: Uint32le, Info: "alpha mask"},
 
 		// NOTE: v5 file use "BGRs", while v4 use 0x1
-		{Offset: baseOffset + 16, Length: 4, Type: Uint32le, Info: "cs type"},
+		{Offset: pos + 16, Length: 4, Type: Uint32le, Info: "cs type"},
 
-		{Offset: baseOffset + 20, Length: 12, Type: Uint8, Info: "ciexyz red"},
-		{Offset: baseOffset + 32, Length: 12, Type: Uint8, Info: "ciexyz green"},
-		{Offset: baseOffset + 44, Length: 12, Type: Uint8, Info: "ciexyz blue"},
+		{Offset: pos + 20, Length: 12, Type: Uint8, Info: "ciexyz red"},
+		{Offset: pos + 32, Length: 12, Type: Uint8, Info: "ciexyz green"},
+		{Offset: pos + 44, Length: 12, Type: Uint8, Info: "ciexyz blue"},
 
-		{Offset: baseOffset + 56, Length: 4, Type: Uint32le, Info: "gamma red"},
-		{Offset: baseOffset + 60, Length: 4, Type: Uint32le, Info: "gamma green"},
-		{Offset: baseOffset + 64, Length: 4, Type: Uint32le, Info: "gamma blue"},
+		{Offset: pos + 56, Length: 4, Type: Uint32le, Info: "gamma red"},
+		{Offset: pos + 60, Length: 4, Type: Uint32le, Info: "gamma green"},
+		{Offset: pos + 64, Length: 4, Type: Uint32le, Info: "gamma blue"},
 	}
 }
 

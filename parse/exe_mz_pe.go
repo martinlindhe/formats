@@ -38,14 +38,14 @@ var (
 )
 
 // parses 32/64-bit Windows executables
-func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
+func parseMZ_PEHeader(file *os.File, pos int64) ([]Layout, error) {
 
 	peHeaderLen := int64(24)
 	sectionHeaderLen := int64(40)
-	optHeaderSize, _ := readUint16le(file, offset+20)
-	numberOfSections, _ := readUint16le(file, offset+6)
+	optHeaderSize, _ := readUint16le(file, pos+20)
+	numberOfSections, _ := readUint16le(file, pos+6)
 
-	machine, _ := readUint16le(file, offset+4)
+	machine, _ := readUint16le(file, pos+4)
 
 	machineName := "?"
 	if val, ok := peMachines[machine]; ok {
@@ -53,30 +53,30 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 	}
 
 	res := []Layout{{
-		Offset: offset,
+		Offset: pos,
 		Length: peHeaderLen,
 		Info:   "PE header",
 		Type:   Group,
 		Childs: []Layout{
-			{Offset: offset, Length: 4, Info: "identifier", Type: ASCIIZ},
-			{Offset: offset + 4, Length: 2, Info: "machine = " + machineName, Type: Uint16le},
-			{Offset: offset + 6, Length: 2, Info: "number of sections", Type: Uint16le},
-			{Offset: offset + 8, Length: 4, Info: "timestamp", Type: Uint32le}, // XXX format, convert, etc: var TimeDateStamp = NumberOfSections.RelativeToLittleEndianDateStamp("TimeDateStamp");
-			{Offset: offset + 12, Length: 4, Info: "symbol table offset", Type: Uint32le},
-			{Offset: offset + 16, Length: 4, Info: "symbol table entries", Type: Uint32le},
-			{Offset: offset + 20, Length: 2, Info: "optional header size", Type: Uint16le},
-			{Offset: offset + 22, Length: 2, Info: "characteristics", Type: Uint16le},
+			{Offset: pos, Length: 4, Info: "identifier", Type: ASCIIZ},
+			{Offset: pos + 4, Length: 2, Info: "machine = " + machineName, Type: Uint16le},
+			{Offset: pos + 6, Length: 2, Info: "number of sections", Type: Uint16le},
+			{Offset: pos + 8, Length: 4, Info: "timestamp", Type: Uint32le}, // XXX format, convert, etc: var TimeDateStamp = NumberOfSections.RelativeToLittleEndianDateStamp("TimeDateStamp");
+			{Offset: pos + 12, Length: 4, Info: "symbol table offset", Type: Uint32le},
+			{Offset: pos + 16, Length: 4, Info: "symbol table entries", Type: Uint32le},
+			{Offset: pos + 20, Length: 2, Info: "optional header size", Type: Uint16le},
+			{Offset: pos + 22, Length: 2, Info: "characteristics", Type: Uint16le},
 		}}}
-	offset += peHeaderLen
+	pos += peHeaderLen
 
 	if optHeaderSize > 0 {
-		optHeader := parsePEOptHeader(file, offset, optHeaderSize)
+		optHeader := parsePEOptHeader(file, pos, optHeaderSize)
 		res = append(res, optHeader)
-		offset += optHeader.Length
+		pos += optHeader.Length
 	}
 
 	sectionHeader := Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: int64(numberOfSections) * sectionHeaderLen,
 		Info:   "section header",
 		Type:   Group,
@@ -84,9 +84,9 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 
 	for i := 0; i < int(numberOfSections); i++ {
 
-		sectionName, _, _ := readZeroTerminatedASCII(file, offset)
-		rawDataSize, _ := readUint32le(file, offset+16)
-		rawDataOffset, _ := readUint32le(file, offset+20)
+		sectionName, _, _ := readZeroTerminatedASCII(file, pos)
+		rawDataSize, _ := readUint32le(file, pos+16)
+		rawDataOffset, _ := readUint32le(file, pos+20)
 
 		res = append(res, Layout{
 			Offset: int64(rawDataOffset),
@@ -98,16 +98,16 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 			}})
 
 		chunk := []Layout{
-			{Offset: offset, Length: 8, Info: "name", Type: ASCIIZ},
-			{Offset: offset + 8, Length: 4, Info: "virtual size", Type: Uint32le},
-			{Offset: offset + 12, Length: 4, Info: "virtual address", Type: Uint32le},
-			{Offset: offset + 16, Length: 4, Info: "raw data size", Type: Uint32le},
-			{Offset: offset + 20, Length: 4, Info: "raw data offset", Type: Uint32le},
-			{Offset: offset + 24, Length: 4, Info: "reallocations offset", Type: Uint32le},
-			{Offset: offset + 28, Length: 4, Info: "linenumbers offset", Type: Uint32le},
-			{Offset: offset + 32, Length: 2, Info: "reallocations count", Type: Uint16le},
-			{Offset: offset + 34, Length: 2, Info: "linenumbers count", Type: Uint16le},
-			{Offset: offset + 36, Length: 4, Info: "flags", Type: Uint32le, Masks: []Mask{
+			{Offset: pos, Length: 8, Info: "name", Type: ASCIIZ},
+			{Offset: pos + 8, Length: 4, Info: "virtual size", Type: Uint32le},
+			{Offset: pos + 12, Length: 4, Info: "virtual address", Type: Uint32le},
+			{Offset: pos + 16, Length: 4, Info: "raw data size", Type: Uint32le},
+			{Offset: pos + 20, Length: 4, Info: "raw data offset", Type: Uint32le},
+			{Offset: pos + 24, Length: 4, Info: "reallocations offset", Type: Uint32le},
+			{Offset: pos + 28, Length: 4, Info: "linenumbers offset", Type: Uint32le},
+			{Offset: pos + 32, Length: 2, Info: "reallocations count", Type: Uint16le},
+			{Offset: pos + 34, Length: 2, Info: "linenumbers count", Type: Uint16le},
+			{Offset: pos + 36, Length: 4, Info: "flags", Type: Uint32le, Masks: []Mask{
 				// XXX fix bit map
 				{Low: 0, Length: 1, Info: "0x00000020 = Code"},
 				{Low: 0, Length: 1, Info: "0x00000040 = Initialized data"},
@@ -121,7 +121,7 @@ func parseMZ_PEHeader(file *os.File, offset int64) ([]Layout, error) {
 			}},
 		}
 		sectionHeader.Childs = append(sectionHeader.Childs, chunk...)
-		offset += sectionHeaderLen
+		pos += sectionHeaderLen
 	}
 
 	res = append(res, sectionHeader)

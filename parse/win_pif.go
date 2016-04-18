@@ -29,15 +29,16 @@ func isPIF(file *os.File) bool {
 
 func parsePIF(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0x171)
 	res := ParsedLayout{
 		FileKind: WindowsResource,
 		Layout: []Layout{{
-			Offset: 0x171,
+			Offset: pos,
 			Length: 15, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0x171, Length: 15, Info: "magic", Type: Uint32le},
+				{Offset: pos, Length: 15, Info: "magic", Type: Uint32le},
 			}}}}
 
 	return &res, nil

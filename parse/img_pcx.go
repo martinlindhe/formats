@@ -45,15 +45,16 @@ func isPCX(file *os.File) bool {
 }
 
 func parsePCX(file *os.File) (*ParsedLayout, error) {
-	offset := int64(0)
 
-	version, _ := readUint8(file, offset+1)
+	pos := int64(0)
+
+	version, _ := readUint8(file, pos+1)
 	versionName := "?"
 	if val, ok := pcxVersions[version]; ok {
 		versionName = val
 	}
 
-	paletteType, _ := readUint16le(file, offset+68)
+	paletteType, _ := readUint16le(file, pos+68)
 	paletteTypeName := "?"
 	if val, ok := pcxPaletteType[paletteType]; ok {
 		paletteTypeName = val
@@ -64,36 +65,36 @@ func parsePCX(file *os.File) (*ParsedLayout, error) {
 	res := ParsedLayout{
 		FileKind: Image,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 128, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 1, Info: "magic", Type: Uint8},
-				{Offset: offset + 1, Length: 1, Info: "version = " + versionName, Type: Uint8},
-				{Offset: offset + 2, Length: 1, Info: "encoding", Type: Uint8},
-				{Offset: offset + 3, Length: 1, Info: "bits per plane", Type: Uint8},
-				{Offset: offset + 4, Length: 2, Info: "x min", Type: Uint16le},
-				{Offset: offset + 6, Length: 2, Info: "y min", Type: Uint16le},
-				{Offset: offset + 8, Length: 2, Info: "x max", Type: Uint16le},
-				{Offset: offset + 10, Length: 2, Info: "y max", Type: Uint16le},
-				{Offset: offset + 12, Length: 2, Info: "vertical dpi", Type: Uint16le},
-				{Offset: offset + 14, Length: 2, Info: "horizontal dpi", Type: Uint16le},
-				{Offset: offset + 16, Length: 48, Info: "palette", Type: Bytes},
-				{Offset: offset + 64, Length: 1, Info: "reserved", Type: Uint8},
-				{Offset: offset + 65, Length: 1, Info: "color planes", Type: Uint8},
-				{Offset: offset + 66, Length: 2, Info: "bytes per plane line", Type: Uint16le},
-				{Offset: offset + 68, Length: 2, Info: "palette type = " + paletteTypeName, Type: Uint16le},
-				{Offset: offset + 70, Length: 2, Info: "hScrSize", Type: Uint16le},
-				{Offset: offset + 72, Length: 2, Info: "vScrSize", Type: Uint16le},
-				{Offset: offset + 74, Length: 54, Info: "padding", Type: Bytes}, // XXX may be 56 byte if horiz dpi is absent
+				{Offset: pos, Length: 1, Info: "magic", Type: Uint8},
+				{Offset: pos + 1, Length: 1, Info: "version = " + versionName, Type: Uint8},
+				{Offset: pos + 2, Length: 1, Info: "encoding", Type: Uint8},
+				{Offset: pos + 3, Length: 1, Info: "bits per plane", Type: Uint8},
+				{Offset: pos + 4, Length: 2, Info: "x min", Type: Uint16le},
+				{Offset: pos + 6, Length: 2, Info: "y min", Type: Uint16le},
+				{Offset: pos + 8, Length: 2, Info: "x max", Type: Uint16le},
+				{Offset: pos + 10, Length: 2, Info: "y max", Type: Uint16le},
+				{Offset: pos + 12, Length: 2, Info: "vertical dpi", Type: Uint16le},
+				{Offset: pos + 14, Length: 2, Info: "horizontal dpi", Type: Uint16le},
+				{Offset: pos + 16, Length: 48, Info: "palette", Type: Bytes},
+				{Offset: pos + 64, Length: 1, Info: "reserved", Type: Uint8},
+				{Offset: pos + 65, Length: 1, Info: "color planes", Type: Uint8},
+				{Offset: pos + 66, Length: 2, Info: "bytes per plane line", Type: Uint16le},
+				{Offset: pos + 68, Length: 2, Info: "palette type = " + paletteTypeName, Type: Uint16le},
+				{Offset: pos + 70, Length: 2, Info: "hScrSize", Type: Uint16le},
+				{Offset: pos + 72, Length: 2, Info: "vScrSize", Type: Uint16le},
+				{Offset: pos + 74, Length: 54, Info: "padding", Type: Bytes}, // XXX may be 56 byte if horiz dpi is absent
 			}}, {
-			Offset: offset + 128,
+			Offset: pos + 128,
 			Length: fileLen - 128,
 			Info:   "image data",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset + 128, Length: fileLen - 128, Info: "image data", Type: Bytes},
+				{Offset: pos + 128, Length: fileLen - 128, Info: "image data", Type: Bytes},
 			}}}}
 
 	return &res, nil

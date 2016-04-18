@@ -48,7 +48,7 @@ func isPNG(file *os.File) bool {
 
 func parsePNG(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
+	pos := int64(0)
 	res := ParsedLayout{
 		FileKind: Image,
 	}
@@ -63,7 +63,7 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 	}
 
 	fileHeader := Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: 8,
 		Info:   "header",
 		Type:   Group,
@@ -74,20 +74,20 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 
 	res.Layout = append(res.Layout, fileHeader)
 
-	offset = 8
+	pos = 8
 
 	chunks := []Layout{}
 	for {
 		l := Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: 8,
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "length", Type: Uint32be},
-				{Offset: offset + 4, Length: 4, Info: "type", Type: ASCII},
+				{Offset: pos, Length: 4, Info: "length", Type: Uint32be},
+				{Offset: pos + 4, Length: 4, Info: "type", Type: ASCII},
 			},
 		}
-		chunkLength, err := readUint32be(file, offset)
+		chunkLength, err := readUint32be(file, pos)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -95,7 +95,7 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 			return nil, err
 		}
 
-		typeCode, err := knownLengthASCII(file, offset+4, 4)
+		typeCode, err := knownLengthASCII(file, pos+4, 4)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -104,35 +104,35 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 		}
 
 		l.Info = "chunk " + typeCode
-		offset += l.Length
+		pos += l.Length
 
 		if typeCode == "IHDR" {
 			if chunkLength != 13 {
 				fmt.Println("warning: IHDR size must be 13")
 			}
 			l.Childs = append(l.Childs, []Layout{
-				{Offset: offset, Length: 4, Info: "width", Type: Uint32be},
-				{Offset: offset + 4, Length: 4, Info: "height", Type: Uint32be},
-				{Offset: offset + 8, Length: 1, Info: "bit depth", Type: Uint8},
-				{Offset: offset + 9, Length: 1, Info: "color type", Type: Uint8},
-				{Offset: offset + 10, Length: 1, Info: "compression method", Type: Uint8}, // XXX show meaning of value
-				{Offset: offset + 11, Length: 1, Info: "filter method", Type: Uint8},
-				{Offset: offset + 12, Length: 1, Info: "interlace method", Type: Uint8},
+				{Offset: pos, Length: 4, Info: "width", Type: Uint32be},
+				{Offset: pos + 4, Length: 4, Info: "height", Type: Uint32be},
+				{Offset: pos + 8, Length: 1, Info: "bit depth", Type: Uint8},
+				{Offset: pos + 9, Length: 1, Info: "color type", Type: Uint8},
+				{Offset: pos + 10, Length: 1, Info: "compression method", Type: Uint8}, // XXX show meaning of value
+				{Offset: pos + 11, Length: 1, Info: "filter method", Type: Uint8},
+				{Offset: pos + 12, Length: 1, Info: "interlace method", Type: Uint8},
 			}...)
 		} else {
 			l.Childs = append(l.Childs, []Layout{
-				{Offset: offset, Length: int64(chunkLength), Info: typeCode + " data", Type: Bytes},
+				{Offset: pos, Length: int64(chunkLength), Info: typeCode + " data", Type: Bytes},
 			}...)
 		}
 
-		offset += int64(chunkLength)
+		pos += int64(chunkLength)
 		l.Length += int64(chunkLength)
 
 		l.Childs = append(l.Childs, []Layout{
-			{Offset: offset, Length: 4, Info: "crc", Type: Uint32be},
+			{Offset: pos, Length: 4, Info: "crc", Type: Uint32be},
 		}...)
 		l.Length += 4
-		offset += 4
+		pos += 4
 
 		chunks = append(chunks, l)
 

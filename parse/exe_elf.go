@@ -1,16 +1,19 @@
 package parse
 
 // Executable and Linkable Format
-// STATUS: 40%
+// STATUS: 70%
 
 import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"sort"
 )
 
 var (
-	elfClasses = map[byte]string{
+	phHeaderSize = int64(32)
+	shHeaderSize = int64(40)
+	elfClasses   = map[byte]string{
 		0: "none",
 		1: "ELF32",
 		2: "ELF64",
@@ -69,15 +72,25 @@ var (
 		5:          "sh lib",
 		6:          "p hdr",
 		0x60000000: "lo os",
-		0x6FFFFFFF: "hi os",
+		0x6fffffff: "hi os",
 		0x70000000: "lo proc",
-		0x7FFFFFFF: "hi proc",
+		0x7fffffff: "hi proc",
 	}
 	elfShTypes = map[uint32]string{
-		0: "null",
-		1: "prog bits",
-		2: "symbol table",
-		3: "string table",
+		0:          "null",
+		1:          "prog bits",
+		2:          "symbol table",
+		3:          "string table",
+		6:          "dynamic",
+		7:          "note",
+		8:          "no bits",
+		9:          "rel",
+		0xb:        "dyn sym",
+		0xe:        "init array",
+		0xf:        "fini array",
+		0x6ffffff6: "gnu hash",
+		0x6ffffffe: "ver need",
+		0x6fffffff: "ver sym",
 	}
 )
 
@@ -145,7 +158,7 @@ func parseELF(file *os.File) (*ParsedLayout, error) {
 
 	shOffset, _ := readUint32le(file, pos+32)
 	shEntrySize, _ := readUint16le(file, pos+46)
-	shCount, _ := readUint16le(file, pos+50)
+	shCount, _ := readUint16le(file, pos+48)
 
 	res := ParsedLayout{
 		FileKind: Executable,
@@ -185,12 +198,37 @@ func parseELF(file *os.File) (*ParsedLayout, error) {
 		res.Layout = append(res.Layout, parseElfShEntries(file, int64(shOffset), shEntrySize, shCount)...)
 	}
 
+	sort.Sort(ByLayout(res.Layout))
+
 	return &res, nil
+}
+
+func elfStrtabOffset(file *os.File, pos int64, shCount uint16) int64 {
+
+	// XXX hack for one sample file
+
+	// XXX need to look up segment type STRTAB to decode name ...
+	// XXX 2: there are 3 strtab segments in sample file:
+	//   which to choose?  .shstrtab  .. but how to know this?!
+
+	return 0x6ed
+
+	/*
+
+		for i := 1; i <= int(shCount); i++ {
+			shType, _ := readUint32le(file, pos+4)
+			if shType == 3 {
+				offset, _ := readUint32le(file, pos+16)
+				return int64(offset)
+			}
+			pos += shHeaderSize
+		}
+		return 0
+	*/
 }
 
 func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uint16) []Layout {
 
-	phHeaderSize := int64(32)
 	res := []Layout{}
 
 	if int64(phEntrySize) != phHeaderSize {
@@ -205,10 +243,15 @@ func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uin
 			phTypeName = val
 		}
 
+		phOffset, _ := readUint32le(file, pos+4)
+		phSize, _ := readUint32le(file, pos+16)
+
+		id := fmt.Sprintf("%d", i)
+
 		res = append(res, Layout{
 			Offset: pos,
 			Length: phHeaderSize,
-			Info:   "program header " + fmt.Sprintf("%d", i),
+			Info:   "program header " + id,
 			Type:   Group,
 			Childs: []Layout{
 				{Offset: pos, Length: 4, Info: "type = " + phTypeName, Type: Uint32le},
@@ -220,6 +263,21 @@ func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uin
 				{Offset: pos + 24, Length: 4, Info: "flags", Type: Uint32le},
 				{Offset: pos + 28, Length: 4, Info: "align", Type: Uint32le},
 			}})
+
+		if phSize > 0 {
+			// NOTE: there are sections covering the whole header (LOAD), and the program header (PHDR)
+			if phOffset != 0 {
+				res = append(res, Layout{
+					Offset: int64(phOffset),
+					Length: int64(phSize),
+					Info:   "program " + id,
+					Type:   Group,
+					Childs: []Layout{
+						{Offset: int64(phOffset), Length: int64(phSize), Info: "data", Type: Bytes},
+					}})
+			}
+		}
+
 		pos += phHeaderSize
 	}
 
@@ -228,12 +286,14 @@ func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uin
 
 func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uint16) []Layout {
 
-	shHeaderSize := int64(40)
 	res := []Layout{}
 
 	if int64(shEntrySize) != shHeaderSize {
 		fmt.Println("warning: unexpected sh entry size. expected", shHeaderSize, ", saw", int64(shEntrySize))
 	}
+
+	strtabOffset := elfStrtabOffset(file, pos, shCount)
+	fmt.Printf("strtab offset = %04x\n", strtabOffset)
 
 	for i := 1; i <= int(shCount); i++ {
 
@@ -243,13 +303,19 @@ func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uin
 			shTypeName = val
 		}
 
+		shOffset, _ := readUint32le(file, pos+16)
+		shSize, _ := readUint32le(file, pos+20)
+
+		nameOffset, _ := readUint32le(file, pos)
+		name, _, _ := readZeroTerminatedASCIIUntil(file, strtabOffset+int64(nameOffset), 32)
+
 		res = append(res, Layout{
 			Offset: pos,
 			Length: shHeaderSize,
 			Info:   "section header " + fmt.Sprintf("%d", i),
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: pos, Length: 4, Info: "name", Type: Uint32le}, /// XXX offset to a string name in the strtab section
+				{Offset: pos, Length: 4, Info: "name = " + name, Type: Uint32le},
 				{Offset: pos + 4, Length: 4, Info: "type = " + shTypeName, Type: Uint32le},
 				{Offset: pos + 8, Length: 4, Info: "flags", Type: Uint32le},
 				{Offset: pos + 12, Length: 4, Info: "address", Type: Uint32le},
@@ -257,6 +323,20 @@ func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uin
 				{Offset: pos + 20, Length: 4, Info: "size", Type: Uint32le},
 				{Offset: pos + 24, Length: 16, Info: "extra", Type: Uint32le}, // type dependent
 			}})
+
+		if shSize > 0 {
+			if shOffset != 0 {
+				res = append(res, Layout{
+					Offset: int64(shOffset),
+					Length: int64(shSize),
+					Info:   "section " + name,
+					Type:   Group,
+					Childs: []Layout{
+						{Offset: int64(shOffset), Length: int64(shSize), Info: "data", Type: Bytes},
+					}})
+			}
+		}
+
 		pos += shHeaderSize
 	}
 

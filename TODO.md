@@ -1,11 +1,24 @@
 # TODO cmd/formats
 
+basic detection of the following formats:
+
 MSI exec
 PDB debug info
 
 VBE "VBScript Encoded Script File" (need samples)
 
 RAW image
+
+COFF   older unix-like exec format
+    https://en.wikipedia.org/wiki/COFF
+
+a.out  even older unix-like exec formats
+    https://en.wikipedia.org/wiki/A.out
+
+
+# TODO
+    .doc, .pps, .ppt, .xls: all are detected as "word" documents now.
+        improve parser to distinguish between them
 
 
 # TODO zip-based formats:
@@ -23,11 +36,6 @@ JAR (java archive)
     https://en.wikipedia.org/wiki/JAR_%28file_format%29
 
 
-# TODO
-    .doc, .pps, .ppt, .xls: all are detected as "word" documents now.
-        improve parser to distinguish between them
-
-
 # TODO cmd/prober
 
   improve --short output:
@@ -35,5 +43,6 @@ JAR (java archive)
       append some relevant info, depending on kind of file:
         - IMAGES: width + height + bpp
         - ARCHIVES: files in archive, total expanded size
+        - exec: show sections
 
     1st: mark all parsers of format group:

@@ -33,28 +33,28 @@ func isCAB(file *os.File) bool {
 
 func parseCAB(file *os.File) (*ParsedLayout, error) {
 
-	offset := int64(0)
+	pos := int64(0)
 
 	res := ParsedLayout{
 		FileKind: Archive,
 		Layout: []Layout{{
-			Offset: offset,
+			Offset: pos,
 			Length: 36, // XXX
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "magic", Type: ASCII},
-				{Offset: offset + 4, Length: 4, Info: "reserved 1", Type: Uint32le},
-				{Offset: offset + 8, Length: 4, Info: "file size", Type: Uint32le},
-				{Offset: offset + 12, Length: 4, Info: "reserved 2", Type: Uint32le},
-				{Offset: offset + 16, Length: 4, Info: "offset to CFFILE", Type: Uint32le},
-				{Offset: offset + 20, Length: 4, Info: "reserved 3", Type: Uint32le},
-				{Offset: offset + 24, Length: 2, Info: "format version", Type: MinorMajor16le},
-				{Offset: offset + 26, Length: 2, Info: "CFFOLDER entries", Type: Uint16le},
-				{Offset: offset + 28, Length: 2, Info: "CFFILE entries", Type: Uint16le},
-				{Offset: offset + 30, Length: 2, Info: "flags", Type: Uint16le},
-				{Offset: offset + 32, Length: 2, Info: "set id", Type: Uint16le},
-				{Offset: offset + 34, Length: 2, Info: "cabinet number", Type: Uint16le},
+				{Offset: pos, Length: 4, Info: "magic", Type: ASCII},
+				{Offset: pos + 4, Length: 4, Info: "reserved 1", Type: Uint32le},
+				{Offset: pos + 8, Length: 4, Info: "file size", Type: Uint32le},
+				{Offset: pos + 12, Length: 4, Info: "reserved 2", Type: Uint32le},
+				{Offset: pos + 16, Length: 4, Info: "offset to CFFILE", Type: Uint32le},
+				{Offset: pos + 20, Length: 4, Info: "reserved 3", Type: Uint32le},
+				{Offset: pos + 24, Length: 2, Info: "format version", Type: MinorMajor16le},
+				{Offset: pos + 26, Length: 2, Info: "CFFOLDER entries", Type: Uint16le},
+				{Offset: pos + 28, Length: 2, Info: "CFFILE entries", Type: Uint16le},
+				{Offset: pos + 30, Length: 2, Info: "flags", Type: Uint16le},
+				{Offset: pos + 32, Length: 2, Info: "set id", Type: Uint16le},
+				{Offset: pos + 34, Length: 2, Info: "cabinet number", Type: Uint16le},
 			}}}}
 
 	/* XXX
@@ -68,7 +68,7 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 	   u1  szDiskNext[];     // (optional) name of next disk
 	*/
 
-	offset += 36 // XXX
+	pos += 36 // XXX
 
 	dirEntries, _ := readUint16le(file, 26)
 
@@ -76,77 +76,77 @@ func parseCAB(file *os.File) (*ParsedLayout, error) {
 
 	for i := 0; i < int(dirEntries); i++ {
 		chunk := Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: 8,
 			Info:   "CFFOLDER " + fmt.Sprintf("%d", i+1),
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "offset of first CFDATA block", Type: Uint32le},
-				{Offset: offset + 4, Length: 2, Info: "CFDATA blocks", Type: Uint16le},
-				{Offset: offset + 6, Length: 2, Info: "compression type", Type: Uint16le},
+				{Offset: pos, Length: 4, Info: "offset of first CFDATA block", Type: Uint32le},
+				{Offset: pos + 4, Length: 2, Info: "CFDATA blocks", Type: Uint16le},
+				{Offset: pos + 6, Length: 2, Info: "compression type", Type: Uint16le},
 				// XXX:
 				// u1  abReserve[];   /* (optional) per-folder reserved area */
 			}}
 
-		pos, _ := readUint32le(file, offset)
-		cnt, _ := readUint16le(file, offset+4)
-		cfDataBlocks[pos] = cnt
+		cfdataPos, _ := readUint32le(file, pos)
+		cfdataBlocks, _ := readUint16le(file, pos+4)
+		cfDataBlocks[cfdataPos] = cfdataBlocks
 
-		offset += chunk.Length
+		pos += chunk.Length
 		res.Layout = append(res.Layout, chunk)
 	}
 
 	fileEntries, _ := readUint16le(file, 28)
 
 	cffOffset, _ := res.readUint32leFromInfo(file, "offset to CFFILE")
-	if offset != int64(cffOffset) {
-		fmt.Printf("cab: unexpected, offset = %x, cffOffset = %x\n", offset, cffOffset)
-		offset = int64(cffOffset)
+	if pos != int64(cffOffset) {
+		fmt.Printf("cab: unexpected, offset = %x, cffOffset = %x\n", pos, cffOffset)
+		pos = int64(cffOffset)
 	}
 
 	for i := 0; i < int(fileEntries); i++ {
 
-		file.Seek(offset+16, os.SEEK_SET)
+		file.Seek(pos+16, os.SEEK_SET)
 		_, nameLen, err := zeroTerminatedASCII(file)
 		if err != nil {
 			return nil, err
 		}
 		chunk := Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: 16 + int64(nameLen),
 			Info:   "CFFILE " + fmt.Sprintf("%d", i+1),
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: offset, Length: 4, Info: "uncompressed size", Type: Uint32le},
-				{Offset: offset + 4, Length: 4, Info: "uncompressed offset in folder", Type: Uint32le},
-				{Offset: offset + 8, Length: 2, Info: "index in CFFOLDER", Type: Uint16le},
-				{Offset: offset + 10, Length: 2, Info: "date stamp", Type: Uint16le},
-				{Offset: offset + 12, Length: 2, Info: "time stamp", Type: Uint16le},
-				{Offset: offset + 14, Length: 2, Info: "attributes", Type: Uint16le},
-				{Offset: offset + 16, Length: int64(nameLen), Info: "name", Type: ASCIIZ},
+				{Offset: pos, Length: 4, Info: "uncompressed size", Type: Uint32le},
+				{Offset: pos + 4, Length: 4, Info: "uncompressed offset in folder", Type: Uint32le},
+				{Offset: pos + 8, Length: 2, Info: "index in CFFOLDER", Type: Uint16le},
+				{Offset: pos + 10, Length: 2, Info: "date stamp", Type: Uint16le},
+				{Offset: pos + 12, Length: 2, Info: "time stamp", Type: Uint16le},
+				{Offset: pos + 14, Length: 2, Info: "attributes", Type: Uint16le},
+				{Offset: pos + 16, Length: int64(nameLen), Info: "name", Type: ASCIIZ},
 			}}
 
-		offset += chunk.Length
+		pos += chunk.Length
 		res.Layout = append(res.Layout, chunk)
 	}
 
 	// map the compressed data
 	for dataOffset, cnt := range cfDataBlocks {
-		offset = int64(dataOffset)
+		pos = int64(dataOffset)
 		for i := 1; i < int(cnt); i++ {
 			cbLen, _ := readUint16le(file, int64(dataOffset)+4)
 			res.Layout = append(res.Layout, Layout{
-				Offset: offset,
+				Offset: pos,
 				Length: 8 + int64(cbLen),
 				Info:   "CFDATA " + fmt.Sprintf("%d", i),
 				Type:   Group,
 				Childs: []Layout{
-					{Offset: offset, Length: 4, Info: "checksum", Type: Uint32le},
-					{Offset: offset + 4, Length: 2, Info: "compressed len", Type: Uint16le},
-					{Offset: offset + 6, Length: 2, Info: "uncompressed len", Type: Uint16le},
-					{Offset: offset + 8, Length: int64(cbLen), Info: "compressed data", Type: Bytes},
+					{Offset: pos, Length: 4, Info: "checksum", Type: Uint32le},
+					{Offset: pos + 4, Length: 2, Info: "compressed len", Type: Uint16le},
+					{Offset: pos + 6, Length: 2, Info: "uncompressed len", Type: Uint16le},
+					{Offset: pos + 8, Length: int64(cbLen), Info: "compressed data", Type: Bytes},
 				}})
-			offset += 8 + int64(cbLen)
+			pos += 8 + int64(cbLen)
 		}
 	}
 

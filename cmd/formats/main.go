@@ -282,6 +282,10 @@ func refreshUI(file *os.File) {
 
 func prettyStatString() string {
 
+	if len(fileLayout.Layout) == 0 {
+		return ""
+	}
+
 	group := fileLayout.Layout[hexView.CurrentGroup]
 
 	// if in sub field view

@@ -79,6 +79,9 @@ func (pl *ParsedLayout) PrettyASCIIView(file *os.File, hexView HexViewState) str
 	for i := base; i < ceil; i += int64(hexView.RowWidth) {
 
 		ofs, err := file.Seek(i, os.SEEK_SET)
+		if err != nil {
+			break
+		}
 		if i != ofs {
 			log.Fatalf("err-1: unexpected offset %04x, expected %04x\n", ofs, i)
 		}
@@ -86,7 +89,6 @@ func (pl *ParsedLayout) PrettyASCIIView(file *os.File, hexView HexViewState) str
 
 		ascii += line + "\n"
 		if err != nil {
-			fmt.Println("got err", err)
 			break
 		}
 	}

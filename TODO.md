@@ -1,24 +1,11 @@
 # TODO cmd/formats
 
 basic detection of the following formats:
-
-MSI exec
-PDB debug info
-
-VBE "VBScript Encoded Script File" (need samples)
-
-RAW image
-
-COFF   older unix-like exec format
-    https://en.wikipedia.org/wiki/COFF
-
-a.out  even older unix-like exec formats
-    https://en.wikipedia.org/wiki/A.out
-
+  - MSI exec
 
 # TODO
-    .doc, .pps, .ppt, .xls: all are detected as "word" documents now.
-        improve parser to distinguish between them
+.doc, .pps, .ppt, .xls: all are detected as "word" documents now.
+    improve parser to distinguish between them
 
 
 # TODO zip-based formats:
@@ -35,6 +22,9 @@ APK (android application package, JAR-based)
 JAR (java archive)
     https://en.wikipedia.org/wiki/JAR_%28file_format%29
 
+# TODO RAW images
+    http://fileformats.archiveteam.org/wiki/Cameras_and_Digital_Image_Sensors
+    https://www.rawsamples.ch/
 
 # TODO cmd/prober
 

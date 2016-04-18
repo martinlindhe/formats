@@ -36,17 +36,19 @@ func isBZIP2(file *os.File) bool {
 
 func parseBZIP2(file *os.File) (*ParsedLayout, error) {
 
+	pos := int64(0)
+
 	res := ParsedLayout{
 		FileKind: Archive,
 		Layout: []Layout{{
-			Offset: 0,
+			Offset: pos,
 			Length: 4,
 			Info:   "header",
 			Type:   Group,
 			Childs: []Layout{
-				{Offset: 0, Length: 2, Info: "magic", Type: ASCII},
-				{Offset: 2, Length: 1, Info: "encoding", Type: Uint8},          // XXX h = huffman
-				{Offset: 3, Length: 1, Info: "compression level", Type: ASCII}, // 0=worst, 9=best<
+				{Offset: pos, Length: 2, Info: "magic", Type: ASCII},
+				{Offset: pos + 2, Length: 1, Info: "encoding", Type: Uint8},          // XXX h = huffman
+				{Offset: pos + 3, Length: 1, Info: "compression level", Type: ASCII}, // 0=worst, 9=best<
 			}}}}
 
 	return &res, nil

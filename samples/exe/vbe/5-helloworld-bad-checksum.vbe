@@ -1,0 +1,3 @@
+'#@~^XwAAAA==v8 ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffhB0AAA==^#~@
+Set objShell = CreateObject("Wscript.Shell")
+objShell.Run("http://lifeinhex.com")

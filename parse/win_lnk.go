@@ -34,7 +34,7 @@ func parseLNK(file *os.File) (*ParsedLayout, error) {
 	offset := int64(0)
 
 	res := ParsedLayout{
-		FileKind: Archive,
+		FileKind: WindowsResource,
 		Layout: []Layout{{
 			Offset: offset,
 			Length: 76, // XXX

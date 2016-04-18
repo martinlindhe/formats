@@ -11,7 +11,7 @@ import (
 func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string {
 
 	if len(pl.Layout) == 0 {
-		fmt.Println("pl.Layout is empty")
+		fmt.Println("CurrentFieldInfo: pl.Layout is empty")
 		return ""
 	}
 

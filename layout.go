@@ -45,12 +45,11 @@ var (
 		"riff": parse.RIFF,
 
 		// doc
-		"chm":  parse.CHM,
-		"hlp":  parse.HLP,
-		"pdf":  parse.PDF,
-		"rtf":  parse.RTF,
-		"word": parse.WORD,
-		"wri":  parse.WRI,
+		"chm": parse.CHM,
+		"hlp": parse.HLP,
+		"pdf": parse.PDF,
+		"rtf": parse.RTF,
+		"wri": parse.WRI,
 
 		// font
 		"eot":   parse.EOT,
@@ -62,21 +61,29 @@ var (
 		"woff2": parse.WOFF2,
 
 		// exe
-		"mz":         parse.MZ,
-		"macho":      parse.MachO,
-		"elf":        parse.ELF,
-		"lua":        parse.LUA,
-		"python":     parse.PYTHON,
 		"dex":        parse.DEX,
+		"elf":        parse.ELF,
 		"java class": parse.JAVA,
+		"lua":        parse.LUA,
+		"macho":      parse.MachO,
+		"mz":         parse.MZ,
+		"python":     parse.PYTHON,
 		"swf":        parse.SWF,
+		"vbe":        parse.VBE,
 
 		// bin
 		"gba-rom": parse.GBAROM,
 		"n64-rom": parse.N64ROM,
 		"sqlite3": parse.SQLITE3,
-		"pif":     parse.PIF, // windows
-		"lnk":     parse.LNK, // windows
+		"pdb":     parse.PDB, // visual studio debug info
+
+		// os-windows
+		"pif":    parse.PIF,
+		"lnk":    parse.LNK,
+		"ole-cf": parse.OLECF,
+
+		// os-macos
+		"ds_store": parse.DSSTORE,
 	}
 )
 

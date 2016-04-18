@@ -49,6 +49,8 @@ const (
 	Executable
 	Document
 	Font
+	WindowsResource
+	MacOSResource
 )
 
 var (
@@ -76,13 +78,15 @@ var (
 	}
 
 	FileKinds = map[FileKind]string{
-		Image:      "image",
-		Archive:    "archive",
-		AudioVideo: "a/v",
-		Binary:     "binary",
-		Executable: "executable",
-		Document:   "document",
-		Font:       "font",
+		Image:           "image",
+		Archive:         "archive",
+		AudioVideo:      "a/v",
+		Binary:          "binary",
+		Executable:      "executable",
+		Document:        "document",
+		Font:            "font",
+		WindowsResource: "os-windows",
+		MacOSResource:   "os-macos",
 	}
 )
 

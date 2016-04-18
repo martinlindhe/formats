@@ -30,7 +30,7 @@ func isPIF(file *os.File) bool {
 func parsePIF(file *os.File) (*ParsedLayout, error) {
 
 	res := ParsedLayout{
-		FileKind: Binary,
+		FileKind: WindowsResource,
 		Layout: []Layout{{
 			Offset: 0x171,
 			Length: 15, // XXX

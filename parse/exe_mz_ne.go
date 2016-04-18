@@ -40,7 +40,7 @@ var (
 func parseMZ_NEHeader(file *os.File, pos int64) ([]Layout, error) {
 
 	res := []Layout{}
-	targetOSId, _ := readUint8(file, pos+54)
+	targetOSId, _ := ReadUint8(file, pos+54)
 	targetOS := "unknown"
 
 	if val, ok := neTargetOS[targetOSId]; ok {
@@ -106,38 +106,38 @@ func parseMZ_NEHeader(file *os.File, pos int64) ([]Layout, error) {
 			Layout{Offset: pos + 62, Length: 2, Info: "expected windows version", Type: MinorMajor16le}, // XXX only used by windows
 		}})
 
-	moduleReferenceEntries, _ := readUint16le(file, pos+30)
-	moduleReferenceOffset, _ := readUint16le(file, pos+40)
+	moduleReferenceEntries, _ := ReadUint16le(file, pos+30)
+	moduleReferenceOffset, _ := ReadUint16le(file, pos+40)
 	if moduleReferenceEntries > 0 {
 		res = append(res, *parseNEModuleReferenceTable(pos+int64(moduleReferenceOffset), moduleReferenceEntries))
 	}
 
-	entryTableOffset, _ := readUint16le(file, pos+4)
-	entryTableLength, _ := readUint16le(file, pos+6)
+	entryTableOffset, _ := ReadUint16le(file, pos+4)
+	entryTableLength, _ := ReadUint16le(file, pos+6)
 	res = append(res, *parseNEEntryTable(file, pos+int64(entryTableOffset), entryTableLength))
 
-	segmentTableOffset, _ := readUint16le(file, pos+34)
-	segmentTableEntries, _ := readUint16le(file, pos+28)
+	segmentTableOffset, _ := ReadUint16le(file, pos+34)
+	segmentTableEntries, _ := ReadUint16le(file, pos+28)
 	if segmentTableEntries > 0 {
 		res = append(res, *parseNESegmentTable(file, pos+int64(segmentTableOffset), segmentTableEntries))
 	}
 
-	importedNamesTableOffset, _ := readUint16le(file, pos+42)
+	importedNamesTableOffset, _ := ReadUint16le(file, pos+42)
 	res = append(res, *parseNEImportedTable(file, pos+int64(importedNamesTableOffset)))
 
-	residentNamesTableOffset, _ := readUint16le(file, pos+38)
+	residentNamesTableOffset, _ := ReadUint16le(file, pos+38)
 	res = append(res, *parseNEResidentTable(file, pos+int64(residentNamesTableOffset)))
 
-	nonResidentNamesTableOffset, _ := readUint32le(file, pos+44)
-	nonresidentNamesTableSize, _ := readUint16le(file, pos+32)
+	nonResidentNamesTableOffset, _ := ReadUint32le(file, pos+44)
+	nonresidentNamesTableSize, _ := ReadUint16le(file, pos+32)
 	res = append(res, *parseNENonResidentTable(file, int64(nonResidentNamesTableOffset), nonresidentNamesTableSize))
 
-	resourceTableOffset, _ := readUint16le(file, pos+36)
-	resourceTableEntries, _ := readUint16le(file, pos+52)
+	resourceTableOffset, _ := ReadUint16le(file, pos+36)
+	resourceTableEntries, _ := ReadUint16le(file, pos+52)
 	res = append(res, *parseNEResourceTable(file, pos+int64(resourceTableOffset), resourceTableEntries))
 
-	fastloadAreaOffset, _ := readUint16le(file, pos+56)
-	fastloadAreaLength, _ := readUint16le(file, pos+58)
+	fastloadAreaOffset, _ := ReadUint16le(file, pos+56)
+	fastloadAreaLength, _ := ReadUint16le(file, pos+58)
 
 	// XXX how to parse this stuff
 	// XXX offset seems wrong
@@ -186,10 +186,10 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 	entryTableLen := 0
 	for entryTableLen < int(length) {
 
-		entries, _ := readUint8(file, offset)
+		entries, _ := ReadUint8(file, offset)
 		entryTableLen += 1
 
-		segNumber, _ := readUint8(file, offset+1)
+		segNumber, _ := ReadUint8(file, offset+1)
 		entryTableLen += 1
 
 		if entries == 0 {
@@ -213,7 +213,7 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *Layout {
 		for i := 1; i <= int(entries); i++ {
 			switch segNumber {
 			case 0xff:
-				int3f, _ := readUint16le(file, offset+1)
+				int3f, _ := ReadUint16le(file, offset+1)
 
 				entryTableLen += 6
 				if int3f != 0x3fcd {
@@ -302,11 +302,6 @@ func parseNEImportedTable(file *os.File, offset int64) *Layout {
 			Layout{Offset: offset, Length: 1, Info: "reserved", Type: Uint8}, // XXX ?
 		}}
 
-	unknown, _ := readUint8(file, offset)
-	if unknown != 0 {
-		panic("sample plz")
-	}
-
 	offset++
 
 	var len byte
@@ -314,7 +309,7 @@ func parseNEImportedTable(file *os.File, offset int64) *Layout {
 	totLen := int64(1)
 	for {
 
-		len, _ = readUint8(file, offset)
+		len, _ = ReadUint8(file, offset)
 
 		b := readBytesFrom(file, offset+1, int64(len))
 
@@ -360,7 +355,7 @@ func parseNEResidentTable(file *os.File, offset int64) *Layout {
 	var len byte
 	for {
 
-		len, _ = readUint8(file, offset)
+		len, _ = ReadUint8(file, offset)
 		chunkLen := 1 + int64(len)
 
 		if len == 0 {
@@ -397,7 +392,7 @@ func parseNENonResidentTable(file *os.File, offset int64, size uint16) *Layout {
 
 	var len byte
 	for {
-		len, _ = readUint8(file, offset)
+		len, _ = ReadUint8(file, offset)
 		if len == 0 {
 			res.Childs = append(res.Childs,
 				Layout{Offset: offset, Length: 1, Info: "end marker", Type: Uint8})
@@ -437,7 +432,7 @@ func parseNEResourceTable(file *os.File, offset int64, count uint16) *Layout {
 
 	for {
 
-		resourceType, _ := readUint16le(file, offset)
+		resourceType, _ := ReadUint16le(file, offset)
 		if resourceType == 0 {
 			len += 2
 			res.Childs = append(res.Childs, Layout{
@@ -445,7 +440,7 @@ func parseNEResourceTable(file *os.File, offset int64, count uint16) *Layout {
 			break
 		}
 
-		resourceCount, _ := readUint16le(file, offset+2)
+		resourceCount, _ := ReadUint16le(file, offset+2)
 
 		info := "type"
 		if val, ok := neResourceType[resourceType]; ok {

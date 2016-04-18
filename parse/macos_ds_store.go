@@ -42,7 +42,7 @@ func parseDSSTORE(file *os.File) (*ParsedLayout, error) {
 
 	for {
 
-		p, _ := readUint32be(file, pos)
+		p, _ := ReadUint32be(file, pos)
 		//count, _ := readUint32be(file, offset+4)
 
 		header.Childs = append(header.Childs, []Layout{

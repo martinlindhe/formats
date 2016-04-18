@@ -1,13 +1,14 @@
-package parse
+package archive
 
 // STATUS 1%, see https://golang.org/src/compress/bzip2/bzip2.go
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func BZIP2(file *os.File) (*ParsedLayout, error) {
+func BZIP2(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isBZIP2(file) {
 		return nil, nil
@@ -34,21 +35,21 @@ func isBZIP2(file *os.File) bool {
 	return true
 }
 
-func parseBZIP2(file *os.File) (*ParsedLayout, error) {
+func parseBZIP2(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	res := ParsedLayout{
-		FileKind: Archive,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.Archive,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4,
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 2, Info: "magic", Type: ASCII},
-				{Offset: pos + 2, Length: 1, Info: "encoding", Type: Uint8},          // XXX h = huffman
-				{Offset: pos + 3, Length: 1, Info: "compression level", Type: ASCII}, // 0=worst, 9=best<
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 2, Info: "magic", Type: parse.ASCII},
+				{Offset: pos + 2, Length: 1, Info: "encoding", Type: parse.Uint8},          // XXX h = huffman
+				{Offset: pos + 3, Length: 1, Info: "compression level", Type: parse.ASCII}, // 0=worst, 9=best<
 			}}}}
 
 	return &res, nil

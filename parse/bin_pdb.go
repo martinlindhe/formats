@@ -16,7 +16,7 @@ func PDB(file *os.File) (*ParsedLayout, error) {
 
 func isPDB(file *os.File) bool {
 
-	s, _, _ := readZeroTerminatedASCIIUntil(file, 0, 26)
+	s, _, _ := ReadZeroTerminatedASCIIUntil(file, 0, 26)
 
 	// XXX just guessing
 	if s != "Microsoft C/C++ MSF 7.00"+"\r\n" {

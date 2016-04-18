@@ -110,11 +110,11 @@ func parseICO(file *os.File) (*ParsedLayout, error) {
 	for i := 0; i < int(numIcons); i++ {
 		resNum := fmt.Sprintf("%d", i+1)
 
-		dataOffset, err := res.readUint32leFromInfo(file, "offset to resource "+resNum)
+		dataOffset, err := res.ReadUint32leFromInfo(file, "offset to resource "+resNum)
 		if err != nil {
 			return nil, err
 		}
-		dataSize, err := res.readUint32leFromInfo(file, "data size of resource "+resNum)
+		dataSize, err := res.ReadUint32leFromInfo(file, "data size of resource "+resNum)
 		if err != nil {
 			return nil, err
 		}

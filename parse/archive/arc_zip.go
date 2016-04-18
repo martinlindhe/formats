@@ -1,11 +1,14 @@
-package parse
+package archive
+
+// STATUS: 1%
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func ZIP(file *os.File) (*ParsedLayout, error) {
+func ZIP(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isZIP(file) {
 		return nil, nil
@@ -26,18 +29,18 @@ func isZIP(file *os.File) bool {
 	return true
 }
 
-func parseZIP(file *os.File) (*ParsedLayout, error) {
+func parseZIP(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: Archive,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.Archive,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 6, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 6, Info: "magic", Type: Bytes},
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
 			}}}}
 	return &res, nil
 }

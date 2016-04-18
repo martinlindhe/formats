@@ -83,7 +83,7 @@ func parseBMP(file *os.File) (*ParsedLayout, error) {
 
 	res.Layout = append(res.Layout, dataLayout)
 
-	compression, err := res.readUint32leFromInfo(file, "compression")
+	compression, err := res.ReadUint32leFromInfo(file, "compression")
 	if err == nil {
 		if val, ok := bmpCompressions[compression]; ok {
 			res.updateLabel("compression", "compression = "+val)
@@ -101,7 +101,7 @@ func parseBMPInfoHeader(file *os.File) (Layout, error) {
 		Type:   Group,
 	}
 
-	infoHdrSize, err := readUint32le(file, infoHeaderBase)
+	infoHdrSize, err := ReadUint32le(file, infoHeaderBase)
 	if err != nil {
 		return layout, err
 	}

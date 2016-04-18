@@ -26,7 +26,7 @@ func SQLITE3(file *os.File) (*ParsedLayout, error) {
 
 func isSQLITE3(file *os.File) bool {
 
-	s, _, _ := readZeroTerminatedASCIIUntil(file, 0, 16)
+	s, _, _ := ReadZeroTerminatedASCIIUntil(file, 0, 16)
 
 	if s != "SQLite format 3" {
 		return false
@@ -38,7 +38,7 @@ func isSQLITE3(file *os.File) bool {
 func parseSQLITE3(file *os.File) (*ParsedLayout, error) {
 
 	pos := int64(0)
-	textEncoding, _ := readUint32be(file, pos+56)
+	textEncoding, _ := ReadUint32be(file, pos+56)
 	textEncodingName := ""
 	if val, ok := sqlite3TextEncodings[textEncoding]; ok {
 		textEncodingName = val

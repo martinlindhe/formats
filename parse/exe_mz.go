@@ -69,10 +69,10 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 		res.Layout = append(res.Layout, *custom)
 	}
 
-	hdrSizeInParagraphs, _ := readUint16le(file, pos+8)
-	ip, _ := readUint16le(file, pos+20)
-	cs, _ := readUint16le(file, pos+22)
-	relocOffset, _ := readUint16le(file, pos+24)
+	hdrSizeInParagraphs, _ := ReadUint16le(file, pos+8)
+	ip, _ := ReadUint16le(file, pos+20)
+	cs, _ := ReadUint16le(file, pos+22)
+	relocOffset, _ := ReadUint16le(file, pos+24)
 
 	if relocOffset == 0x40 {
 		// 0x40 for new-(NE,LE,LX,W3,PE etc.) executable
@@ -92,7 +92,7 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 				{Offset: pos + 32, Length: 4, Info: "start of ext header", Type: Uint32le},
 			}})
 
-		newHeaderPos, _ := readUint32le(file, pos+32)
+		newHeaderPos, _ := ReadUint32le(file, pos+32)
 
 		pos = int64(newHeaderPos)
 		newHeaderId, _ := knownLengthASCII(file, pos, 2)
@@ -118,7 +118,7 @@ func parseMZ(file *os.File) (*ParsedLayout, error) {
 			panic("unknown newHeaderId =" + newHeaderId)
 		}
 	} else {
-		relocItems, _ := readUint16le(file, pos+6)
+		relocItems, _ := ReadUint16le(file, pos+6)
 		if relocItems > 0 {
 			pos = int64(relocOffset)
 			reloc := Layout{

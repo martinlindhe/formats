@@ -62,8 +62,8 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 	}
 
 	for {
-		magic, _ := readUint8(file, pos)
-		marker, _ := readUint8(file, pos+1)
+		magic, _ := ReadUint8(file, pos)
+		marker, _ := ReadUint8(file, pos+1)
 
 		// fmt.Printf("Reading jpeg chunk at %04x. marker %02x\n", offset, marker)
 		if magic != 0xff {
@@ -101,7 +101,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 
 		if marker == 0xda { // start of scan
 
-			components, _ := readUint8(file, pos+4)
+			components, _ := ReadUint8(file, pos+4)
 			chunk := Layout{
 				Offset: pos,
 				Type:   Group,
@@ -202,7 +202,7 @@ func parseJPEG(file *os.File) (*ParsedLayout, error) {
 			continue
 		}
 
-		chunkLen, _ := readUint16be(file, pos+2)
+		chunkLen, _ := ReadUint16be(file, pos+2)
 
 		res.Layout = append(res.Layout, Layout{
 			Offset: pos,

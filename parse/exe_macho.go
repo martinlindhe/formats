@@ -61,7 +61,7 @@ func parseMachO(file *os.File) (*ParsedLayout, error) {
 
 	pos := int64(0)
 
-	cpuType, _ := readUint32le(file, pos+4)
+	cpuType, _ := ReadUint32le(file, pos+4)
 	cpuTypeName := "?"
 	if val, ok := machoCpuTypes[cpuType]; ok {
 		cpuTypeName = val

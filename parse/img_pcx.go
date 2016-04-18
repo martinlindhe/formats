@@ -48,13 +48,13 @@ func parsePCX(file *os.File) (*ParsedLayout, error) {
 
 	pos := int64(0)
 
-	version, _ := readUint8(file, pos+1)
+	version, _ := ReadUint8(file, pos+1)
 	versionName := "?"
 	if val, ok := pcxVersions[version]; ok {
 		versionName = val
 	}
 
-	paletteType, _ := readUint16le(file, pos+68)
+	paletteType, _ := ReadUint16le(file, pos+68)
 	paletteTypeName := "?"
 	if val, ok := pcxPaletteType[paletteType]; ok {
 		paletteTypeName = val

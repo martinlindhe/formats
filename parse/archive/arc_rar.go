@@ -1,11 +1,12 @@
-package parse
+package archive
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func RAR(file *os.File) (*ParsedLayout, error) {
+func RAR(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isRAR(file) {
 		return nil, nil
@@ -36,19 +37,19 @@ func isRAR(file *os.File) bool {
 	return true
 }
 
-func parseRAR(file *os.File) (*ParsedLayout, error) {
+func parseRAR(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	res := ParsedLayout{
-		FileKind: Archive,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.Archive,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				Layout{Offset: pos, Length: 4, Info: "magic", Type: ASCII},
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
 			}}}}
 
 	return &res, nil

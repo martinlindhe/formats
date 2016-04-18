@@ -122,43 +122,43 @@ func parseELF(file *os.File) (*ParsedLayout, error) {
 
 	pos := int64(0)
 
-	elfClass, _ := readUint8(file, pos+4)
+	elfClass, _ := ReadUint8(file, pos+4)
 	className := "?"
 	if val, ok := elfClasses[elfClass]; ok {
 		className = val
 	}
 
-	encoding, _ := readUint8(file, pos+5)
+	encoding, _ := ReadUint8(file, pos+5)
 	encodingName := "?"
 	if val, ok := elfDataEncodings[encoding]; ok {
 		encodingName = val
 	}
 
-	osABI, _ := readUint8(file, pos+7)
+	osABI, _ := ReadUint8(file, pos+7)
 	osABIName := "?"
 	if val, ok := elfOSABIs[osABI]; ok {
 		osABIName = val
 	}
 
-	elfType, _ := readUint16le(file, pos+16)
+	elfType, _ := ReadUint16le(file, pos+16)
 	typeName := "?"
 	if val, ok := elfTypes[elfType]; ok {
 		typeName = val
 	}
 
-	machine, _ := readUint16le(file, pos+18)
+	machine, _ := ReadUint16le(file, pos+18)
 	machineName := "?"
 	if val, ok := elfMachines[machine]; ok {
 		machineName = val
 	}
 
-	phOffset, _ := readUint32le(file, pos+28)
-	phEntrySize, _ := readUint16le(file, pos+42)
-	phCount, _ := readUint16le(file, pos+44)
+	phOffset, _ := ReadUint32le(file, pos+28)
+	phEntrySize, _ := ReadUint16le(file, pos+42)
+	phCount, _ := ReadUint16le(file, pos+44)
 
-	shOffset, _ := readUint32le(file, pos+32)
-	shEntrySize, _ := readUint16le(file, pos+46)
-	shCount, _ := readUint16le(file, pos+48)
+	shOffset, _ := ReadUint32le(file, pos+32)
+	shEntrySize, _ := ReadUint16le(file, pos+46)
+	shCount, _ := ReadUint16le(file, pos+48)
 
 	res := ParsedLayout{
 		FileKind: Executable,
@@ -237,14 +237,14 @@ func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uin
 
 	for i := 1; i <= int(phCount); i++ {
 
-		phType, _ := readUint32le(file, pos)
+		phType, _ := ReadUint32le(file, pos)
 		phTypeName := "?"
 		if val, ok := elfPhTypes[phType]; ok {
 			phTypeName = val
 		}
 
-		phOffset, _ := readUint32le(file, pos+4)
-		phSize, _ := readUint32le(file, pos+16)
+		phOffset, _ := ReadUint32le(file, pos+4)
+		phSize, _ := ReadUint32le(file, pos+16)
 
 		id := fmt.Sprintf("%d", i)
 
@@ -297,17 +297,17 @@ func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uin
 
 	for i := 1; i <= int(shCount); i++ {
 
-		shType, _ := readUint32le(file, pos+4)
+		shType, _ := ReadUint32le(file, pos+4)
 		shTypeName := "?"
 		if val, ok := elfShTypes[shType]; ok {
 			shTypeName = val
 		}
 
-		shOffset, _ := readUint32le(file, pos+16)
-		shSize, _ := readUint32le(file, pos+20)
+		shOffset, _ := ReadUint32le(file, pos+16)
+		shSize, _ := ReadUint32le(file, pos+20)
 
-		nameOffset, _ := readUint32le(file, pos)
-		name, _, _ := readZeroTerminatedASCIIUntil(file, strtabOffset+int64(nameOffset), 32)
+		nameOffset, _ := ReadUint32le(file, pos)
+		name, _, _ := ReadZeroTerminatedASCIIUntil(file, strtabOffset+int64(nameOffset), 32)
 
 		res = append(res, Layout{
 			Offset: pos,

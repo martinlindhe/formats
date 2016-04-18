@@ -1,10 +1,11 @@
-package parse
+package archive
 
 // STATUS borked
 
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/martinlindhe/formats/parse"
 	"io"
 	"os"
 )
@@ -22,7 +23,7 @@ const (
 	arjCrcMask       = 0xffffffff
 )
 
-func ARJ(file *os.File) (*ParsedLayout, error) {
+func ARJ(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isARJ(file) {
 		return nil, nil
@@ -32,73 +33,73 @@ func ARJ(file *os.File) (*ParsedLayout, error) {
 
 	// XXX rest of arj
 
-	return &ParsedLayout{
-		FileKind: Archive,
+	return &parse.ParsedLayout{
+		FileKind: parse.Archive,
 		Layout:   mainHeader}, err
 }
 
-func parseARJMainHeader(f *os.File) ([]Layout, error) {
+func parseARJMainHeader(f *os.File) ([]parse.Layout, error) {
 
 	pos, err := findARJHeader(f)
 	if err != nil {
 		return nil, err
 	}
 
-	mainHeaderLen := int64(35) // XXX hdr len?!
+	mainHeaderLen := int64(35) // XXX
 
-	f.Seek(mainHeaderLen, os.SEEK_SET)
-
-	archiveName, _, _ := zeroTerminatedASCII(f)
+	pos = mainHeaderLen
+	archiveName, _, _ := parse.ReadZeroTerminatedASCIIUntil(f, pos, 32)
 	archiveNameLen := int64(len(archiveName)) + 1 // including terminating zero
+	pos += archiveNameLen
 
-	comment, _, _ := zeroTerminatedASCII(f)
+	comment, _, _ := parse.ReadZeroTerminatedASCIIUntil(f, pos, 32)
 	commentLen := int64(len(comment)) + 1
 
-	chunk := Layout{
+	chunk := parse.Layout{
 		Offset: pos,
 		Length: mainHeaderLen + archiveNameLen + commentLen + 8,
-		Type:   Group,
+		Type:   parse.Group,
 		Info:   "main header",
-		Childs: []Layout{
+		Childs: []parse.Layout{
 			// XXX convert arjMainHeader into []Layout and add to Childs in return
-			{Offset: pos, Length: 2, Type: Uint16le, Info: "magic"},
-			{Offset: pos + 2, Length: 2, Type: Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
-			{Offset: pos + 4, Length: 1, Type: Uint8, Info: "size up to and including 'extra data'"},
-			{Offset: pos + 5, Length: 1, Type: Uint8, Info: "archiver version number"},
-			{Offset: pos + 6, Length: 1, Type: Uint8, Info: "minimum archiver version to extract"},
-			{Offset: pos + 7, Length: 1, Type: Uint8, Info: "host OS"},   // XXX map hostOSes
-			{Offset: pos + 8, Length: 1, Type: Uint8, Info: "arj flags"}, // XXX show bitfield
-			{Offset: pos + 9, Length: 1, Type: Uint8, Info: "security version"},
-			{Offset: pos + 10, Length: 1, Type: Uint8, Info: "file type"},        // XXX map fileTypes
-			{Offset: pos + 11, Length: 4, Type: Uint32le, Info: "created time"},  // XXX time in "msdos-format"
-			{Offset: pos + 15, Length: 4, Type: Uint32le, Info: "modified time"}, // XXX time in "msdos-format"
-			{Offset: pos + 19, Length: 4, Type: Uint32le, Info: "archive size for secured archive"},
-			{Offset: pos + 23, Length: 4, Type: Uint32le, Info: "security envelope file position"},
-			{Offset: pos + 27, Length: 4, Type: Uint32le, Info: "filespec position in filename"},
-			{Offset: pos + 31, Length: 2, Type: Uint16le, Info: "length in bytes of security envelope data"},
-			{Offset: pos + 33, Length: 1, Type: Uint8, Info: "encryption version"},
-			{Offset: pos + 34, Length: 1, Type: Uint8, Info: "last chapter"}, // XXX
+			{Offset: pos, Length: 2, Type: parse.Uint16le, Info: "magic"},
+			{Offset: pos + 2, Length: 2, Type: parse.Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
+			{Offset: pos + 4, Length: 1, Type: parse.Uint8, Info: "size up to and including 'extra data'"},
+			{Offset: pos + 5, Length: 1, Type: parse.Uint8, Info: "archiver version number"},
+			{Offset: pos + 6, Length: 1, Type: parse.Uint8, Info: "minimum archiver version to extract"},
+			{Offset: pos + 7, Length: 1, Type: parse.Uint8, Info: "host OS"},   // XXX map hostOSes
+			{Offset: pos + 8, Length: 1, Type: parse.Uint8, Info: "arj flags"}, // XXX show bitfield
+			{Offset: pos + 9, Length: 1, Type: parse.Uint8, Info: "security version"},
+			{Offset: pos + 10, Length: 1, Type: parse.Uint8, Info: "file type"},        // XXX map fileTypes
+			{Offset: pos + 11, Length: 4, Type: parse.Uint32le, Info: "created time"},  // XXX time in "msdos-format"
+			{Offset: pos + 15, Length: 4, Type: parse.Uint32le, Info: "modified time"}, // XXX time in "msdos-format"
+			{Offset: pos + 19, Length: 4, Type: parse.Uint32le, Info: "archive size for secured archive"},
+			{Offset: pos + 23, Length: 4, Type: parse.Uint32le, Info: "security envelope file position"},
+			{Offset: pos + 27, Length: 4, Type: parse.Uint32le, Info: "filespec position in filename"},
+			{Offset: pos + 31, Length: 2, Type: parse.Uint16le, Info: "length in bytes of security envelope data"},
+			{Offset: pos + 33, Length: 1, Type: parse.Uint8, Info: "encryption version"},
+			{Offset: pos + 34, Length: 1, Type: parse.Uint8, Info: "last chapter"}, // XXX
 		},
 	}
 	pos += mainHeaderLen
 
-	chunk.Childs = append(chunk.Childs, []Layout{
-		{Offset: pos, Length: archiveNameLen, Type: ASCIIZ, Info: "archive name"},
+	chunk.Childs = append(chunk.Childs, []parse.Layout{
+		{Offset: pos, Length: archiveNameLen, Type: parse.ASCIIZ, Info: "archive name"},
 	}...)
 	pos += archiveNameLen
 
-	chunk.Childs = append(chunk.Childs, []Layout{
-		{Offset: pos, Length: commentLen, Type: ASCIIZ, Info: "comment"},
+	chunk.Childs = append(chunk.Childs, []parse.Layout{
+		{Offset: pos, Length: commentLen, Type: parse.ASCIIZ, Info: "comment"},
 	}...)
 	pos += commentLen
 
-	chunk.Childs = append(chunk.Childs, []Layout{
-		{Offset: pos, Length: 4, Type: Uint32le, Info: "crc32"},
-		{Offset: pos + 4, Length: 4, Type: Uint32le, Info: "ext header size"},
+	chunk.Childs = append(chunk.Childs, []parse.Layout{
+		{Offset: pos, Length: 4, Type: parse.Uint32le, Info: "crc32"},
+		{Offset: pos + 4, Length: 4, Type: parse.Uint32le, Info: "ext header size"},
 	}...)
 	pos += 8
 
-	return []Layout{chunk}, nil
+	return []parse.Layout{chunk}, nil
 
 	/*
 	   XXX dont understand to parse 0x22, is 0 in both my samples

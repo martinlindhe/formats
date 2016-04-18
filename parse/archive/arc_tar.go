@@ -1,4 +1,4 @@
-package parse
+package archive
 
 /*
 public TarReader(FileStream fs) : base(fs)

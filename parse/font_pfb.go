@@ -18,7 +18,7 @@ func PFB(file *os.File) (*ParsedLayout, error) {
 func isPFB(file *os.File) bool {
 
 	// XXX just guessing ...
-	s, _, _ := readZeroTerminatedASCIIUntil(file, 6, 10)
+	s, _, _ := ReadZeroTerminatedASCIIUntil(file, 6, 10)
 	if s != "%!FontType" {
 		return false
 	}

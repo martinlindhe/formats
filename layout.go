@@ -2,25 +2,26 @@ package formats
 
 import (
 	"github.com/martinlindhe/formats/parse"
+	"github.com/martinlindhe/formats/parse/archive"
 	"os"
 )
 
 var (
 	parsers = map[string]func(*os.File) (*parse.ParsedLayout, error){
 		// archive
-		"7z":    parse.SEVENZIP,
-		"arj":   parse.ARJ,
-		"bzip2": parse.BZIP2,
-		"cab":   parse.CAB,
-		"gzip":  parse.GZIP,
-		"iso":   parse.ISO,
-		"lzma":  parse.LZMA,
-		"rar":   parse.RAR,
-		// "tar": parse.TAR, // XXX
-		"td2":    parse.TD2,
-		"winimg": parse.WINIMG,
-		"xz":     parse.XZ,
-		"zip":    parse.ZIP,
+		"7z":    archive.SEVENZIP,
+		"arj":   archive.ARJ,
+		"bzip2": archive.BZIP2,
+		"cab":   archive.CAB,
+		"gzip":  archive.GZIP,
+		"iso":   archive.ISO,
+		"lzma":  archive.LZMA,
+		"rar":   archive.RAR,
+		// "tar": archive.TAR, // XXX
+		"td2":    archive.TD2,
+		"winimg": archive.WINIMG,
+		"xz":     archive.XZ,
+		"zip":    archive.ZIP,
 
 		// image
 		"bmp":  parse.BMP,

@@ -87,7 +87,7 @@ func parsePNG(file *os.File) (*ParsedLayout, error) {
 				{Offset: pos + 4, Length: 4, Info: "type", Type: ASCII},
 			},
 		}
-		chunkLength, err := readUint32be(file, pos)
+		chunkLength, err := ReadUint32be(file, pos)
 		if err != nil {
 			if err == io.EOF {
 				break

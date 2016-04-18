@@ -50,16 +50,10 @@ func countInitiatedASCII(r io.Reader) (string, int, error) {
 	return s, readCnt, nil
 }
 
-func readZeroTerminatedASCIIUntil(file *os.File, offset int64, maxLen int) (string, int, error) {
+func ReadZeroTerminatedASCIIUntil(file *os.File, offset int64, maxLen int) (string, int, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	return zeroTerminatedASCIIUntil(file, maxLen)
-}
-
-func readZeroTerminatedASCII(file *os.File, offset int64) (string, int, error) {
-
-	file.Seek(offset, os.SEEK_SET)
-	return zeroTerminatedASCII(file)
 }
 
 // return string, bytes read, error
@@ -122,7 +116,7 @@ func readBytesFrom(file *os.File, offset int64, size int64) []byte {
 	return b
 }
 
-func readUint8(file *os.File, offset int64) (uint8, error) {
+func ReadUint8(file *os.File, offset int64) (uint8, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	var b uint8
@@ -130,7 +124,7 @@ func readUint8(file *os.File, offset int64) (uint8, error) {
 	return b, nil
 }
 
-func readUint16be(file *os.File, offset int64) (uint16, error) {
+func ReadUint16be(file *os.File, offset int64) (uint16, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	var b uint16
@@ -138,7 +132,7 @@ func readUint16be(file *os.File, offset int64) (uint16, error) {
 	return b, nil
 }
 
-func readUint16le(file *os.File, offset int64) (uint16, error) {
+func ReadUint16le(file *os.File, offset int64) (uint16, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	var b uint16
@@ -146,7 +140,7 @@ func readUint16le(file *os.File, offset int64) (uint16, error) {
 	return b, nil
 }
 
-func readUint32be(file *os.File, offset int64) (uint32, error) {
+func ReadUint32be(file *os.File, offset int64) (uint32, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	var b uint32
@@ -154,7 +148,7 @@ func readUint32be(file *os.File, offset int64) (uint32, error) {
 	return b, nil
 }
 
-func readUint32le(file *os.File, offset int64) (uint32, error) {
+func ReadUint32le(file *os.File, offset int64) (uint32, error) {
 
 	file.Seek(offset, os.SEEK_SET)
 	var b uint32

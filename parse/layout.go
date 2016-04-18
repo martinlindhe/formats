@@ -294,7 +294,7 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 	panic("XXX fixme handle bit shifts stuff and tests")
 }
 
-func (pl *ParsedLayout) readUint32leFromInfo(file *os.File, info string) (uint32, error) {
+func (pl *ParsedLayout) ReadUint32leFromInfo(file *os.File, info string) (uint32, error) {
 
 	layout := pl.findInfoField(info)
 	if layout == nil {

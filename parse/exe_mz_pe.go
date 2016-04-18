@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	optHeaderMainLen = int64(96)
+
 	peTypes = map[uint16]string{
 		0x10b: "PE32",
 		0x20b: "PE32+ (64-bit)",
@@ -42,10 +44,10 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]Layout, error) {
 
 	peHeaderLen := int64(24)
 	sectionHeaderLen := int64(40)
-	optHeaderSize, _ := readUint16le(file, pos+20)
-	numberOfSections, _ := readUint16le(file, pos+6)
+	optHeaderSize, _ := ReadUint16le(file, pos+20)
+	numberOfSections, _ := ReadUint16le(file, pos+6)
 
-	machine, _ := readUint16le(file, pos+4)
+	machine, _ := ReadUint16le(file, pos+4)
 
 	machineName := "?"
 	if val, ok := peMachines[machine]; ok {
@@ -84,9 +86,9 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]Layout, error) {
 
 	for i := 0; i < int(numberOfSections); i++ {
 
-		sectionName, _, _ := readZeroTerminatedASCII(file, pos)
-		rawDataSize, _ := readUint32le(file, pos+16)
-		rawDataOffset, _ := readUint32le(file, pos+20)
+		sectionName, _, _ := ReadZeroTerminatedASCIIUntil(file, pos, 256)
+		rawDataSize, _ := ReadUint32le(file, pos+16)
+		rawDataOffset, _ := ReadUint32le(file, pos+20)
 
 		res = append(res, Layout{
 			Offset: int64(rawDataOffset),
@@ -131,21 +133,19 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]Layout, error) {
 
 func parsePEOptHeader(file *os.File, offset int64, size uint16) Layout {
 
-	typeId, _ := readUint16le(file, offset)
+	typeId, _ := ReadUint16le(file, offset)
 	typeName := "?"
 	if val, ok := peTypes[typeId]; ok {
 		typeName = val
 	}
 
-	subsystem, _ := readUint16le(file, offset+68)
+	subsystem, _ := ReadUint16le(file, offset+68)
 	subsystemName := "?"
 	if val, ok := peSubsystems[subsystem]; ok {
 		subsystemName = val
 	}
 
-	numberOfRva, _ := readUint32le(file, offset+92)
-
-	optHeaderMainLen := int64(96)
+	numberOfRva, _ := ReadUint32le(file, offset+92)
 
 	optHeader := Layout{
 		Offset: offset,

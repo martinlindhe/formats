@@ -4,6 +4,8 @@ import (
 	"os"
 )
 
+// TODO EXEPACK: http://www.shikadi.net/moddingwiki/Microsoft_EXEPACK
+
 func findCustomDOSHeaders(file *os.File) *Layout {
 
 	pos := int64(0x1c)
@@ -45,7 +47,7 @@ func findCustomDOSHeaders(file *os.File) *Layout {
 		// "LZ91" = v 0.91
 	}
 
-	u32tok, _ := readUint32le(file, 0x1c)
+	u32tok, _ := ReadUint32le(file, 0x1c)
 	if u32tok == 0x018A0001 {
 
 		panic("TOPSPEED")
@@ -62,10 +64,8 @@ func findCustomDOSHeaders(file *os.File) *Layout {
 		*/
 	}
 
-	// TODO EXEPACK: http://www.shikadi.net/moddingwiki/Microsoft_EXEPACK
-
-	tlink1, _ := readUint16le(file, pos)
-	tlinkId, _ := readUint8(file, pos+2)
+	tlink1, _ := ReadUint16le(file, pos)
+	tlinkId, _ := ReadUint8(file, pos+2)
 	if tlink1 == 0x1 && tlinkId == 0xfb {
 		return &Layout{
 			Offset: pos,

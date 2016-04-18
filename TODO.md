@@ -1,3 +1,11 @@
+# TODO cmd/XXX
+
+    new cmd that lists all files recursively from given dir, and show match/unknown...
+
+    scan windows/macos/linux installs with it, experiment
+
+
+
 # TODO cmd/formats
 
 basic detection of the following formats:

@@ -239,7 +239,7 @@ func (pl *ParsedLayout) PrettyPrint() string {
 	return res
 }
 
-func (pl *ParsedLayout) updateLabel(label string, newLabel string) {
+func (pl *ParsedLayout) UpdateLabel(label string, newLabel string) {
 
 	for layoutIdx, layout := range pl.Layout {
 		if layout.Info == label {
@@ -315,7 +315,7 @@ func (pl *ParsedLayout) readBytesFromInfo(file *os.File, info string) ([]byte, e
 		return nil, fmt.Errorf("ERROR didnt find field %v", info)
 	}
 
-	return readBytesFrom(file, layout.Offset, layout.Length), nil
+	return ReadBytesFrom(file, layout.Offset, layout.Length), nil
 }
 
 type ByLayout []Layout

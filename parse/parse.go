@@ -107,7 +107,7 @@ func readCString(file *os.File, offset int64) string {
 	return s
 }
 
-func readBytesFrom(file *os.File, offset int64, size int64) []byte {
+func ReadBytesFrom(file *os.File, offset int64, size int64) []byte {
 
 	file.Seek(offset, os.SEEK_SET)
 
@@ -156,7 +156,7 @@ func ReadUint32le(file *os.File, offset int64) (uint32, error) {
 	return b, nil
 }
 
-func fileSize(file *os.File) int64 {
+func FileSize(file *os.File) int64 {
 
 	fi, err := file.Stat()
 	if err != nil {

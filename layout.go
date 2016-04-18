@@ -3,14 +3,19 @@ package formats
 import (
 	"github.com/martinlindhe/formats/parse"
 	"github.com/martinlindhe/formats/parse/archive"
-	"github.com/martinlindhe/formats/parse/av"
+	"github.com/martinlindhe/formats/parse/av" // a/v
 	"github.com/martinlindhe/formats/parse/bin"
+	"github.com/martinlindhe/formats/parse/doc"
+	"github.com/martinlindhe/formats/parse/exe"
+	"github.com/martinlindhe/formats/parse/font"
+	"github.com/martinlindhe/formats/parse/image"
+	"github.com/martinlindhe/formats/parse/macos"
+	"github.com/martinlindhe/formats/parse/windows"
 	"os"
 )
 
 var (
 	parsers = map[string]func(*os.File) (*parse.ParsedLayout, error){
-		// archive
 		"7z":    archive.SEVENZIP,
 		"arj":   archive.ARJ,
 		"bzip2": archive.BZIP2,
@@ -20,73 +25,57 @@ var (
 		"lzma":  archive.LZMA,
 		"rar":   archive.RAR,
 		// "tar": archive.TAR, // XXX
-		"td2":    archive.TD2,
-		"winimg": archive.WINIMG,
-		"xz":     archive.XZ,
-		"zip":    archive.ZIP,
-
-		// a/v
-		"aiff": av.AIFF,
-		"asf":  av.ASF,
-		"caf":  av.CAF,
-		"flac": av.FLAC,
-		"flv":  av.FLV,
-		"midi": av.MIDI,
-		"mkv":  av.MKV,
-		"mp3":  av.MP3,
-		"mp4":  av.MP4,
-		"ogg":  av.OGG,
-		"riff": av.RIFF,
-
-		// bin
-		"gba-rom": bin.GBAROM,
-		"n64-rom": bin.N64ROM,
-		"sqlite3": bin.SQLITE3,
-		"pdb":     bin.PDB, // visual studio debug info
-
-		// doc
-		"chm": parse.CHM,
-		"hlp": parse.HLP,
-		"pdf": parse.PDF,
-		"rtf": parse.RTF,
-		"wri": parse.WRI,
-
-		// font
-		"eot":   parse.EOT,
-		"otf":   parse.OTF,
-		"pfb":   parse.PFB,
-		"ttc":   parse.TTC,
-		"ttf":   parse.TTF,
-		"woff":  parse.WOFF,
-		"woff2": parse.WOFF2,
-
-		// exe
-		"dex":        parse.DEX,
-		"elf":        parse.ELF,
-		"java class": parse.JAVA,
-		"lua":        parse.LUA,
-		"macho":      parse.MachO,
-		"mz":         parse.MZ,
-		"python":     parse.PYTHON,
-		"swf":        parse.SWF,
-		"vbe":        parse.VBE,
-
-		// image
-		"bmp":  parse.BMP,
-		"gif":  parse.GIF,
-		"ico":  parse.ICO,
-		"jpeg": parse.JPEG,
-		"pcx":  parse.PCX,
-		"png":  parse.PNG,
-		"tiff": parse.TIFF,
-
-		// os-windows
-		"pif":    parse.PIF,
-		"lnk":    parse.LNK,
-		"ole-cf": parse.OLECF,
-
-		// os-macos
-		"ds_store": parse.DSSTORE,
+		"td2":      archive.TD2,
+		"winimg":   archive.WINIMG,
+		"xz":       archive.XZ,
+		"zip":      archive.ZIP,
+		"aiff":     av.AIFF,
+		"asf":      av.ASF,
+		"caf":      av.CAF,
+		"flac":     av.FLAC,
+		"flv":      av.FLV,
+		"midi":     av.MIDI,
+		"mkv":      av.MKV,
+		"mp3":      av.MP3,
+		"mp4":      av.MP4,
+		"ogg":      av.OGG,
+		"riff":     av.RIFF,
+		"gba-rom":  bin.GBAROM,
+		"n64-rom":  bin.N64ROM,
+		"sqlite3":  bin.SQLITE3,
+		"pdb":      bin.PDB, // visual studio debug info
+		"chm":      doc.CHM,
+		"hlp":      doc.HLP,
+		"pdf":      doc.PDF,
+		"rtf":      doc.RTF,
+		"wri":      doc.WRI,
+		"dex":      exe.DEX,
+		"elf":      exe.ELF,
+		"java":     exe.JAVA, // java class
+		"lua":      exe.LUA,
+		"macho":    exe.MachO,
+		"mz":       exe.MZ,
+		"python":   exe.PYTHON,
+		"swf":      exe.SWF,
+		"vbe":      exe.VBE,
+		"eot":      font.EOT,
+		"otf":      font.OTF,
+		"pfb":      font.PFB,
+		"ttc":      font.TTC,
+		"ttf":      font.TTF,
+		"woff":     font.WOFF,
+		"woff2":    font.WOFF2,
+		"bmp":      image.BMP,
+		"gif":      image.GIF,
+		"ico":      image.ICO,
+		"jpeg":     image.JPEG,
+		"pcx":      image.PCX,
+		"png":      image.PNG,
+		"tiff":     image.TIFF,
+		"ds_store": macos.DSSTORE,
+		"pif":      windows.PIF,
+		"lnk":      windows.LNK,
+		"ole-cf":   windows.OLECF,
 	}
 )
 

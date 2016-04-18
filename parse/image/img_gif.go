@@ -170,7 +170,6 @@ func gifImageDescriptor(file *os.File, pos int64) *parse.Layout {
 			{Offset: pos + 3, Length: 2, Info: "image top", Type: parse.Uint16le},
 			{Offset: pos + 5, Length: 2, Info: "image width", Type: parse.Uint16le},
 			{Offset: pos + 7, Length: 2, Info: "image height", Type: parse.Uint16le},
-
 			{Offset: pos + 9, Length: 1, Info: "packed #3", Type: parse.Uint8, Masks: []parse.Mask{
 				{Low: 0, Length: 2, Info: "size of local color table"},
 				{Low: 3, Length: 2, Info: "reserved"},
@@ -357,20 +356,20 @@ func gifLogicalDescriptor(file *os.File) parse.Layout {
 	}
 }
 
-func gifImageData(file *os.File, baseOffset int64) (*parse.Layout, error) {
+func gifImageData(file *os.File, pos int64) (*parse.Layout, error) {
 
 	// XXX need to decode first bytes of lzw stream to decode stream length
 
-	file.Seek(baseOffset+1, os.SEEK_SET)
+	file.Seek(pos+1, os.SEEK_SET)
 
 	length := int64(1)
 	childs := []parse.Layout{{
-		Offset: baseOffset,
+		Offset: pos,
 		Length: 1,
 		Info:   "lzw code size",
 		Type:   parse.Uint8}}
 
-	lzwSubBlocks, err := gifSubBlocks(file, baseOffset+1)
+	lzwSubBlocks, err := gifSubBlocks(file, pos+1)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +379,7 @@ func gifImageData(file *os.File, baseOffset int64) (*parse.Layout, error) {
 	}
 
 	res := parse.Layout{
-		Offset: baseOffset,
+		Offset: pos,
 		Length: length,
 		Info:   "image data",
 		Type:   parse.Group,
@@ -390,11 +389,11 @@ func gifImageData(file *os.File, baseOffset int64) (*parse.Layout, error) {
 	return &res, nil
 }
 
-func gifSubBlocks(file *os.File, baseOffset int64) ([]parse.Layout, error) {
+func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	length := int64(0)
 	childs := []parse.Layout{}
-	file.Seek(baseOffset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 
 	for {
 		var follows byte // number of bytes follows
@@ -407,7 +406,7 @@ func gifSubBlocks(file *os.File, baseOffset int64) ([]parse.Layout, error) {
 		}
 
 		childs = append(childs, parse.Layout{
-			Offset: baseOffset + length,
+			Offset: pos + length,
 			Length: 1,
 			Info:   "block length",
 			Type:   parse.Uint8})
@@ -418,13 +417,13 @@ func gifSubBlocks(file *os.File, baseOffset int64) ([]parse.Layout, error) {
 		}
 
 		childs = append(childs, parse.Layout{
-			Offset: baseOffset + length,
+			Offset: pos + length,
 			Length: int64(follows),
 			Info:   "block",
 			Type:   parse.Uint8})
 
 		length += int64(follows)
-		file.Seek(baseOffset+length, os.SEEK_SET)
+		file.Seek(pos+length, os.SEEK_SET)
 	}
 	return childs, nil
 }

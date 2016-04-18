@@ -209,12 +209,12 @@ func parseBMPVersion4Header(file *os.File, pos int64) []parse.Layout {
 	}
 }
 
-func parseBMPVersion5Header(file *os.File, baseOffset int64) []parse.Layout {
+func parseBMPVersion5Header(file *os.File, pos int64) []parse.Layout {
 
 	return []parse.Layout{
-		{Offset: baseOffset, Length: 4, Type: parse.Uint32le, Info: "intent"},
-		{Offset: baseOffset + 4, Length: 4, Type: parse.Uint32le, Info: "profile data"},
-		{Offset: baseOffset + 8, Length: 4, Type: parse.Uint32le, Info: "profile size"},
-		{Offset: baseOffset + 12, Length: 4, Type: parse.Uint32le, Info: "reserved"},
+		{Offset: pos, Length: 4, Type: parse.Uint32le, Info: "intent"},
+		{Offset: pos + 4, Length: 4, Type: parse.Uint32le, Info: "profile data"},
+		{Offset: pos + 8, Length: 4, Type: parse.Uint32le, Info: "profile size"},
+		{Offset: pos + 12, Length: 4, Type: parse.Uint32le, Info: "reserved"},
 	}
 }

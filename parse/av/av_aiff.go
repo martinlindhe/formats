@@ -1,4 +1,4 @@
-package parse
+package av
 
 // Audio Interchange File Format (AIFF)
 // Developed by Apple, popular on Mac OS in the 90's
@@ -6,10 +6,11 @@ package parse
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func AIFF(file *os.File) (*ParsedLayout, error) {
+func AIFF(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isAIFF(file) {
 		return nil, nil
@@ -34,18 +35,18 @@ func isAIFF(file *os.File) bool {
 	return true
 }
 
-func parseAIFF(file *os.File) (*ParsedLayout, error) {
+func parseAIFF(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: AudioVideo,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.AudioVideo,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: Bytes},
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
 			}}}}
 
 	return &res, nil

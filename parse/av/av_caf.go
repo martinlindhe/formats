@@ -1,4 +1,4 @@
-package parse
+package av
 
 // STATUS: 1%
 // Core Audio Format (CAF)
@@ -6,10 +6,11 @@ package parse
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func CAF(file *os.File) (*ParsedLayout, error) {
+func CAF(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isCAF(file) {
 		return nil, nil
@@ -32,18 +33,18 @@ func isCAF(file *os.File) bool {
 	return true
 }
 
-func parseCAF(file *os.File) (*ParsedLayout, error) {
+func parseCAF(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: AudioVideo,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.AudioVideo,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: Bytes},
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
 			}}}}
 
 	return &res, nil

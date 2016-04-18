@@ -3,6 +3,7 @@ package formats
 import (
 	"github.com/martinlindhe/formats/parse"
 	"github.com/martinlindhe/formats/parse/archive"
+	"github.com/martinlindhe/formats/parse/av"
 	"os"
 )
 
@@ -33,17 +34,17 @@ var (
 		"tiff": parse.TIFF,
 
 		// a/v
-		"aiff": parse.AIFF,
-		"asf":  parse.ASF,
-		"caf":  parse.CAF,
-		"flac": parse.FLAC,
-		"flv":  parse.FLV,
-		"midi": parse.MIDI,
-		"mkv":  parse.MKV,
-		"mp3":  parse.MP3,
-		"mp4":  parse.MP4,
-		"ogg":  parse.OGG,
-		"riff": parse.RIFF,
+		"aiff": av.AIFF,
+		"asf":  av.ASF,
+		"caf":  av.CAF,
+		"flac": av.FLAC,
+		"flv":  av.FLV,
+		"midi": av.MIDI,
+		"mkv":  av.MKV,
+		"mp3":  av.MP3,
+		"mp4":  av.MP4,
+		"ogg":  av.OGG,
+		"riff": av.RIFF,
 
 		// doc
 		"chm": parse.CHM,

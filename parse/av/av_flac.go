@@ -1,13 +1,14 @@
-package parse
+package av
 
 // STATUS: 1%
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func FLAC(file *os.File) (*ParsedLayout, error) {
+func FLAC(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isFLAC(file) {
 		return nil, nil
@@ -30,18 +31,18 @@ func isFLAC(file *os.File) bool {
 	return true
 }
 
-func parseFLAC(file *os.File) (*ParsedLayout, error) {
+func parseFLAC(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: AudioVideo,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.AudioVideo,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: Bytes},
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
 			}}}}
 
 	return &res, nil

@@ -1,4 +1,4 @@
-package parse
+package av
 
 // STATUS: 1%
 // ASF container (.asf; .wmv; .wma)
@@ -6,6 +6,7 @@ package parse
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
@@ -24,7 +25,7 @@ var (
 		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
 )
 
-func ASF(file *os.File) (*ParsedLayout, error) {
+func ASF(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isASF(file) {
 		return nil, nil
@@ -34,14 +35,31 @@ func ASF(file *os.File) (*ParsedLayout, error) {
 
 func isASF(file *os.File) bool {
 
-	if !HasASFSignature(file, 0, ObjectSignature) {
+	if !hasASFSignature(file, 0, ObjectSignature) {
 		return false
 	}
 
 	return true
 }
 
-func HasASFSignature(file *os.File, offset int64, sig []byte) bool {
+func parseASF(file *os.File) (*parse.ParsedLayout, error) {
+
+	pos := int64(0)
+	res := parse.ParsedLayout{
+		FileKind: parse.AudioVideo,
+		Layout: []parse.Layout{{
+			Offset: pos,
+			Length: 16, // XXX
+			Info:   "header",
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 16, Info: "magic", Type: parse.Bytes},
+			}}}}
+
+	return &res, nil
+}
+
+func hasASFSignature(file *os.File, offset int64, sig []byte) bool {
 
 	file.Seek(offset, os.SEEK_SET)
 	var b [16]byte
@@ -56,23 +74,6 @@ func HasASFSignature(file *os.File, offset int64, sig []byte) bool {
 	}
 
 	return true
-}
-
-func parseASF(file *os.File) (*ParsedLayout, error) {
-
-	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: AudioVideo,
-		Layout: []Layout{{
-			Offset: pos,
-			Length: 16, // XXX
-			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 16, Info: "magic", Type: Bytes},
-			}}}}
-
-	return &res, nil
 }
 
 /*

@@ -1,13 +1,14 @@
-package parse
+package av
 
 // STATUS: 1%
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func MKV(file *os.File) (*ParsedLayout, error) {
+func MKV(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isMKV(file) {
 		return nil, nil
@@ -30,18 +31,18 @@ func isMKV(file *os.File) bool {
 	return true
 }
 
-func parseMKV(file *os.File) (*ParsedLayout, error) {
+func parseMKV(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: AudioVideo,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.AudioVideo,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: ASCII},
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
 			}}}}
 
 	return &res, nil

@@ -1,10 +1,11 @@
-package parse
+package bin
 
 // Gameboy Advance ROM image
 // STATUS: 1%
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
@@ -25,7 +26,7 @@ var (
 		0xD6, 0x25, 0xE4, 0x8B, 0x38, 0x0A, 0xAC, 0x72, 0x21, 0xD4, 0xF8, 0x07}
 )
 
-func GBAROM(file *os.File) (*ParsedLayout, error) {
+func GBAROM(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isGBAROM(file) {
 		return nil, nil
@@ -39,6 +40,35 @@ func isGBAROM(file *os.File) bool {
 		return false
 	}
 	return true
+}
+
+func parseGBAROM(file *os.File) (*parse.ParsedLayout, error) {
+
+	pos := int64(0)
+	res := parse.ParsedLayout{
+		FileKind: parse.Binary,
+		Layout: []parse.Layout{{
+			Offset: pos,
+			Length: 192, // XXX
+			Info:   "header",
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				// 000h    4     ROM Entry Point  (32bit ARM branch opcode, eg. "B rom_start")
+				{Offset: pos, Length: 4, Info: "entry point", Type: parse.Uint32le}, // XXX le/be
+				{Offset: pos + 4, Length: 156, Info: "nintendo logo", Type: parse.Bytes},
+				{Offset: pos + 160, Length: 12, Info: "game title", Type: parse.ASCIIZ},
+				{Offset: pos + 172, Length: 4, Info: "game code", Type: parse.ASCII},
+				{Offset: pos + 176, Length: 2, Info: "maker code", Type: parse.ASCII},
+				{Offset: pos + 178, Length: 1, Info: "reserved (0x96)", Type: parse.Uint8},
+				{Offset: pos + 179, Length: 1, Info: "main unit code", Type: parse.Uint8}, // XXX = 0 for all gba models?!?!
+				{Offset: pos + 180, Length: 1, Info: "device type", Type: parse.Uint8},
+				{Offset: pos + 181, Length: 7, Info: "reserved area", Type: parse.Bytes},
+				{Offset: pos + 188, Length: 1, Info: "software version", Type: parse.Uint8},
+				{Offset: pos + 189, Length: 1, Info: "checksum", Type: parse.Uint8},
+				{Offset: pos + 190, Length: 2, Info: "reserved 2", Type: parse.Bytes},
+			}}}}
+
+	return &res, nil
 }
 
 func hasGBALogo(file *os.File) bool {
@@ -55,33 +85,4 @@ func hasGBALogo(file *os.File) bool {
 		}
 	}
 	return true
-}
-
-func parseGBAROM(file *os.File) (*ParsedLayout, error) {
-
-	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: Binary,
-		Layout: []Layout{{
-			Offset: pos,
-			Length: 192, // XXX
-			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				// 000h    4     ROM Entry Point  (32bit ARM branch opcode, eg. "B rom_start")
-				{Offset: pos, Length: 4, Info: "entry point", Type: Uint32le}, // XXX le/be
-				{Offset: pos + 4, Length: 156, Info: "nintendo logo", Type: Bytes},
-				{Offset: pos + 160, Length: 12, Info: "game title", Type: ASCIIZ},
-				{Offset: pos + 172, Length: 4, Info: "game code", Type: ASCII},
-				{Offset: pos + 176, Length: 2, Info: "maker code", Type: ASCII},
-				{Offset: pos + 178, Length: 1, Info: "reserved (0x96)", Type: Uint8},
-				{Offset: pos + 179, Length: 1, Info: "main unit code", Type: Uint8}, // XXX = 0 for all gba models?!?!
-				{Offset: pos + 180, Length: 1, Info: "device type", Type: Uint8},
-				{Offset: pos + 181, Length: 7, Info: "reserved area", Type: Bytes},
-				{Offset: pos + 188, Length: 1, Info: "software version", Type: Uint8},
-				{Offset: pos + 189, Length: 1, Info: "checksum", Type: Uint8},
-				{Offset: pos + 190, Length: 2, Info: "reserved 2", Type: Bytes},
-			}}}}
-
-	return &res, nil
 }

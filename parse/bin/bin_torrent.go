@@ -1,0 +1,3 @@
+package bin
+
+// XXX

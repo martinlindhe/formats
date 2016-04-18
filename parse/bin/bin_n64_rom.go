@@ -1,14 +1,15 @@
-package parse
+package bin
 
 // Nintendo 64 ROM image
 // STATUS: 1%
 
 import (
 	"encoding/binary"
+	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
-func N64ROM(file *os.File) (*ParsedLayout, error) {
+func N64ROM(file *os.File) (*parse.ParsedLayout, error) {
 
 	if !isN64ROM(file) {
 		return nil, nil
@@ -29,18 +30,18 @@ func isN64ROM(file *os.File) bool {
 	return true
 }
 
-func parseN64ROM(file *os.File) (*ParsedLayout, error) {
+func parseN64ROM(file *os.File) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := ParsedLayout{
-		FileKind: Binary,
-		Layout: []Layout{{
+	res := parse.ParsedLayout{
+		FileKind: parse.Binary,
+		Layout: []parse.Layout{{
 			Offset: pos,
 			Length: 4, // XXX
 			Info:   "header",
-			Type:   Group,
-			Childs: []Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: Uint32le}, // XXX le/be
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le}, // XXX le/be
 			}}}}
 
 	return &res, nil

@@ -1,4 +1,4 @@
-package parse
+package bin
 
 /*
 public IntelMicrocode(FileStream fs) : base(fs)

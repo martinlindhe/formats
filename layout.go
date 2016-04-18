@@ -4,6 +4,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 	"github.com/martinlindhe/formats/parse/archive"
 	"github.com/martinlindhe/formats/parse/av"
+	"github.com/martinlindhe/formats/parse/bin"
 	"os"
 )
 
@@ -24,15 +25,6 @@ var (
 		"xz":     archive.XZ,
 		"zip":    archive.ZIP,
 
-		// image
-		"bmp":  parse.BMP,
-		"gif":  parse.GIF,
-		"ico":  parse.ICO,
-		"jpeg": parse.JPEG,
-		"pcx":  parse.PCX,
-		"png":  parse.PNG,
-		"tiff": parse.TIFF,
-
 		// a/v
 		"aiff": av.AIFF,
 		"asf":  av.ASF,
@@ -45,6 +37,12 @@ var (
 		"mp4":  av.MP4,
 		"ogg":  av.OGG,
 		"riff": av.RIFF,
+
+		// bin
+		"gba-rom": bin.GBAROM,
+		"n64-rom": bin.N64ROM,
+		"sqlite3": bin.SQLITE3,
+		"pdb":     bin.PDB, // visual studio debug info
 
 		// doc
 		"chm": parse.CHM,
@@ -73,11 +71,14 @@ var (
 		"swf":        parse.SWF,
 		"vbe":        parse.VBE,
 
-		// bin
-		"gba-rom": parse.GBAROM,
-		"n64-rom": parse.N64ROM,
-		"sqlite3": parse.SQLITE3,
-		"pdb":     parse.PDB, // visual studio debug info
+		// image
+		"bmp":  parse.BMP,
+		"gif":  parse.GIF,
+		"ico":  parse.ICO,
+		"jpeg": parse.JPEG,
+		"pcx":  parse.PCX,
+		"png":  parse.PNG,
+		"tiff": parse.TIFF,
 
 		// os-windows
 		"pif":    parse.PIF,

@@ -1,4 +1,4 @@
-package parse
+package bin
 
 /*
 public BsonReader(FileStream fs) : base(fs)

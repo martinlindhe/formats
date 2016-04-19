@@ -81,8 +81,7 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	globalColorTableFlag := pl.DecodeBitfieldFromInfo(file, "global color table flag")
 	if globalColorTableFlag != 0 {
 		if globalColorTableFlag != 1 {
-			fmt.Println(globalColorTableFlag)
-			panic("res is odd!")
+			fmt.Println("warning: res is odd!", globalColorTableFlag)
 		}
 		sizeOfGCT := pl.DecodeBitfieldFromInfo(file, "size of global color table")
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {

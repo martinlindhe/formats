@@ -215,7 +215,7 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *parse.Layout
 
 				entryTableLen += 6
 				if int3f != 0x3fcd {
-					panic("PARSE ERROR in NE - entry points. int3f == " + fmt.Sprintf("%04x", int3f))
+					fmt.Println("PARSE ERROR in NE - entry points. int3f == " + fmt.Sprintf("%04x", int3f))
 				}
 
 				id := fmt.Sprintf("%d", i)
@@ -233,7 +233,7 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *parse.Layout
 				offset += 6
 
 			case 0xfe:
-				panic("  TODO   refer to constant defined within module")
+				// panic("  TODO   refer to constant defined within module")
 				// struct entry_tab_fixed_s
 				// unsigned char flags;
 				// unsigned short offset;

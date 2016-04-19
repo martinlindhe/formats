@@ -1,10 +1,9 @@
 package image
 
 // XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
-// XXX samples/gif/gif_87a_001.gif is broken!
+// XXX most files ok
 
 // STATUS: 80%
-// XXX gif89 most files ok, gif87 broken!
 
 import (
 	"encoding/binary"
@@ -28,14 +27,14 @@ var (
 	}
 )
 
-// Section indicators.
+// section indicators
 const (
 	sExtension       = 0x21
 	sImageDescriptor = 0x2C
 	sTrailer         = 0x3B
 )
 
-// Extensions.
+// extensions
 const (
 	eText           = 0x01 // Plain Text
 	eGraphicControl = 0xF9 // Graphic Control
@@ -70,28 +69,29 @@ func isGIF(hdr *[0xffff]byte) bool {
 
 func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
+	offset := int64(0)
 	pl.FileKind = parse.Image
 
-	pl.Layout = append(pl.Layout, gifHeader(file))
-	pl.Layout = append(pl.Layout, gifLogicalDescriptor(file))
+	header := gifHeader(file)
+	pl.Layout = append(pl.Layout, header)
+	offset += header.Length
 
-	// XXX 1. make test using a specific file, with known PACKED value, and use that to test the decode stuff!
+	logicalDesc := gifLogicalDescriptor(file)
+	pl.Layout = append(pl.Layout, logicalDesc)
+	offset += logicalDesc.Length
 
-	// XXX hack... decodeBitfieldFromInfo should return 1 but returns 2 now for soem reason?!
 	globalColorTableFlag := pl.DecodeBitfieldFromInfo(file, "global color table flag")
 	if globalColorTableFlag != 0 {
-		if globalColorTableFlag != 1 {
-			fmt.Println("warning: res is odd!", globalColorTableFlag)
-		}
-		sizeOfGCT := pl.DecodeBitfieldFromInfo(file, "size of global color table")
+		sizeOfGCT := pl.DecodeBitfieldFromInfo(file, "global color table size")
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
 			pl.Layout = append(pl.Layout, gifGlobalColorTable(file, gctByteLen))
+			offset += gctByteLen
 		}
 	}
 
 	for {
 
-		offset, _ := file.Seek(0, os.SEEK_CUR)
+		file.Seek(offset, os.SEEK_SET)
 
 		var b byte
 		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
@@ -109,26 +109,30 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 				return nil, err
 			}
 			pl.Layout = append(pl.Layout, *gfxExt)
+			offset += gfxExt.Length
 
 		case sImageDescriptor:
 			imgDescriptor := gifImageDescriptor(file, offset)
 			if imgDescriptor != nil {
 				pl.Layout = append(pl.Layout, *imgDescriptor)
+				offset += imgDescriptor.Length
 			}
 			if pl.DecodeBitfieldFromInfo(file, "local color table flag") == 1 {
 				// XXX this is untested due to lack of sample with a local color table
 				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "local color table size")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
-					localTbl := gifLocalColorTable(file, offset+imgDescriptorLen, lctByteLen)
+					localTbl := gifLocalColorTable(file, offset, lctByteLen)
 					pl.Layout = append(pl.Layout, localTbl)
+					offset += localTbl.Length
 				}
 			}
 
-			imgData, err := gifImageData(file, offset+imgDescriptorLen)
+			imgData, err := gifImageData(file, offset)
 			if err != nil {
 				return nil, err
 			}
 			pl.Layout = append(pl.Layout, *imgData)
+			offset += imgData.Length
 
 		case sTrailer:
 			pl.Layout = append(pl.Layout, gifTrailer(file, offset))

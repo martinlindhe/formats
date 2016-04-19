@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LNK(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func LNK(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isLNK(&hdr) {
+	if !isLNK(&c.Header) {
 		return nil, nil
 	}
-	return parseLNK(file, pl)
+	return parseLNK(c.File, c.ParsedLayout)
 }
 
 func isLNK(hdr *[0xffff]byte) bool {

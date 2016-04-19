@@ -6,12 +6,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LZMA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func LZMA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isLZMA(&hdr) {
+	if !isLZMA(&c.Header) {
 		return nil, nil
 	}
-	return parseLZMA(file, pl)
+	return parseLZMA(c.File, c.ParsedLayout)
 }
 
 func isLZMA(hdr *[0xffff]byte) bool {

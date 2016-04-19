@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	parsers = map[string]func(*os.File, [0xffff]byte, parse.ParsedLayout) (*parse.ParsedLayout, error){
+	parsers = map[string]func(*parse.ParseChecker) (*parse.ParsedLayout, error){
 		"7z":       archive.SevenZIP,
 		"arj":      archive.ARJ,
 		"bzip2":    archive.BZIP2,
@@ -103,18 +103,21 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 		return nil, err
 	}
 
-	var fixedB [0xffff]byte
-	copy(fixedB[:], b[:len])
+	layout := parse.ParsedLayout{
+		FileName: fileGetName(file),
+		FileSize: fileSize}
+
+	checker := parse.ParseChecker{
+		File:         file,
+		ParsedLayout: layout}
+
+	copy(checker.Header[:], b[:len])
 
 	for name, parser := range parsers {
 
-		layout := parse.ParsedLayout{
-			FormatName: name,
-			FileName:   fileGetName(file),
-			FileSize:   fileSize}
-
-		pl, err := parser(file, fixedB, layout)
+		pl, err := parser(&checker)
 		if pl != nil {
+			pl.FormatName = name
 			return pl, err
 		}
 	}

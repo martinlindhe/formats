@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func TTF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isTTF(&hdr) {
+	if !isTTF(&c.Header) {
 		return nil, nil
 	}
-	return parseTTF(file, pl)
+	return parseTTF(c.File, c.ParsedLayout)
 }
 
 func isTTF(hdr *[0xffff]byte) bool {

@@ -27,12 +27,12 @@ var (
 		0xD6, 0x25, 0xE4, 0x8B, 0x38, 0x0A, 0xAC, 0x72, 0x21, 0xD4, 0xF8, 0x07}
 )
 
-func GBAROM(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func GBAROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGBAROM(file) {
+	if !isGBAROM(c.File) {
 		return nil, nil
 	}
-	return parseGBAROM(file, pl)
+	return parseGBAROM(c.File, c.ParsedLayout)
 }
 
 func isGBAROM(file *os.File) bool {

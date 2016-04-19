@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func PFB(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func PFB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPFB(file) {
+	if !isPFB(c.File) {
 		return nil, nil
 	}
-	return parsePFB(file, pl)
+	return parsePFB(c.File, c.ParsedLayout)
 }
 
 func isPFB(file *os.File) bool {

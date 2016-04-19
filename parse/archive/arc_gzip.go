@@ -7,12 +7,12 @@ import (
 	"os"
 )
 
-func GZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func GZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGZIP(&hdr) {
+	if !isGZIP(&c.Header) {
 		return nil, nil
 	}
-	return parseGZIP(file, pl)
+	return parseGZIP(c.File, c.ParsedLayout)
 }
 
 func isGZIP(hdr *[0xffff]byte) bool {

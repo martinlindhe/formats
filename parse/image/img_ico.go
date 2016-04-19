@@ -15,12 +15,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ICO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func ICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isICO(file) {
+	if !isICO(c.File) {
 		return nil, nil
 	}
-	return parseICO(file, pl)
+	return parseICO(c.File, c.ParsedLayout)
 }
 
 func isICO(file *os.File) bool {

@@ -12,12 +12,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func DSSTORE(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func DSSTORE(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isDSSTORE(&hdr) {
+	if !isDSSTORE(&c.Header) {
 		return nil, nil
 	}
-	return parseDSSTORE(file, pl)
+	return parseDSSTORE(c.File, c.ParsedLayout)
 }
 
 func isDSSTORE(hdr *[0xffff]byte) bool {

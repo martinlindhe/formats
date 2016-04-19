@@ -7,6 +7,12 @@ import (
 	"os"
 )
 
+type ParseChecker struct {
+	Header       [0xffff]byte
+	File         *os.File
+	ParsedLayout ParsedLayout
+}
+
 func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (string, error) {
 
 	switch dataType {

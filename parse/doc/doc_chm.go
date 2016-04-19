@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CHM(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func CHM(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isCHM(&hdr) {
+	if !isCHM(&c.Header) {
 		return nil, nil
 	}
-	return parseCHM(file, pl)
+	return parseCHM(c.File, c.ParsedLayout)
 }
 
 func isCHM(hdr *[0xffff]byte) bool {

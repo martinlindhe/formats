@@ -39,12 +39,12 @@ var (
 	}
 )
 
-func JPEG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func JPEG(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isJPEG(&hdr) {
+	if !isJPEG(&c.Header) {
 		return nil, nil
 	}
-	return parseJPEG(file, pl)
+	return parseJPEG(c.File, c.ParsedLayout)
 }
 
 func isJPEG(hdr *[0xffff]byte) bool {

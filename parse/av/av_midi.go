@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MIDI(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func MIDI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMIDI(&hdr) {
+	if !isMIDI(&c.Header) {
 		return nil, nil
 	}
-	return parseMIDI(file, pl)
+	return parseMIDI(c.File, c.ParsedLayout)
 }
 
 func isMIDI(hdr *[0xffff]byte) bool {

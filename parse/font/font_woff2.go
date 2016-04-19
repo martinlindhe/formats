@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WOFF2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func WOFF2(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isWOFF2(&hdr) {
+	if !isWOFF2(&c.Header) {
 		return nil, nil
 	}
-	return parseWOFF2(file, pl)
+	return parseWOFF2(c.File, c.ParsedLayout)
 }
 
 func isWOFF2(hdr *[0xffff]byte) bool {

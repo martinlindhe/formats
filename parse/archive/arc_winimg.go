@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WINIMG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func WINIMG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isWINIMG(&hdr) {
+	if !isWINIMG(&c.Header) {
 		return nil, nil
 	}
-	return parseWINIMG(file, pl)
+	return parseWINIMG(c.File, c.ParsedLayout)
 }
 
 func isWINIMG(hdr *[0xffff]byte) bool {

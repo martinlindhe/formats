@@ -14,12 +14,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func VBE(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func VBE(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isVBE(&hdr) {
+	if !isVBE(&c.Header) {
 		return nil, nil
 	}
-	return parseVBE(file, pl)
+	return parseVBE(c.File, c.ParsedLayout)
 }
 
 func isVBE(hdr *[0xffff]byte) bool {

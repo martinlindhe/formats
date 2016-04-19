@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SevenZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func SevenZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isSevenZIP(&hdr) {
+	if !isSevenZIP(&c.Header) {
 		return nil, nil
 	}
-	return parseSevenZIP(file, pl)
+	return parseSevenZIP(c.File, c.ParsedLayout)
 }
 
 func isSevenZIP(hdr *[0xffff]byte) bool {

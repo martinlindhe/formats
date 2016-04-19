@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func FLV(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func FLV(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isFLV(&hdr) {
+	if !isFLV(&c.Header) {
 		return nil, nil
 	}
-	return parseFLV(file, pl)
+	return parseFLV(c.File, c.ParsedLayout)
 }
 
 func isFLV(hdr *[0xffff]byte) bool {

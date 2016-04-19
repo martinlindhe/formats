@@ -14,12 +14,12 @@ var (
 	subHeaderLen = int64(36) // XXX
 )
 
-func MZ(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func MZ(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isMZ(&hdr) {
+	if !isMZ(&c.Header) {
 		return nil, nil
 	}
-	return parseMZ(file, pl)
+	return parseMZ(c.File, c.ParsedLayout)
 }
 
 func isMZ(hdr *[0xffff]byte) bool {

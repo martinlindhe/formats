@@ -11,12 +11,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func EOT(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func EOT(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isEOT(&hdr) {
+	if !isEOT(&c.Header) {
 		return nil, nil
 	}
-	return parseEOT(file, pl)
+	return parseEOT(c.File, c.ParsedLayout)
 }
 
 func isEOT(hdr *[0xffff]byte) bool {

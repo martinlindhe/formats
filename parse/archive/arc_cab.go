@@ -9,12 +9,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CAB(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func CAB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isCAB(&hdr) {
+	if !isCAB(&c.Header) {
 		return nil, nil
 	}
-	return parseCAB(file, pl)
+	return parseCAB(c.File, c.ParsedLayout)
 }
 
 func isCAB(hdr *[0xffff]byte) bool {

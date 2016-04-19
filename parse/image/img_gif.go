@@ -44,12 +44,12 @@ const (
 	imgDescriptorLen = 10
 )
 
-func GIF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func GIF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isGIF(&hdr) {
+	if !isGIF(&c.Header) {
 		return nil, nil
 	}
-	return parseGIF(file, pl)
+	return parseGIF(c.File, c.ParsedLayout)
 }
 
 func isGIF(hdr *[0xffff]byte) bool {

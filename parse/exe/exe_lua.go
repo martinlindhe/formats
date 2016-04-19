@@ -9,12 +9,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LUA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func LUA(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isLUA(&hdr) {
+	if !isLUA(&c.Header) {
 		return nil, nil
 	}
-	return parseLUA(file, pl)
+	return parseLUA(c.File, c.ParsedLayout)
 }
 
 func isLUA(hdr *[0xffff]byte) bool {

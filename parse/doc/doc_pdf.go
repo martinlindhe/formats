@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PDF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func PDF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isPDF(&hdr) {
+	if !isPDF(&c.Header) {
 		return nil, nil
 	}
-	return parsePDF(file, pl)
+	return parsePDF(c.File, c.ParsedLayout)
 }
 
 func isPDF(hdr *[0xffff]byte) bool {

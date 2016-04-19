@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TTC(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func TTC(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isTTC(&hdr) {
+	if !isTTC(&c.Header) {
 		return nil, nil
 	}
-	return parseTTC(file, pl)
+	return parseTTC(c.File, c.ParsedLayout)
 }
 
 func isTTC(hdr *[0xffff]byte) bool {

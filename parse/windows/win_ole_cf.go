@@ -17,12 +17,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OLECF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func OLECF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isOLECF(&hdr) {
+	if !isOLECF(&c.Header) {
 		return nil, nil
 	}
-	return parseOLECF(file, pl)
+	return parseOLECF(c.File, c.ParsedLayout)
 }
 
 func isOLECF(hdr *[0xffff]byte) bool {

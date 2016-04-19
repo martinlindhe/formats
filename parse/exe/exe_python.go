@@ -34,12 +34,12 @@ var (
 	}
 )
 
-func PythonBytecode(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func PythonBytecode(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPythonBytecode(file) {
+	if !isPythonBytecode(c.File) {
 		return nil, nil
 	}
-	return parsePythonBytecode(file, pl)
+	return parsePythonBytecode(c.File, c.ParsedLayout)
 }
 
 func isPythonBytecode(file *os.File) bool {

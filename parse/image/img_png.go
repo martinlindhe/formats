@@ -13,12 +13,12 @@ import (
 	"os"
 )
 
-func PNG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func PNG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPNG(file) {
+	if !isPNG(c.File) {
 		return nil, nil
 	}
-	return parsePNG(file, pl)
+	return parsePNG(c.File, c.ParsedLayout)
 }
 
 func isPNG(file *os.File) bool {

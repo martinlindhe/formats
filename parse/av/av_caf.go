@@ -11,12 +11,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CAF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func CAF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isCAF(&hdr) {
+	if !isCAF(&c.Header) {
 		return nil, nil
 	}
-	return parseCAF(file, pl)
+	return parseCAF(c.File, c.ParsedLayout)
 }
 
 func isCAF(hdr *[0xffff]byte) bool {

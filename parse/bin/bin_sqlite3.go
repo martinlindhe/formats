@@ -17,12 +17,12 @@ var (
 	}
 )
 
-func SQLITE3(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func SQLITE3(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isSQLITE3(file) {
+	if !isSQLITE3(c.File) {
 		return nil, nil
 	}
-	return parseSQLITE3(file, pl)
+	return parseSQLITE3(c.File, c.ParsedLayout)
 }
 
 func isSQLITE3(file *os.File) bool {

@@ -9,12 +9,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WRI(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func WRI(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isWRI(&hdr) {
+	if !isWRI(&c.Header) {
 		return nil, nil
 	}
-	return parseWRI(file, pl)
+	return parseWRI(c.File, c.ParsedLayout)
 }
 
 func isWRI(hdr *[0xffff]byte) bool {

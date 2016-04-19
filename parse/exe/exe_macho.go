@@ -36,12 +36,12 @@ var (
 	}
 )
 
-func MachO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func MachO(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isMachO(&hdr) {
+	if !isMachO(&c.Header) {
 		return nil, nil
 	}
-	return parseMachO(file, pl)
+	return parseMachO(c.File, c.ParsedLayout)
 }
 
 func isMachO(hdr *[0xffff]byte) bool {

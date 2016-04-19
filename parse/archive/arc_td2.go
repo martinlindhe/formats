@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TD2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func TD2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTD2(&hdr) {
+	if !isTD2(&c.Header) {
 		return nil, nil
 	}
-	return parseTD2(file, pl)
+	return parseTD2(c.File, c.ParsedLayout)
 }
 
 func isTD2(hdr *[0xffff]byte) bool {

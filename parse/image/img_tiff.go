@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func TIFF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isTIFF(&hdr) {
+	if !isTIFF(&c.Header) {
 		return nil, nil
 	}
-	return parseTIFF(file, pl)
+	return parseTIFF(c.File, c.ParsedLayout)
 }
 
 func isTIFF(hdr *[0xffff]byte) bool {

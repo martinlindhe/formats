@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GRP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func GRP(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isGRP(&hdr) {
+	if !isGRP(&c.Header) {
 		return nil, nil
 	}
-	return parseGRP(file, pl)
+	return parseGRP(c.File, c.ParsedLayout)
 }
 
 func isGRP(hdr *[0xffff]byte) bool {

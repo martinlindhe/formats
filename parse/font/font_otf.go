@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func OTF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isOTF(&hdr) {
+	if !isOTF(&c.Header) {
 		return nil, nil
 	}
-	return parseOTF(file, pl)
+	return parseOTF(c.File, c.ParsedLayout)
 }
 
 func isOTF(hdr *[0xffff]byte) bool {

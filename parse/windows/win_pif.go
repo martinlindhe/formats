@@ -9,12 +9,12 @@ import (
 	"os"
 )
 
-func PIF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func PIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPIF(file) {
+	if !isPIF(c.File) {
 		return nil, nil
 	}
-	return parsePIF(file, pl)
+	return parsePIF(c.File, c.ParsedLayout)
 }
 
 func isPIF(file *os.File) bool {

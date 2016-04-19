@@ -1,6 +1,8 @@
 package archive
 
-// STATUS 1%, see https://golang.org/src/compress/bzip2/bzip2.go
+// STATUS 1%
+
+// https://golang.org/src/compress/bzip2/bzip2.go
 
 import (
 	"os"
@@ -8,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func BZIP2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func BZIP2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isBZIP2(&hdr) {
+	if !isBZIP2(&c.Header) {
 		return nil, nil
 	}
-	return parseBZIP2(file, pl)
+	return parseBZIP2(c.File, c.ParsedLayout)
 }
 
 func isBZIP2(hdr *[0xffff]byte) bool {

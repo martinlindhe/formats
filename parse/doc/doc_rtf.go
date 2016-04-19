@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func RTF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isRTF(&hdr) {
+	if !isRTF(&c.Header) {
 		return nil, nil
 	}
-	return parseRTF(file, pl)
+	return parseRTF(c.File, c.ParsedLayout)
 }
 
 func isRTF(hdr *[0xffff]byte) bool {

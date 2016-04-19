@@ -95,12 +95,12 @@ var (
 	}
 )
 
-func ELF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func ELF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isELF(&hdr) {
+	if !isELF(&c.Header) {
 		return nil, nil
 	}
-	return parseELF(file, pl)
+	return parseELF(c.File, c.ParsedLayout)
 }
 
 func isELF(h *[0xffff]byte) bool {

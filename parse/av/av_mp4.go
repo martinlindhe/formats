@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MP4(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func MP4(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMP4(&hdr) {
+	if !isMP4(&c.Header) {
 		return nil, nil
 	}
-	return parseMP4(file, pl)
+	return parseMP4(c.File, c.ParsedLayout)
 }
 
 func isMP4(hdr *[0xffff]byte) bool {

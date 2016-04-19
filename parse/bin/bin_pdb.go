@@ -11,12 +11,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PDB(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func PDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPDB(file) {
+	if !isPDB(c.File) {
 		return nil, nil
 	}
-	return parsePDB(file, pl)
+	return parsePDB(c.File, c.ParsedLayout)
 }
 
 func isPDB(file *os.File) bool {

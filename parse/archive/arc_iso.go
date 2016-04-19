@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ISO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func ISO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isISO(&hdr) {
+	if !isISO(&c.Header) {
 		return nil, nil
 	}
-	return parseISO(file, pl)
+	return parseISO(c.File, c.ParsedLayout)
 }
 
 func isISO(hdr *[0xffff]byte) bool {

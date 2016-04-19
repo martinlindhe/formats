@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func ZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isZIP(&hdr) {
+	if !isZIP(&c.Header) {
 		return nil, nil
 	}
-	return parseZIP(file, pl)
+	return parseZIP(c.File, c.ParsedLayout)
 }
 
 func isZIP(hdr *[0xffff]byte) bool {

@@ -9,12 +9,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func RIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRIFF(&hdr) {
+	if !isRIFF(&c.Header) {
 		return nil, nil
 	}
-	return parseRIFF(file, pl)
+	return parseRIFF(c.File, c.ParsedLayout)
 }
 
 func isRIFF(hdr *[0xffff]byte) bool {

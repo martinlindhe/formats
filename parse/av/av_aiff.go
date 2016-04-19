@@ -11,12 +11,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func AIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func AIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isAIFF(&hdr) {
+	if !isAIFF(&c.Header) {
 		return nil, nil
 	}
-	return parseAIFF(file, pl)
+	return parseAIFF(c.File, c.ParsedLayout)
 }
 
 func isAIFF(hdr *[0xffff]byte) bool {

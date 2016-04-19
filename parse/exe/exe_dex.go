@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func DEX(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func DEX(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isDEX(&hdr) {
+	if !isDEX(&c.Header) {
 		return nil, nil
 	}
-	return parseDEX(file, pl)
+	return parseDEX(c.File, c.ParsedLayout)
 }
 
 func isDEX(h *[0xffff]byte) bool {

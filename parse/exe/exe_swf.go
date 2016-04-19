@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SWF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func SWF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isSWF(&hdr) {
+	if !isSWF(&c.Header) {
 		return nil, nil
 	}
-	return parseSWF(file, pl)
+	return parseSWF(c.File, c.ParsedLayout)
 }
 
 func isSWF(hdr *[0xffff]byte) bool {

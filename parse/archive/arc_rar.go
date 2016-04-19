@@ -6,12 +6,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RAR(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func RAR(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRAR(&hdr) {
+	if !isRAR(&c.Header) {
 		return nil, nil
 	}
-	return parseRAR(file, pl)
+	return parseRAR(c.File, c.ParsedLayout)
 }
 
 func isRAR(hdr *[0xffff]byte) bool {

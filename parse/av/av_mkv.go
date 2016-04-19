@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MKV(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func MKV(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMKV(&hdr) {
+	if !isMKV(&c.Header) {
 		return nil, nil
 	}
-	return parseMKV(file, pl)
+	return parseMKV(c.File, c.ParsedLayout)
 }
 
 func isMKV(hdr *[0xffff]byte) bool {

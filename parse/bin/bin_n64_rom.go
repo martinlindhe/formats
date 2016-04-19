@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func N64ROM(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func N64ROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isN64ROM(&hdr) {
+	if !isN64ROM(&c.Header) {
 		return nil, nil
 	}
-	return parseN64ROM(file, pl)
+	return parseN64ROM(c.File, c.ParsedLayout)
 }
 
 func isN64ROM(hdr *[0xffff]byte) bool {

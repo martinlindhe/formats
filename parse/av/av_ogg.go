@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OGG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func OGG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isOGG(&hdr) {
+	if !isOGG(&c.Header) {
 		return nil, nil
 	}
-	return parseOGG(file, pl)
+	return parseOGG(c.File, c.ParsedLayout)
 }
 
 func isOGG(hdr *[0xffff]byte) bool {

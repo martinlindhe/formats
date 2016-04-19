@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func HLP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func HLP(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isHLP(&hdr) {
+	if !isHLP(&c.Header) {
 		return nil, nil
 	}
-	return parseHLP(file, pl)
+	return parseHLP(c.File, c.ParsedLayout)
 }
 
 func isHLP(hdr *[0xffff]byte) bool {

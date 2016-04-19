@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func FLAC(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func FLAC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isFLAC(&hdr) {
+	if !isFLAC(&c.Header) {
 		return nil, nil
 	}
-	return parseFLAC(file, pl)
+	return parseFLAC(c.File, c.ParsedLayout)
 }
 
 func isFLAC(hdr *[0xffff]byte) bool {

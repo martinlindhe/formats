@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func XZ(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func XZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isXZ(&hdr) {
+	if !isXZ(&c.Header) {
 		return nil, nil
 	}
-	return parseXZ(file, pl)
+	return parseXZ(c.File, c.ParsedLayout)
 }
 
 func isXZ(hdr *[0xffff]byte) bool {

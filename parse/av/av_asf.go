@@ -26,12 +26,12 @@ var (
 		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
 )
 
-func ASF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func ASF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isASF(file) {
+	if !isASF(c.File) {
 		return nil, nil
 	}
-	return parseASF(file, pl)
+	return parseASF(c.File, c.ParsedLayout)
 }
 
 func isASF(file *os.File) bool {

@@ -8,12 +8,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MP3(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func MP3(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMP3(&hdr) {
+	if !isMP3(&c.Header) {
 		return nil, nil
 	}
-	return parseMP3(file, pl)
+	return parseMP3(c.File, c.ParsedLayout)
 }
 
 func isMP3(hdr *[0xffff]byte) bool {

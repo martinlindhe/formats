@@ -10,12 +10,12 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func JavaClass(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func JavaClass(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
 
-	if !isJavaClass(&hdr) {
+	if !isJavaClass(&c.Header) {
 		return nil, nil
 	}
-	return parseJavaClass(file, pl)
+	return parseJavaClass(c.File, c.ParsedLayout)
 }
 
 func isJavaClass(hdr *[0xffff]byte) bool {

@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/images"
+	searchDir := "./samples"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -62,13 +62,16 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
 			}
 			if l.Offset+l.Length > layout.FileSize {
-				t.Fatalf("%s child extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
+				t.Fatalf("%s data extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
 			}
 			sum := int64(0)
 			for _, child := range l.Childs {
 				sum += child.Length
 				if child.Type == parse.Group {
 					t.Fatalf("child level cant be group %v, %s", l, path)
+				}
+				if child.Offset+child.Length > layout.FileSize {
+					t.Fatalf("%s (child) data extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
 				}
 			}
 			if sum != l.Length {

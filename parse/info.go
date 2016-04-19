@@ -46,7 +46,11 @@ func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string 
 
 	field := group.Childs[state.CurrentField]
 
-	res += "\n └ " + field.fieldInfoByType(f) + " (" + field.Type.String() + ")"
+	res += "\n └ " + field.fieldInfoByType(f) + " (" + field.Type.String()
+	if field.Type == ASCII || field.Type == ASCIIZ {
+		res += ", " + fmt.Sprintf("%d", field.Length) + " bytes"
+	}
+	res += ")"
 
 	return res
 }
@@ -166,6 +170,13 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	case MajorMinor16le:
 		var b [2]uint8
 		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		res += fmt.Sprintf("%d.%d", b[0], b[1])
+
+	case MajorMinor16be:
+		var b [2]uint8
+		if err := binary.Read(f, binary.BigEndian, &b); err != nil && err != io.EOF {
 			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d.%d", b[0], b[1])

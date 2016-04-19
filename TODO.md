@@ -11,7 +11,7 @@ if "raw"
 
 
 
-TOP, FIX THESE: ARJ, JPEG
+TOP, FIX THESE: ARJ
 
 
 

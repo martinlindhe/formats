@@ -1,8 +1,6 @@
 package image
 
-// TODO need sample with exif data
-// XXX samples/jpg/jpeg_002.jpg parse OK!
-// XXX samples/jpg/jpeg_001.jpg loops forever
+// XXX recognize jpeg with exif ... samples/images/jpg/jpeg_003_exif_fujifilm-finepix40i.jpg is unrecognized
 
 // STATUS: 80%
 
@@ -14,20 +12,30 @@ import (
 	"os"
 )
 
+const (
+	jpegSOI  = 0xd8
+	jpegEOI  = 0xd9
+	jpegSOS  = 0xda
+	jpegDQT  = 0xdb
+	jpegAPP0 = 0xe0
+	jpegAPP1 = 0xe1
+	jpegCOM  = 0xfe
+)
+
 var (
-	jpegChunkTypes = map[byte]string{ // "marker"
-		0xC0: "baseline DCT (SOF0)",
-		0xC1: "extended sequential DCT (SOF1)",
-		0xC2: "progressive DCT (SOF2)",
-		0xC3: "lossless (SOF3)",
-		0xC4: "huffman table (DHT)",
-		0xD8: "start of image (SOI)",
-		0xD9: "end of image (EOI)",
-		0xDA: "start of scan (SOS)",
-		0xDB: "quantization table (DQT)",
-		0xE0: "APP0",
-		0xE1: "APP1",
-		0xFE: "comment (COM)",
+	jpegMarkers = map[byte]string{
+		0xc0:     "baseline DCT (SOF0)",
+		0xc1:     "extended sequential DCT (SOF1)",
+		0xc2:     "progressive DCT (SOF2)",
+		0xc3:     "lossless (SOF3)",
+		0xc4:     "huffman table (DHT)",
+		jpegSOI:  "start of image (SOI)",
+		jpegEOI:  "end of image (EOI)",
+		jpegSOS:  "start of scan (SOS)",
+		jpegDQT:  "quantization table (DQT)",
+		jpegAPP0: "APP0",
+		jpegAPP1: "APP1",
+		jpegCOM:  "comment (COM)",
 	}
 )
 
@@ -60,18 +68,16 @@ func parseJPEG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 		magic, _ := parse.ReadUint8(file, pos)
 		marker, _ := parse.ReadUint8(file, pos+1)
 
-		// fmt.Printf("Reading jpeg chunk at %04x. marker %02x\n", offset, marker)
 		if magic != 0xff {
 			fmt.Printf("jpeg parse error at %04x. expected ff, found %02x\n", pos, magic)
 			break
 		}
 
-		if marker == 0xd8 { // start of image
-			// NOTE: this marker dont have any content
+		if marker == jpegSOI {
 			pl.Layout = append(pl.Layout, parse.Layout{
 				Offset: pos,
 				Length: 2,
-				Info:   jpegChunkTypes[marker],
+				Info:   jpegMarkers[marker],
 				Type:   parse.Group,
 				Childs: []parse.Layout{
 					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16le},
@@ -79,135 +85,150 @@ func parseJPEG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 			pos += 2
 			continue
 		}
-		if marker == 0xd9 {
+		if marker == jpegEOI {
 			pl.Layout = append(pl.Layout, parse.Layout{
 				Offset: pos,
 				Type:   parse.Group,
 				Length: 2,
-				Info:   jpegChunkTypes[marker],
+				Info:   jpegMarkers[marker],
 				Childs: []parse.Layout{
 					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16le},
 				}})
-			// fmt.Println("Ending parser since EOI marker was detected")
 			break
 		}
 
-		if marker == 0xda { // start of scan
+		if marker == jpegSOS {
 
-			components, _ := parse.ReadUint8(file, pos+4)
-			chunk := parse.Layout{
-				Offset: pos,
-				Length: 5,
-				Info:   jpegChunkTypes[marker],
-				Type:   parse.Group,
-				Childs: []parse.Layout{
-					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16be},
-					{Offset: pos + 2, Length: 2, Info: "length", Type: parse.Uint16be},
-					{Offset: pos + 4, Length: 1, Info: "color components", Type: parse.Uint8},
-				}}
-			pos += chunk.Length
+			sos := parseJPEGSos(file, pos)
+			pl.Layout = append(pl.Layout, sos)
+			pos += sos.Length
 
-			for i := 0; i < int(components); i++ {
-				chunk.Childs = append(chunk.Childs, []parse.Layout{
-					{Offset: pos, Length: 1, Info: "color id", Type: parse.Uint8},
-
-					// XXX decode values:
-					// An AC table # (Low Nibble)
-					// An DC table # (High Nibble)
-					{Offset: pos + 1, Length: 1, Info: "ac,dc tables", Type: parse.Uint8}, // XXX hi/lo nibbles type
-				}...)
-				chunk.Length += 2
-				pos += 2
-			}
-
-			chunk.Childs = append(chunk.Childs, []parse.Layout{
-				{Offset: pos, Length: 3, Info: "unknown", Type: parse.Bytes},
-			}...)
-			chunk.Length += 3
-			pos += 3
-
-			file.Seek(pos, os.SEEK_SET)
-
-			// fmt.Printf("starting at %04x\n", offset)
-			dataStart := pos
-			rewind := false
-			pl.Layout = append(pl.Layout, chunk)
-
-			for {
-				var b uint16
-				err := binary.Read(file, binary.BigEndian, &b)
-				if err == io.EOF {
-					fmt.Println(err)
-					break
-				}
-
-				// fmt.Printf("from %04x: %04x\n", offset, b)
-				pos += 2
-
-				marker := b & 0xff
-				if b&0xff00 == 0xff00 && marker != 0 && (marker < 0xd0 || marker > 0xd8) {
-					// eoi
-					dataLen := pos - dataStart - 2
-
-					pl.Layout = append(pl.Layout, parse.Layout{
-						Offset: dataStart,
-						Length: dataLen,
-						Info:   "image data",
-						Type:   parse.Group,
-						Childs: []parse.Layout{
-							{Offset: dataStart, Length: dataLen, Info: "image data", Type: parse.Bytes},
-						}})
-
-					rewind = true
-					pos -= 2
-					// fmt.Printf("rewinded offset to %04x\n", offset)
-					file.Seek(pos, os.SEEK_SET)
-					break
-				}
-			}
-
-			if !rewind {
-				pos += chunk.Length
-			}
+			imgData := findJPEGImageData(file, pos)
+			pl.Layout = append(pl.Layout, imgData)
+			pos += imgData.Length
 			continue
 		}
 
-		if marker == 0xe0 {
-			// APP0
-			pl.Layout = append(pl.Layout, parse.Layout{
-				Offset: pos,
-				Length: 18,
-				Info:   jpegChunkTypes[marker],
-				Type:   parse.Group,
-				Childs: []parse.Layout{
-					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16be},
-					{Offset: pos + 2, Length: 2, Info: "length", Type: parse.Uint16be},
-					{Offset: pos + 4, Length: 5, Info: "identifier", Type: parse.ASCII},
-					{Offset: pos + 9, Length: 2, Info: "revision", Type: parse.MajorMinor16be},
-					{Offset: pos + 11, Length: 1, Info: "units used", Type: parse.Uint8},
-					{Offset: pos + 12, Length: 2, Info: "width", Type: parse.Uint16be},
-					{Offset: pos + 14, Length: 2, Info: "height", Type: parse.Uint16be},
-					{Offset: pos + 16, Length: 1, Info: "horizontal pixels", Type: parse.Uint8},
-					{Offset: pos + 17, Length: 1, Info: "vertical pixels", Type: parse.Uint8},
-				}})
-			pos += 18
+		if marker == jpegAPP0 {
+			app0 := parseJPEGApp0(file, pos)
+			pl.Layout = append(pl.Layout, app0)
+			pos += app0.Length
 			continue
 		}
 
 		chunkLen, _ := parse.ReadUint16be(file, pos+2)
 
+		dataType := parse.Bytes
+		if marker == jpegCOM {
+			dataType = parse.ASCII
+		}
+
 		pl.Layout = append(pl.Layout, parse.Layout{
 			Offset: pos,
 			Length: 2 + int64(chunkLen),
-			Info:   jpegChunkTypes[marker],
+			Info:   jpegMarkers[marker],
 			Type:   parse.Group,
 			Childs: []parse.Layout{
 				{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16be},
 				{Offset: pos + 2, Length: 2, Info: "length", Type: parse.Uint16be},
-				{Offset: pos + 4, Length: int64(chunkLen) - 2, Info: "data", Type: parse.Bytes}, // XXX
+				{Offset: pos + 4, Length: int64(chunkLen) - 2, Info: "data", Type: dataType},
 			}})
 		pos += 2 + int64(chunkLen)
 	}
 
 	return &pl, nil
+}
+
+func findJPEGImageData(file *os.File, pos int64) parse.Layout {
+
+	dataStart := pos
+
+	res := parse.Layout{
+		Offset: dataStart,
+		Info:   "image data",
+		Type:   parse.Group}
+
+	for {
+		file.Seek(pos, os.SEEK_SET)
+
+		var b uint16
+		err := binary.Read(file, binary.BigEndian, &b)
+		if err == io.EOF {
+			fmt.Printf("error: jpeg EOF at pos %04x\n", pos)
+			break
+		}
+
+		pos++
+		marker := b & 0xff
+
+		if b&0xff00 == 0xff00 && marker != 0 && (marker < 0xd0 || marker > 0xd8) {
+			// eoi
+			dataLen := pos - dataStart - 1
+			res.Length = dataLen
+			res.Childs = []parse.Layout{
+				{Offset: dataStart, Length: dataLen, Info: "image data", Type: parse.Bytes},
+			}
+			break
+		}
+	}
+	return res
+}
+
+func parseJPEGSos(file *os.File, pos int64) parse.Layout {
+
+	components, _ := parse.ReadUint8(file, pos+4)
+	chunk := parse.Layout{
+		Offset: pos,
+		Length: 5,
+		Info:   jpegMarkers[jpegSOS],
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16be},
+			{Offset: pos + 2, Length: 2, Info: "length", Type: parse.Uint16be},
+			{Offset: pos + 4, Length: 1, Info: "color components", Type: parse.Uint8},
+		}}
+	pos += chunk.Length
+
+	for i := 0; i < int(components); i++ {
+		chunk.Childs = append(chunk.Childs, []parse.Layout{
+			{Offset: pos, Length: 1, Info: "COMPSOS", Type: parse.Uint8, Masks: []parse.Mask{
+				{Low: 0, Length: 4, Info: "dc table"},
+				{Low: 4, Length: 4, Info: "ac table"},
+			}},
+		}...)
+		chunk.Length++
+		pos++
+	}
+
+	chunk.Childs = append(chunk.Childs, []parse.Layout{
+		{Offset: pos, Length: 1, Info: "ss", Type: parse.Uint8},
+		{Offset: pos + 1, Length: 1, Info: "se", Type: parse.Uint8},
+		{Offset: pos + 2, Length: 1, Info: "a", Type: parse.Uint8, Masks: []parse.Mask{
+			{Low: 0, Length: 4, Info: "al"},
+			{Low: 4, Length: 4, Info: "ah"},
+		}},
+	}...)
+	chunk.Length += 3
+
+	return chunk
+}
+
+func parseJPEGApp0(file *os.File, pos int64) parse.Layout {
+
+	return parse.Layout{
+		Offset: pos,
+		Length: 18,
+		Info:   jpegMarkers[jpegAPP0],
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16be},
+			{Offset: pos + 2, Length: 2, Info: "length", Type: parse.Uint16be},
+			{Offset: pos + 4, Length: 5, Info: "identifier", Type: parse.ASCII},
+			{Offset: pos + 9, Length: 2, Info: "revision", Type: parse.MajorMinor16be},
+			{Offset: pos + 11, Length: 1, Info: "units used", Type: parse.Uint8},
+			{Offset: pos + 12, Length: 2, Info: "width", Type: parse.Uint16be},
+			{Offset: pos + 14, Length: 2, Info: "height", Type: parse.Uint16be},
+			{Offset: pos + 16, Length: 1, Info: "horizontal pixels", Type: parse.Uint8},
+			{Offset: pos + 17, Length: 1, Info: "vertical pixels", Type: parse.Uint8},
+		}}
 }

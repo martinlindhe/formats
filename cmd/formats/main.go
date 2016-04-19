@@ -294,7 +294,7 @@ func prettyStatString() string {
 
 	group := fileLayout.Layout[hexView.CurrentGroup]
 
-	warn := ""
+	warn := "" // useful while debugging
 
 	// if in sub field view
 	if hexView.BrowseMode == parse.ByFieldInGroup {

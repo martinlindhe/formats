@@ -1,9 +1,6 @@
 package image
 
-// XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
-// XXX most files ok
-
-// STATUS: 80%
+// STATUS: 90%
 
 import (
 	"encoding/binary"
@@ -30,16 +27,16 @@ var (
 // section indicators
 const (
 	sExtension       = 0x21
-	sImageDescriptor = 0x2C
-	sTrailer         = 0x3B
+	sImageDescriptor = 0x2c
+	sTrailer         = 0x3b
 )
 
 // extensions
 const (
-	eText           = 0x01 // Plain Text
-	eGraphicControl = 0xF9 // Graphic Control
-	eComment        = 0xFE // Comment
-	eApplication    = 0xFF // Application
+	eText           = 0x01
+	eGraphicControl = 0xf9
+	eComment        = 0xfe
+	eApplication    = 0xff
 )
 
 // misc
@@ -117,8 +114,7 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 				pl.Layout = append(pl.Layout, *imgDescriptor)
 				offset += imgDescriptor.Length
 			}
-			if pl.DecodeBitfieldFromInfo(file, "local color table flag") == 1 {
-				// XXX this is untested due to lack of sample with a local color table
+			if pl.DecodeBitfieldFromInfo(file, "local color table flag") > 0 {
 				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "local color table size")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
 					localTbl := gifLocalColorTable(file, offset, lctByteLen)
@@ -329,27 +325,16 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 	res := parse.Layout{
 		Offset: pos,
 		Length: size + 1,
-		Info:   "extension",
+		Info:   typeInfo + " extension",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 1, Info: "block id (extension)", Type: parse.Uint8},
-			{Offset: pos + 1, Length: 1, Info: typeInfo, Type: parse.Uint8},
+			{Offset: pos + 1, Length: 1, Info: "type = " + typeInfo, Type: parse.Uint8},
 		}}
 
 	res.Childs = append(res.Childs, typeSpecific...)
 
 	return &res, nil
-}
-
-func gifReadBlock(file *os.File) (int, error) {
-
-	var b byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return 0, err
-	}
-
-	// return io.ReadFull(file, d.tmp[:n])
-	return 0, nil
 }
 
 func gifImageData(file *os.File, pos int64) (*parse.Layout, error) {
@@ -386,9 +371,10 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	length := int64(0)
 	childs := []parse.Layout{}
-	file.Seek(pos, os.SEEK_SET)
 
 	for {
+		file.Seek(pos, os.SEEK_SET)
+
 		var follows byte // number of bytes follows
 		if err := binary.Read(file, binary.LittleEndian, &follows); err != nil {
 			if err == io.EOF {
@@ -399,24 +385,26 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 		}
 
 		childs = append(childs, parse.Layout{
-			Offset: pos + length,
+			Offset: pos,
 			Length: 1,
 			Info:   "block length",
 			Type:   parse.Uint8})
 		length += 1
+		pos += 1
+
+		// XXX special case 0xff ?
 
 		if follows == 0 {
 			break
 		}
 
 		childs = append(childs, parse.Layout{
-			Offset: pos + length,
+			Offset: pos,
 			Length: int64(follows),
 			Info:   "block",
-			Type:   parse.Uint8})
-
+			Type:   parse.Bytes})
 		length += int64(follows)
-		file.Seek(pos+length, os.SEEK_SET)
+		pos += int64(follows)
 	}
 	return childs, nil
 }

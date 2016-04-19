@@ -8,15 +8,15 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SEVENZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func SevenZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isSEVENZIP(&hdr) {
+	if !isSevenZIP(&hdr) {
 		return nil, nil
 	}
-	return parseSEVENZIP(file, pl)
+	return parseSevenZIP(file, pl)
 }
 
-func isSEVENZIP(hdr *[0xffff]byte) bool {
+func isSevenZIP(hdr *[0xffff]byte) bool {
 
 	b := *hdr
 	if b[0] != '7' || b[1] != 'z' || b[2] != 0xbc || b[3] != 0xaf ||
@@ -26,7 +26,7 @@ func isSEVENZIP(hdr *[0xffff]byte) bool {
 	return true
 }
 
-func parseSEVENZIP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parseSevenZIP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 	pl.FileKind = parse.Archive

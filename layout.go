@@ -18,7 +18,7 @@ import (
 
 var (
 	parsers = map[string]func(*os.File, [0xffff]byte, parse.ParsedLayout) (*parse.ParsedLayout, error){
-		"7z":       archive.SEVENZIP,
+		"7z":       archive.SevenZIP,
 		"arj":      archive.ARJ,
 		"bzip2":    archive.BZIP2,
 		"cab":      archive.CAB,
@@ -52,11 +52,11 @@ var (
 		"wri":      doc.WRI,
 		"dex":      exe.DEX,
 		"elf":      exe.ELF,
-		"java":     exe.JAVA, // java class
+		"java":     exe.JavaClass,
 		"lua":      exe.LUA,
 		"macho":    exe.MachO,
 		"mz":       exe.MZ,
-		"python":   exe.PYTHON,
+		"python":   exe.PythonBytecode,
 		"swf":      exe.SWF,
 		"vbe":      exe.VBE,
 		"eot":      font.EOT,

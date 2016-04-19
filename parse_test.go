@@ -83,18 +83,46 @@ func TestParsedLayout(t *testing.T) {
 	assert.Equal(t, nil, err)
 }
 
-/*
 func TestParseGIF87a(t *testing.T) {
 
-	file, err := os.Open("samples/gif/gif_001_87a.gif")
+	file, err := os.Open("samples/images/gif/gif_87a_001.gif")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
-	layout := ParseLayout(file)
-	assert.Equal(t, true, layout != nil)
-	assert.Equal(t, `XXX`, layout)
+	layout, err := ParseLayout(file)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, `Format: gif (gif_87a_001.gif, 42 bytes)
+
+header (0000), group
+  signature (0000), ASCII
+  version (0003), ASCII
+logical screen descriptor (0006), group
+  width (0006), uint16-le
+  height (0008), uint16-le
+  packed (000a), uint8
+  background color (000b), uint8
+  aspect ratio (000c), uint8
+global color table (000d), group
+  color 1 (000d), RGB
+  color 2 (0010), RGB
+  color 3 (0013), RGB
+  color 4 (0016), RGB
+image descriptor (0019), group
+  image separator (0019), uint8
+  image left (001a), uint16-le
+  image top (001c), uint16-le
+  image width (001e), uint16-le
+  image height (0020), uint16-le
+  packed #3 (0022), uint8
+image data (0023), group
+  lzw code size (0023), uint8
+  block length (0024), uint8
+  block (0025), bytes
+  block length (0028), uint8
+trailer (0029), group
+  trailer (0029), uint8
+`, layout.PrettyPrint())
 }
-*/
 
 func TestParseGIF89a(t *testing.T) {
 

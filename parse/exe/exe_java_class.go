@@ -10,15 +10,15 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func JAVA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func JavaClass(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isJAVA(&hdr) {
+	if !isJavaClass(&hdr) {
 		return nil, nil
 	}
-	return parseJAVA(file, pl)
+	return parseJavaClass(file, pl)
 }
 
-func isJAVA(hdr *[0xffff]byte) bool {
+func isJavaClass(hdr *[0xffff]byte) bool {
 
 	b := *hdr
 	if b[0] == 0xca && b[1] == 0xfe && b[2] == 0xba && b[3] == 0xbe {
@@ -27,7 +27,7 @@ func isJAVA(hdr *[0xffff]byte) bool {
 	return false
 }
 
-func parseJAVA(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parseJavaClass(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 	pl.FileKind = parse.Executable

@@ -1,11 +1,13 @@
 # TODO cmd/typelister
 
-    new cmd that lists all files recursively from given dir, and show match/unknown...
-
-    scan windows/macos/linux installs with it, experiment
+    scan windows/macos/linux installs with it to find more file types
 
 
 # TODO cmd/formats
+
+TOP, FIX THESE: ARJ, GIF, JPEG
+
+
 
 basic detection of the following formats:
   - MSI exec

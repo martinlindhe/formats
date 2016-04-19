@@ -105,7 +105,8 @@ func findARJHeader(file *os.File) (int64, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("could not find arj header")
+	fi, _ := file.Stat()
+	return 0, fmt.Errorf("could not find arj header in %s", fi.Name())
 }
 
 func parseARJMainHeader(f *os.File) ([]parse.Layout, error) {

@@ -41,7 +41,7 @@ func fileSize(file *os.File) int64 {
 
 	fi, err := file.Stat()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("fileSize error: ", err)
 	}
 	return fi.Size()
 }

@@ -96,9 +96,9 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 			// OS/2 (32-bit)
 			header, _ := parseMZ_LXHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
-		case "LE":
-			// OS/2 (mixed 16/32-bit)
-			panic("LE")
+		//case "LE":
+		// OS/2 (mixed 16/32-bit)
+		//panic("LE")
 		case "NE":
 			// Win16, OS/2
 			header, _ := parseMZ_NEHeader(file, pos)
@@ -109,7 +109,8 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 			pl.Layout = append(pl.Layout, header...)
 		default:
 			// XXX get samples of LE, W3 files
-			panic("unknown newHeaderId =" + newHeaderId)
+			fmt.Println("mz-error: unknown newHeaderId =" + newHeaderId)
+			return nil, nil
 		}
 	} else {
 		relocItems, _ := parse.ReadUint16le(file, pos+6)

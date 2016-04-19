@@ -47,7 +47,7 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	optHeaderSize, _ := parse.ReadUint16le(file, pos+20)
 	numberOfSections, _ := parse.ReadUint16le(file, pos+6)
-	machineName, _ := parse.ReadToMap(file, parse.Uint8, pos+4, peMachines)
+	machineName, _ := parse.ReadToMap(file, parse.Uint16le, pos+4, peMachines)
 	res := []parse.Layout{{
 		Offset: pos,
 		Length: peHeaderLen,

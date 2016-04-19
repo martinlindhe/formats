@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	//	"github.com/martinlindhe/formats"
+	"github.com/martinlindhe/formats"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -20,9 +20,9 @@ func main() {
 	kingpin.CommandLine.HelpFlag.Short('h')
 	kingpin.Parse()
 
-	fileList := []os.FileInfo{}
+	fileList := []string{}
 	err := filepath.Walk(*path, func(path string, f os.FileInfo, err error) error {
-		fileList = append(fileList, f)
+		fileList = append(fileList, path)
 		return nil
 	})
 	if err != nil {
@@ -30,11 +30,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, file := range fileList {
-		if file.IsDir() {
+	for _, fileName := range fileList {
+
+		file, _ := os.Open(fileName)
+		fi, _ := file.Stat()
+		if fi.IsDir() {
 			continue
 		}
-		fmt.Println(file.Name(), ": xxx check format!")
-	}
 
+		layout, err := formats.ParseLayout(file)
+		if err != nil {
+			fmt.Println("error:", err)
+			os.Exit(1)
+		}
+
+		if layout == nil {
+			fmt.Println("ERR: layout is nil")
+			os.Exit(1)
+		}
+
+		fmt.Println(fi.Name(), ":", layout.ShortPrint())
+	}
 }

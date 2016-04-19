@@ -95,7 +95,7 @@ func TestParseGIF87a(t *testing.T) {
 
 func TestParseGIF89a(t *testing.T) {
 
-	file, err := os.Open("samples/gif/gif_89a_001.gif")
+	file, err := os.Open("samples/images/gif/gif_89a_001.gif")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
@@ -146,7 +146,7 @@ trailer (0044), Group
 
 func TestParseARJ(t *testing.T) {
 
-	file, err := os.Open("samples/arj/tiny.arj")
+	file, err := os.Open("samples/archives/arj/arj_001_tiny.arj")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
@@ -179,19 +179,21 @@ func TestParseARJ(t *testing.T) {
 
 func TestParseBMP(t *testing.T) {
 
-	file, err := os.Open("samples/bmp/bmp_v3-001.bmp")
+	file, err := os.Open("samples/images/bmp/bmp_v3-001.bmp")
 	defer file.Close()
 	assert.Equal(t, nil, err)
 
 	layout, err := ParseLayout(file)
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, `file header (0000), Group
+	assert.Equal(t, `Format: bmp (bmp_v3-001.bmp, 70 bytes)
+
+file header (0000), group
   magic (0000), ASCII
   file size (0002), uint32-le
   reserved (0006), uint32-le
-  offset to image data (000a), uint32-le
-info header V3 (000e), Group
+  image data offset (000a), uint32-le
+info header V3 (000e), group
   info header size (000e), uint32-le
   width (0012), uint32-le
   height (0016), uint32-le
@@ -203,7 +205,7 @@ info header V3 (000e), Group
   vertical resolution (002a), uint32-le
   number of used colors (002e), uint32-le
   number of important colors (0032), uint32-le
-image data (0036), Group
-  image data (0036), uint8
+image data (0036), group
+  image data (0036), bytes
 `, layout.PrettyPrint())
 }

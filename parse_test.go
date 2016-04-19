@@ -101,41 +101,43 @@ func TestParseGIF89a(t *testing.T) {
 
 	layout, err := ParseLayout(file)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, `header (0000), Group
+	assert.Equal(t, `Format: gif (gif_89a_001.gif, 69 bytes)
+
+header (0000), group
   signature (0000), ASCII
   version (0003), ASCII
-logical screen descriptor (0006), Group
+logical screen descriptor (0006), group
   width (0006), uint16-le
   height (0008), uint16-le
   packed (000a), uint8
   background color (000b), uint8
   aspect ratio (000c), uint8
-global color table (000d), Group
+global color table (000d), group
   color 1 (000d), RGB
   color 2 (0010), RGB
   color 3 (0013), RGB
   color 4 (0016), RGB
-extension (0019), Group
+graphic control extension (0019), group
   block id (extension) (0019), uint8
-  graphic control (001a), uint8
+  type = graphic control (001a), uint8
   byte size (001b), uint8
   packed #2 (001c), uint8
   delay time (001d), uint16-le
   transparent color index (001f), uint8
   block terminator (0020), uint8
-image descriptor (0021), Group
+image descriptor (0021), group
   image separator (0021), uint8
   image left (0022), uint16-le
   image top (0024), uint16-le
   image width (0026), uint16-le
   image height (0028), uint16-le
   packed #3 (002a), uint8
-image data (002b), Group
+image data (002b), group
   lzw code size (002b), uint8
   block length (002c), uint8
-  block (002d), uint8
+  block (002d), bytes
   block length (0043), uint8
-trailer (0044), Group
+trailer (0044), group
   trailer (0044), uint8
 `, layout.PrettyPrint())
 
@@ -152,28 +154,30 @@ func TestParseARJ(t *testing.T) {
 
 	layout, err := ParseLayout(file)
 	assert.Equal(t, nil, err)
-	assert.Equal(t, `main header (0035), Group
-  magic (0035), uint16-le
-  basic header size (0037), uint16-le
-  size up to and including 'extra data' (0039), uint8
-  archiver version number (003a), uint8
-  minimum archiver version to extract (003b), uint8
-  host OS (003c), uint8
-  arj flags (003d), uint8
-  security version (003e), uint8
-  file type (003f), uint8
-  created time (0040), uint32-le
-  modified time (0044), uint32-le
-  archive size for secured archive (0048), uint32-le
-  security envelope file position (004c), uint32-le
-  filespec position in filename (0050), uint32-le
-  length in bytes of security envelope data (0054), uint16-le
-  encryption version (0056), uint8
-  last chapter (0057), uint8
-  archive name (0035), ASCIIZ
-  comment (0035), ASCIIZ
-  crc32 (0035), uint32-le
-  ext header size (0039), uint32-le
+	assert.Equal(t, `Format: arj (arj_001_tiny.arj, 121 bytes)
+
+main header (0024), group
+  magic (0024), uint16-le
+  basic header size (0026), uint16-le
+  size up to and including 'extra data' (0028), uint8
+  archiver version number (0029), uint8
+  minimum archiver version to extract (002a), uint8
+  host OS (002b), uint8
+  arj flags (002c), uint8
+  security version (002d), uint8
+  file type (002e), uint8
+  created time (002f), uint32-le
+  modified time (0033), uint32-le
+  archive size for secured archive (0037), uint32-le
+  security envelope file position (003b), uint32-le
+  filespec position in filename (003f), uint32-le
+  length in bytes of security envelope data (0043), uint16-le
+  encryption version (0045), uint8
+  last chapter (0046), uint8
+  archive name (0047), ASCIIZ
+  comment (0048), ASCIIZ
+  crc32 (0049), uint32-le
+  ext header size (004d), uint32-le
 `, layout.PrettyPrint())
 }
 

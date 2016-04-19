@@ -44,6 +44,7 @@ func PYTHON(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.Pars
 
 func isPYTHON(file *os.File) bool {
 
+	// TODO: in order to work with hdr []byte, we need to read uint32le from it ...
 	file.Seek(0, os.SEEK_SET)
 	var b uint32
 	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {

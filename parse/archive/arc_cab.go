@@ -1,34 +1,28 @@
 package archive
 
-// STATUS 80% some polishing remains
+// STATUS: 80%
 
 import (
-	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func CAB(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isCAB(file) {
+	if !isCAB(&hdr) {
 		return nil, nil
 	}
 	return parseCAB(file, pl)
 }
 
-func isCAB(file *os.File) bool {
+func isCAB(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'M' || b[1] != 'S' || b[2] != 'C' || b[3] != 'F' {
 		return false
 	}
-
 	return true
 }
 

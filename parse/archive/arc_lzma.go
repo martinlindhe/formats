@@ -1,32 +1,26 @@
 package archive
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func LZMA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isLZMA(file) {
+	if !isLZMA(&hdr) {
 		return nil, nil
 	}
 	return parseLZMA(file, pl)
 }
 
-func isLZMA(file *os.File) bool {
+func isLZMA(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [6]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	// XXX not proper magic , need other check
 	if b[0] != 0x5d || b[1] != 0x00 {
 		return false
 	}
-
 	return true
 }
 

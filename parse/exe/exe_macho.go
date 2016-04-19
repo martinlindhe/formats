@@ -1,13 +1,14 @@
 package exe
 
-// NOTE: on OSX, there is C headers in /usr/include/mach-o
-// OS X Mach-O executable
+// MacOS Mach-O executable
+// NOTE: on MacOS, there is C headers in /usr/include/mach-o
+
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -37,21 +38,16 @@ var (
 
 func MachO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isMachO(file) {
+	if !isMachO(&hdr) {
 		return nil, nil
 	}
 	return parseMachO(file, pl)
 }
 
-func isMachO(file *os.File) bool {
+func isMachO(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b uint32
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
-	if b == 0xfeedfacf {
+	b := *hdr
+	if b[3] == 0xfe && b[2] == 0xed && b[1] == 0xfa && b[0] == 0xcf {
 		return true
 	}
 

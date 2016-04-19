@@ -9,9 +9,10 @@ package image
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"io"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -49,20 +50,15 @@ const (
 
 func GIF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isGIF(file) {
+	if !isGIF(&hdr) {
 		return nil, nil
 	}
 	return parseGIF(file, pl)
 }
 
-func isGIF(file *os.File) bool {
+func isGIF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-
-	var b [5]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] != 'G' || b[1] != 'I' || b[2] != 'F' || b[3] != '8' {
 		return false
 	}

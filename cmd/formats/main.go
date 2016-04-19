@@ -118,6 +118,7 @@ func uiLoop(file *os.File) {
 	statsPar.X = 10
 
 	updateUIPositions()
+	focusAtCurrentField()
 
 	termui.Handle("/sys/kbd/q", func(termui.Event) {
 		// press q to quit

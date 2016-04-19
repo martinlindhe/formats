@@ -5,9 +5,10 @@ package archive
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"io"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 
 func ARJ(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isARJ(file) {
+	if !isARJ(&hdr) {
 		return nil, nil
 	}
 
@@ -37,6 +38,74 @@ func ARJ(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedL
 	pl.Layout = mainHeader
 
 	return &pl, err
+}
+
+func isARJ(hdr *[0xffff]byte) bool {
+
+	b := *hdr
+	return b[0] == 0x60 && b[1] == 0xea
+}
+
+/**
+ * finds arj header and leaves file position at it
+ */
+func findARJHeader(file *os.File) (int64, error) {
+
+	reader := io.Reader(file)
+
+	pos, _ := file.Seek(0, os.SEEK_CUR)
+	lastpos, _ := file.Seek(0, os.SEEK_END)
+	lastpos -= 2
+
+	if lastpos > arjMaxSFX {
+		lastpos = arjMaxSFX
+	}
+	for ; pos < lastpos; pos++ {
+		// fmt.Printf("setting pos to %04x\n", pos)
+		pos2, _ := file.Seek(pos, os.SEEK_SET)
+		if pos != pos2 {
+			fmt.Printf("warning: expected %d, got %d\n", pos, pos2)
+		}
+
+		var c byte
+		if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
+			return 0, err
+		}
+
+		for pos < lastpos {
+			if c != arjHeaderIDLo { // low order first
+				if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
+					return 0, err
+				}
+			} else {
+				if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
+					return 0, err
+				}
+				if c == arjHeaderIDHi {
+					// fmt.Println("yes 1")
+					break
+				}
+			}
+			pos++
+		}
+		if pos >= lastpos {
+			// fmt.Println("yes 2")
+			break
+		}
+
+		var headerSize uint16
+		if err := binary.Read(reader, binary.LittleEndian, &headerSize); err != nil {
+			return 0, err
+		}
+
+		// fmt.Printf("header size %02x\n", headerSize)
+
+		if headerSize <= arjHeaderSizeMax {
+			return pos, nil
+		}
+	}
+
+	return 0, fmt.Errorf("could not find arj header")
 }
 
 func parseARJMainHeader(f *os.File) ([]parse.Layout, error) {
@@ -112,77 +181,4 @@ func parseARJMainHeader(f *os.File) ([]parse.Layout, error) {
 	               (0x02 = reserved bit)
 	     2   spare bytes
 	*/
-}
-
-func isARJ(file *os.File) bool {
-
-	file.Seek(0, os.SEEK_SET)
-	r := io.Reader(file)
-	var b [2]byte
-	if err := binary.Read(r, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	return b[0] == 0x60 && b[1] == 0xea
-}
-
-/**
- * finds arj header and leaves file position at it
- */
-func findARJHeader(file *os.File) (int64, error) {
-
-	reader := io.Reader(file)
-
-	pos, _ := file.Seek(0, os.SEEK_CUR)
-	lastpos, _ := file.Seek(0, os.SEEK_END)
-	lastpos -= 2
-
-	if lastpos > arjMaxSFX {
-		lastpos = arjMaxSFX
-	}
-	for ; pos < lastpos; pos++ {
-		// fmt.Printf("setting pos to %04x\n", pos)
-		pos2, _ := file.Seek(pos, os.SEEK_SET)
-		if pos != pos2 {
-			fmt.Printf("warning: expected %d, got %d\n", pos, pos2)
-		}
-
-		var c byte
-		if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
-			return 0, err
-		}
-
-		for pos < lastpos {
-			if c != arjHeaderIDLo { // low order first
-				if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
-					return 0, err
-				}
-			} else {
-				if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
-					return 0, err
-				}
-				if c == arjHeaderIDHi {
-					// fmt.Println("yes 1")
-					break
-				}
-			}
-			pos++
-		}
-		if pos >= lastpos {
-			// fmt.Println("yes 2")
-			break
-		}
-
-		var headerSize uint16
-		if err := binary.Read(reader, binary.LittleEndian, &headerSize); err != nil {
-			return 0, err
-		}
-
-		// fmt.Printf("header size %02x\n", headerSize)
-
-		if headerSize <= arjHeaderSizeMax {
-			return pos, nil
-		}
-	}
-
-	return 0, fmt.Errorf("could not find arj header")
 }

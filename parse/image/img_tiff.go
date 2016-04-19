@@ -3,27 +3,22 @@ package image
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func TIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isTIFF(file) {
+	if !isTIFF(&hdr) {
 		return nil, nil
 	}
 	return parseTIFF(file, pl)
 }
 
-func isTIFF(file *os.File) bool {
+func isTIFF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	// XXX dont know magic numbers just guessing
 	if b[0] != 'I' || b[1] != 'I' || b[2] != '*' || b[3] != 0 {
 		return false

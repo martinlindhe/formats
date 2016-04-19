@@ -3,31 +3,25 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func FLAC(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isFLAC(file) {
+	if !isFLAC(&hdr) {
 		return nil, nil
 	}
 	return parseFLAC(file, pl)
 }
 
-func isFLAC(file *os.File) bool {
+func isFLAC(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'f' || b[1] != 'L' || b[2] != 'a' || b[3] != 'C' {
 		return false
 	}
-
 	return true
 }
 
@@ -41,7 +35,7 @@ func parseFLAC(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 		Info:   "header",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
 		}}}
 
 	return &pl, nil

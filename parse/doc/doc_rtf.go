@@ -1,34 +1,29 @@
 package doc
 
 // Rich Type File (RTF)
+
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func RTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isRTF(file) {
+	if !isRTF(&hdr) {
 		return nil, nil
 	}
 	return parseRTF(file, pl)
 }
 
-func isRTF(file *os.File) bool {
+func isRTF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [5]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != '{' || b[1] != '\\' || b[2] != 'r' || b[3] != 't' || b[4] != 'f' {
 		return false
 	}
-
 	return true
 }
 

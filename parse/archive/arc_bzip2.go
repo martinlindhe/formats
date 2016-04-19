@@ -3,35 +3,29 @@ package archive
 // STATUS 1%, see https://golang.org/src/compress/bzip2/bzip2.go
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func BZIP2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isBZIP2(file) {
+	if !isBZIP2(&hdr) {
 		return nil, nil
 	}
 	return parseBZIP2(file, pl)
 }
 
-func isBZIP2(file *os.File) bool {
+func isBZIP2(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [3]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'B' || b[1] != 'Z' {
 		return false
 	}
 	if b[2] != 'h' {
-		// NOTE: onlu huffman encoding is used in the format (?)
+		// only huffman encoding is used in the format
 		return false
 	}
-
 	return true
 }
 

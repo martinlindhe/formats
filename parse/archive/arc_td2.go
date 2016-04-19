@@ -1,40 +1,33 @@
 package archive
 
-// STATUS 1%
+// STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func TD2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isTD2(file) {
+	if !isTD2(&hdr) {
 		return nil, nil
 	}
 	return parseTD2(file, pl)
 }
 
-func isTD2(file *os.File) bool {
+func isTD2(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [3]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 't' || b[1] != 'd' || b[2] != 0 {
 		return false
 	}
-
 	return true
 }
 
 func parseTD2(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-
 	pl.FileKind = parse.Archive
 	pl.Layout = []parse.Layout{{
 		Offset: pos,

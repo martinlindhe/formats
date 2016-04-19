@@ -1,29 +1,28 @@
 package font
 
+// Embedded OpenType
+// https://en.wikipedia.org/wiki/Embedded_OpenType
+
 // STATUS 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func EOT(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isEOT(file) {
+	if !isEOT(&hdr) {
 		return nil, nil
 	}
 	return parseEOT(file, pl)
 }
 
-func isEOT(file *os.File) bool {
+func isEOT(hdr *[0xffff]byte) bool {
 
-	file.Seek(34, os.SEEK_SET)
-	var b uint16
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	if b != 0x504c {
+	b := *hdr
+	if b[34] != 0x4c || b[35] != 0x50 {
 		return false
 	}
 	return true

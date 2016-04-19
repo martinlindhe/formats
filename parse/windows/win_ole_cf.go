@@ -12,25 +12,22 @@ package windows
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func OLECF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isOLECF(file) {
+	if !isOLECF(&hdr) {
 		return nil, nil
 	}
 	return parseOLECF(file, pl)
 }
 
-func isOLECF(file *os.File) bool {
+func isOLECF(hdr *[0xffff]byte) bool {
 
-	var b [8]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] != 0xd0 || b[1] != 0xcf || b[2] != 0x11 || b[3] != 0xe0 ||
 		b[4] != 0xa1 || b[5] != 0xb1 || b[6] != 0x1a || b[7] != 0xe1 {
 		return false

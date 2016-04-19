@@ -5,30 +5,25 @@ package exe
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func JAVA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isJAVA(file) {
+	if !isJAVA(&hdr) {
 		return nil, nil
 	}
 	return parseJAVA(file, pl)
 }
 
-func isJAVA(file *os.File) bool {
+func isJAVA(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b uint32
-	if err := binary.Read(file, binary.BigEndian, &b); err != nil {
-		return false
-	}
-	if b == 0xcafebabe {
+	b := *hdr
+	if b[0] == 0xca && b[1] == 0xfe && b[2] == 0xba && b[3] == 0xbe {
 		return true
 	}
-
 	return false
 }
 

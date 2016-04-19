@@ -5,30 +5,25 @@ package font
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func TTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isTTF(file) {
+	if !isTTF(&hdr) {
 		return nil, nil
 	}
 	return parseTTF(file, pl)
 }
 
-func isTTF(file *os.File) bool {
+func isTTF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] != 0 || b[1] != 1 || b[2] != 0 || b[3] != 0 {
 		return false
 	}
-
 	return true
 }
 

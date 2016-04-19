@@ -3,31 +3,25 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func OGG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isOGG(file) {
+	if !isOGG(&hdr) {
 		return nil, nil
 	}
 	return parseOGG(file, pl)
 }
 
-func isOGG(file *os.File) bool {
+func isOGG(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'O' || b[1] != 'g' || b[2] != 'g' {
 		return false
 	}
-
 	return true
 }
 

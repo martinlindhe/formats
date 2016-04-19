@@ -33,24 +33,18 @@ var (
 
 func JPEG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isJPEG(file) {
+	if !isJPEG(&hdr) {
 		return nil, nil
 	}
 	return parseJPEG(file, pl)
 }
 
-func isJPEG(file *os.File) bool {
+func isJPEG(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [12]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 0xff || b[1] != 0xd8 {
 		return false
 	}
-
 	if b[6] != 'J' || b[7] != 'F' || b[8] != 'I' || b[9] != 'F' || b[10] != 0 {
 		return false
 	}

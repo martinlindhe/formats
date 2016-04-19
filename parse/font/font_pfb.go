@@ -18,6 +18,8 @@ func PFB(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedL
 
 func isPFB(file *os.File) bool {
 
+	// XXX need ways to work on hdr []byte
+
 	// XXX just guessing ...
 	s, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, 6, 10)
 	if s != "%!FontType" {

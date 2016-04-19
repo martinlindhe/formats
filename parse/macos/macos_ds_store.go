@@ -7,32 +7,30 @@ package macos
 // XXX borked
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func DSSTORE(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isDSSTORE(file) {
+	if !isDSSTORE(&hdr) {
 		return nil, nil
 	}
 	return parseDSSTORE(file, pl)
 }
 
-func isDSSTORE(file *os.File) bool {
+func isDSSTORE(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
-	// XXX just guessing
-	//	if b[0] != 0xff || b[1] != 0xfe || b[2] != 0x23 || b[3] != 0 {
-	//		return false
-	//	}
 	return false
+	/*
+		b := *hdr
+		// XXX just guessing
+		if b[0] != 0xff || b[1] != 0xfe || b[2] != 0x23 || b[3] != 0 {
+			return false
+		}
+		return true
+	*/
 }
 
 func parseDSSTORE(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

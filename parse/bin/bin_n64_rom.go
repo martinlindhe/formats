@@ -5,26 +5,22 @@ package bin
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func N64ROM(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isN64ROM(file) {
+	if !isN64ROM(&hdr) {
 		return nil, nil
 	}
 	return parseN64ROM(file, pl)
 }
 
-func isN64ROM(file *os.File) bool {
+func isN64ROM(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] != 0x80 || b[1] != 0x37 || b[2] != 0x12 || b[3] != 0x40 {
 		return false
 	}

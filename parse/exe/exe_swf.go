@@ -3,26 +3,22 @@ package exe
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func SWF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isSWF(file) {
+	if !isSWF(&hdr) {
 		return nil, nil
 	}
 	return parseSWF(file, pl)
 }
 
-func isSWF(file *os.File) bool {
+func isSWF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [3]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] == 'F' || b[0] == 'C' || b[0] == 'Z' {
 		if b[1] == 'W' && b[2] == 'S' {
 			return true

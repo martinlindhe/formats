@@ -1,27 +1,22 @@
 package archive
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func RAR(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isRAR(file) {
+	if !isRAR(&hdr) {
 		return nil, nil
 	}
 	return parseRAR(file, pl)
 }
 
-func isRAR(file *os.File) bool {
+func isRAR(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'R' || b[1] != 'a' || b[2] != 'r' || b[3] != '!' {
 		return false
 	}

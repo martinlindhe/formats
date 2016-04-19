@@ -1,38 +1,28 @@
 package archive
 
-// STATUS 1% , XXX
+// STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func ISO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isISO(file) {
+	if !isISO(&hdr) {
 		return nil, nil
 	}
 	return parseISO(file, pl)
 }
 
-func isISO(file *os.File) bool {
+func isISO(hdr *[0xffff]byte) bool {
 
-	/* XXX
-	   if (BaseStream.Length < 0x8000 + 100)
-	       return false;
-	*/
-	file.Seek(0x8000, os.SEEK_SET)
-
-	var b [3]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+	pos := 0x8000
+	b := *hdr
+	if b[pos] != 1 || b[pos+1] != 'C' || b[pos+2] != 'D' {
 		return false
 	}
-
-	if b[0] != 1 || b[1] != 'C' || b[2] != 'D' {
-		return false
-	}
-
 	return true
 }
 

@@ -6,10 +6,10 @@ package image
 // STATUS: 90%
 
 import (
-	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -28,19 +28,15 @@ var (
 
 func BMP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isBMP(file) {
+	if !isBMP(&hdr) {
 		return nil, nil
 	}
 	return parseBMP(file, pl)
 }
 
-func isBMP(file *os.File) bool {
+func isBMP(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [2]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	return b[0] == 'B' && b[1] == 'M'
 }
 

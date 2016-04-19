@@ -6,33 +6,26 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func AIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isAIFF(file) {
+	if !isAIFF(&hdr) {
 		return nil, nil
 	}
 	return parseAIFF(file, pl)
 }
 
-func isAIFF(file *os.File) bool {
+func isAIFF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	// TODO also detect "AIFF" string
+	b := *hdr
 	if b[0] != 'F' || b[1] != 'O' || b[2] != 'R' || b[3] != 'M' {
 		return false
 	}
-
-	// TODO also detect "AIFF" string
-
 	return true
 }
 

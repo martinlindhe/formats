@@ -4,28 +4,23 @@ package exe
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func LUA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isLUA(file) {
+	if !isLUA(&hdr) {
 		return nil, nil
 	}
 	return parseLUA(file, pl)
 }
 
-func isLUA(file *os.File) bool {
+func isLUA(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b uint32
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
-	if b == 0x61754c1b {
+	b := *hdr
+	if b[3] == 0x61 && b[2] == 0x75 && b[1] == 0x4c && b[0] == 0x1b {
 		// Lua 5.1 and 5.2 identifer
 		return true
 	}

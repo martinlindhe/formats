@@ -4,28 +4,22 @@ package doc
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
-
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func WRI(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isWRI(file) {
+	if !isWRI(&hdr) {
 		return nil, nil
 	}
 	return parseWRI(file, pl)
 }
 
-func isWRI(file *os.File) bool {
+func isWRI(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [5]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	// TODO what is right magic bytes? just guessing
 	// FIXME IT IS     if data.find(b'\xBE\x00\x00\x00\xAB\x00\x00\x00\x00\x00\x00\x00\x00') == 1
 	if b[0] != 0x31 || b[1] != 0xbe || b[2] != 0 || b[3] != 0 {

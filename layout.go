@@ -1,6 +1,10 @@
 package formats
 
 import (
+	"encoding/binary"
+	"fmt"
+	"os"
+
 	"github.com/martinlindhe/formats/parse"
 	"github.com/martinlindhe/formats/parse/archive"
 	"github.com/martinlindhe/formats/parse/av"
@@ -11,20 +15,18 @@ import (
 	"github.com/martinlindhe/formats/parse/image"
 	"github.com/martinlindhe/formats/parse/macos"
 	"github.com/martinlindhe/formats/parse/windows"
-	"os"
 )
 
 var (
 	parsers = map[string]func(*os.File, [0xffff]byte, parse.ParsedLayout) (*parse.ParsedLayout, error){
-		"7z":    archive.SEVENZIP,
-		"arj":   archive.ARJ,
-		"bzip2": archive.BZIP2,
-		"cab":   archive.CAB,
-		"gzip":  archive.GZIP,
-		"iso":   archive.ISO,
-		"lzma":  archive.LZMA,
-		"rar":   archive.RAR,
-		// "tar": archive.TAR, // XXX
+		"7z":       archive.SEVENZIP,
+		"arj":      archive.ARJ,
+		"bzip2":    archive.BZIP2,
+		"cab":      archive.CAB,
+		"gzip":     archive.GZIP,
+		"iso":      archive.ISO,
+		"lzma":     archive.LZMA,
+		"rar":      archive.RAR,
 		"td2":      archive.TD2,
 		"winimg":   archive.WINIMG,
 		"xz":       archive.XZ,
@@ -87,17 +89,31 @@ func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
 
 func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 
-	var b [0xffff]byte
-	// XXX read into arr ...
+	fileSize := fileSize(file)
+	maxLen := int64(0xffff)
+	len := fileSize
+	if len > maxLen {
+		len = maxLen
+	}
+
+	b := make([]byte, len)
+
+	file.Seek(0, os.SEEK_SET)
+	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		return nil, err
+	}
+
+	var fixedB [0xffff]byte
+	copy(fixedB[:], b[:len])
 
 	for name, parser := range parsers {
 
 		layout := parse.ParsedLayout{
 			FormatName: name,
 			FileName:   fileGetName(file),
-			FileSize:   fileSize(file)}
+			FileSize:   fileSize}
 
-		pl, err := parser(file, b, layout)
+		pl, err := parser(file, fixedB, layout)
 		if pl != nil {
 			return pl, err
 		}

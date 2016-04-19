@@ -3,31 +3,25 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func FLV(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isFLV(file) {
+	if !isFLV(&hdr) {
 		return nil, nil
 	}
 	return parseFLV(file, pl)
 }
 
-func isFLV(file *os.File) bool {
+func isFLV(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [3]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'F' || b[1] != 'L' || b[2] != 'V' {
 		return false
 	}
-
 	return true
 }
 

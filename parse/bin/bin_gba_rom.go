@@ -1,6 +1,7 @@
 package bin
 
 // Gameboy Advance ROM image
+
 // STATUS: 1%
 
 import (

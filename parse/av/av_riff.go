@@ -4,31 +4,25 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func RIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isRIFF(file) {
+	if !isRIFF(&hdr) {
 		return nil, nil
 	}
 	return parseRIFF(file, pl)
 }
 
-func isRIFF(file *os.File) bool {
+func isRIFF(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *hdr
 	if b[0] != 'R' || b[1] != 'I' || b[2] != 'F' || b[3] != 'F' {
 		return false
 	}
-
 	return true
 }
 

@@ -3,26 +3,21 @@ package archive
 // STATUS: 1%
 
 import (
-	"encoding/binary"
 	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
 func GZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isGZIP(file) {
+	if !isGZIP(&hdr) {
 		return nil, nil
 	}
 	return parseGZIP(file, pl)
 }
 
-func isGZIP(file *os.File) bool {
+func isGZIP(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [2]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] != 0x1f || b[1] != 0x8b {
 		return false
 	}

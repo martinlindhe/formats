@@ -3,26 +3,22 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func MIDI(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isMIDI(file) {
+	if !isMIDI(&hdr) {
 		return nil, nil
 	}
 	return parseMIDI(file, pl)
 }
 
-func isMIDI(file *os.File) bool {
+func isMIDI(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+	b := *hdr
 	if b[0] != 'M' || b[1] != 'T' || b[2] != 'h' || b[3] != 'd' {
 		return false
 	}

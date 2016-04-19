@@ -5,27 +5,23 @@ package windows
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func LNK(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isLNK(file) {
+	if !isLNK(&hdr) {
 		return nil, nil
 	}
 	return parseLNK(file, pl)
 }
 
-func isLNK(file *os.File) bool {
+func isLNK(hdr *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b uint32
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	if b != 0x4c {
+	b := *hdr
+	if b[0] != 0x4c || b[1] != 0 || b[2] != 0 || b[3] != 0 {
 		return false
 	}
 	return true

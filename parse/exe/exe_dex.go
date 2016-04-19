@@ -4,32 +4,25 @@ package exe
 // STATUS: 1%
 
 import (
-	"encoding/binary"
 	"github.com/martinlindhe/formats/parse"
 	"os"
 )
 
 func DEX(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isDEX(file) {
+	if !isDEX(&hdr) {
 		return nil, nil
 	}
 	return parseDEX(file, pl)
 }
 
-func isDEX(file *os.File) bool {
+func isDEX(h *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [8]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
+	b := *h
 	if b[0] == 'd' && b[1] == 'e' && b[2] == 'x' && b[3] == '\n' &&
 		b[4] == '0' && b[5] == '3' && b[6] == '5' && b[7] == 0 {
 		return true
 	}
-
 	return false
 }
 

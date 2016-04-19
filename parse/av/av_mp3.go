@@ -3,29 +3,24 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 func MP3(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isMP3(file) {
+	if !isMP3(&hdr) {
 		return nil, nil
 	}
 	return parseMP3(file, pl)
 }
 
-func isMP3(file *os.File) bool {
-
-	file.Seek(0, os.SEEK_SET)
-	var b [4]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
+func isMP3(hdr *[0xffff]byte) bool {
 
 	// TODO find mp3 stream start, ignore id3 tags
 
+	b := *hdr
 	if b[0] != 'I' || b[1] != 'D' || b[2] != '3' {
 		return false
 	}
@@ -34,7 +29,6 @@ func isMP3(file *os.File) bool {
 	   if (id3ver != 3 && id3ver != 4)
 	       return false;
 	*/
-
 	return true
 }
 

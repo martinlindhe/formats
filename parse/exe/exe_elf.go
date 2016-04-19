@@ -4,7 +4,6 @@ package exe
 // STATUS: 70%
 
 import (
-	"encoding/binary"
 	"fmt"
 	"github.com/martinlindhe/formats/parse"
 	"os"
@@ -96,25 +95,19 @@ var (
 
 func ELF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	if !isELF(file) {
+	if !isELF(&hdr) {
 		return nil, nil
 	}
 	return parseELF(file, pl)
 }
 
-func isELF(file *os.File) bool {
+func isELF(h *[0xffff]byte) bool {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [16]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
-	// XXX 16 first bytes are id
+	b := *h
 	if b[0] == 0x7f && b[1] == 'E' && b[2] == 'L' && b[3] == 'F' {
+		// XXX 16 first bytes are id
 		return true
 	}
-
 	return false
 }
 

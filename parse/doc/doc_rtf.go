@@ -9,12 +9,12 @@ import (
 	"os"
 )
 
-func RTF(file *os.File) (*parse.ParsedLayout, error) {
+func RTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isRTF(file) {
 		return nil, nil
 	}
-	return parseRTF(file)
+	return parseRTF(file, pl)
 }
 
 func isRTF(file *os.File) bool {
@@ -32,18 +32,18 @@ func isRTF(file *os.File) bool {
 	return true
 }
 
-func parseRTF(file *os.File) (*parse.ParsedLayout, error) {
+func parseRTF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Document,
-		Layout: []parse.Layout{{
-			Offset: 0,
-			Length: 5, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: 0, Length: 5, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pos := int64(0)
+	pl.FileKind = parse.Document
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 5, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 5, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

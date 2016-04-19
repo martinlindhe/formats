@@ -1,8 +1,9 @@
 package av
 
-// STATUS: 1%
 // ASF container (.asf; .wmv; .wma)
 // video/x-ms-wmv, audio/x-ms-wma
+
+// STATUS: 1%
 
 import (
 	"encoding/binary"
@@ -11,52 +12,51 @@ import (
 )
 
 var (
-	ObjectSignature = []byte{
+	asfObjectSignature = []byte{
 		0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11,
 		0xA6, 0xD9, 0x00, 0xAA, 0x00, 0x62, 0xCE, 0x6C}
-	ObjectStreamProperties = []byte{
+	asfObjectStreamProperties = []byte{
 		0x91, 0x07, 0xDC, 0xB7, 0xB7, 0xA9, 0xCF, 0x11,
 		0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65}
-	StreamPropertyAudio = []byte{
+	asfStreamPropertyAudio = []byte{
 		0x40, 0x9E, 0x69, 0xF8, 0x4D, 0x5B, 0xCF, 0x11,
 		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
-	StreamPropertyVideo = []byte{
+	asfStreamPropertyVideo = []byte{
 		0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11,
 		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
 )
 
-func ASF(file *os.File) (*parse.ParsedLayout, error) {
+func ASF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isASF(file) {
 		return nil, nil
 	}
-	return parseASF(file)
+	return parseASF(file, pl)
 }
 
 func isASF(file *os.File) bool {
 
-	if !hasASFSignature(file, 0, ObjectSignature) {
+	if !hasASFSignature(file, 0, asfObjectSignature) {
 		return false
 	}
 
 	return true
 }
 
-func parseASF(file *os.File) (*parse.ParsedLayout, error) {
+func parseASF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.AudioVideo,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 16, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 16, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.AudioVideo
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 16, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 16, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }
 
 func hasASFSignature(file *os.File, offset int64, sig []byte) bool {
@@ -139,7 +139,7 @@ private Chunk ParseAsfHeader()
         subHead.length = (uint)lenValue;
         subHead.Nodes.Add(Data);
 
-        if (HasSignature(guid.offset, ObjectStreamProperties)) {
+        if (HasSignature(guid.offset, asfObjectStreamProperties)) {
             // TODO parse remaining of stream properites object
             var streamGuid = len.RelativeTo("Stream prop GUID", 16);
             subHead.Nodes.Add(streamGuid);
@@ -147,9 +147,9 @@ private Chunk ParseAsfHeader()
             //string streamHex = ByteArrayToString(d, streamGuid.offset, 16);
             string streamHex = "XXX streamHex";
 
-            if (HasSignature(streamGuid.offset, StreamPropertyAudio)) {
+            if (HasSignature(streamGuid.offset, asfStreamPropertyAudio)) {
                 Log("Audio");
-            } else if (HasSignature(streamGuid.offset, StreamPropertyVideo)) {
+            } else if (HasSignature(streamGuid.offset, asfStreamPropertyVideo)) {
                 Log("Video");
             } else {
                 Log("Unknown stream props guid = " + streamHex);

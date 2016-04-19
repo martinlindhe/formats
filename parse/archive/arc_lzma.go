@@ -6,12 +6,12 @@ import (
 	"os"
 )
 
-func LZMA(file *os.File) (*parse.ParsedLayout, error) {
+func LZMA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isLZMA(file) {
 		return nil, nil
 	}
-	return parseLZMA(file)
+	return parseLZMA(file, pl)
 }
 
 func isLZMA(file *os.File) bool {
@@ -30,23 +30,22 @@ func isLZMA(file *os.File) bool {
 	return true
 }
 
-func parseLZMA(file *os.File) (*parse.ParsedLayout, error) {
+func parseLZMA(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 13, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				// XXX unsure of this stuff
-				{Offset: pos, Length: 1, Info: "properties", Type: parse.Uint8},
-				{Offset: pos + 1, Length: 4, Info: "dict cap", Type: parse.Uint32le},
-				{Offset: pos + 5, Length: 8, Info: "uncompressed size", Type: parse.Uint64le},
-			}}}}
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 13, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			// XXX unsure of this stuff
+			{Offset: pos, Length: 1, Info: "properties", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 4, Info: "dict cap", Type: parse.Uint32le},
+			{Offset: pos + 5, Length: 8, Info: "uncompressed size", Type: parse.Uint64le},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

@@ -9,12 +9,12 @@ import (
 	"os"
 )
 
-func LUA(file *os.File) (*parse.ParsedLayout, error) {
+func LUA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isLUA(file) {
 		return nil, nil
 	}
-	return parseLUA(file)
+	return parseLUA(file, pl)
 }
 
 func isLUA(file *os.File) bool {
@@ -33,21 +33,20 @@ func isLUA(file *os.File) bool {
 	return false
 }
 
-func parseLUA(file *os.File) (*parse.ParsedLayout, error) {
+func parseLUA(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
-			}}}}
+	pl.FileKind = parse.Executable
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }
 
 /*

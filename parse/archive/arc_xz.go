@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func XZ(file *os.File) (*parse.ParsedLayout, error) {
+func XZ(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isXZ(file) {
 		return nil, nil
 	}
-	return parseXZ(file)
+	return parseXZ(file, pl)
 }
 
 func isXZ(file *os.File) bool {
@@ -32,21 +32,20 @@ func isXZ(file *os.File) bool {
 	return true
 }
 
-func parseXZ(file *os.File) (*parse.ParsedLayout, error) {
+func parseXZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 6, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 6, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }
 
 /*

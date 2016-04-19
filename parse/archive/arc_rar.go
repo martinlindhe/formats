@@ -6,12 +6,12 @@ import (
 	"os"
 )
 
-func RAR(file *os.File) (*parse.ParsedLayout, error) {
+func RAR(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isRAR(file) {
 		return nil, nil
 	}
-	return parseRAR(file)
+	return parseRAR(file, pl)
 }
 
 func isRAR(file *os.File) bool {
@@ -37,22 +37,21 @@ func isRAR(file *os.File) bool {
 	return true
 }
 
-func parseRAR(file *os.File) (*parse.ParsedLayout, error) {
+func parseRAR(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }
 
 /*

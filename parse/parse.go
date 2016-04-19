@@ -2,11 +2,55 @@ package parse
 
 import (
 	"encoding/binary"
-	//	"fmt"
+	"fmt"
 	"io"
-	"log"
 	"os"
 )
+
+func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (string, error) {
+
+	switch dataType {
+	case Uint8:
+		idx, err := ReadUint8(file, pos)
+		if err != nil {
+			return "", err
+		}
+		a := i.(map[byte]string)
+		if val, ok := a[idx]; ok {
+			return val, nil
+		}
+	case Uint16le:
+		idx, err := ReadUint16le(file, pos)
+		if err != nil {
+			return "", err
+		}
+		a := i.(map[uint16]string)
+		if val, ok := a[idx]; ok {
+			return val, nil
+		}
+	case Uint32le:
+		idx, err := ReadUint32le(file, pos)
+		if err != nil {
+			return "", err
+		}
+		a := i.(map[uint32]string)
+		if val, ok := a[idx]; ok {
+			return val, nil
+		}
+	case Uint32be:
+		idx, err := ReadUint32be(file, pos)
+		if err != nil {
+			return "", err
+		}
+		a := i.(map[uint32]string)
+		if val, ok := a[idx]; ok {
+			return val, nil
+		}
+	default:
+		fmt.Println("UNHNANdlNED:", dataType.String())
+	}
+	return "?", nil
+}
 
 func knownLengthASCII(file *os.File, offset int64, length int) (string, error) {
 
@@ -154,15 +198,6 @@ func ReadUint32le(file *os.File, offset int64) (uint32, error) {
 	var b uint32
 	binary.Read(file, binary.LittleEndian, &b)
 	return b, nil
-}
-
-func FileSize(file *os.File) int64 {
-
-	fi, err := file.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return fi.Size()
 }
 
 func (pl *ParsedLayout) PercentMapped(totalSize int64) float64 {

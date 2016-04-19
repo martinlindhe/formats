@@ -1,6 +1,7 @@
 package doc
 
 // HLP help file (Windows)
+
 // STATUS: 1%
 
 import (
@@ -9,12 +10,12 @@ import (
 	"os"
 )
 
-func HLP(file *os.File) (*parse.ParsedLayout, error) {
+func HLP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isHLP(file) {
 		return nil, nil
 	}
-	return parseHLP(file)
+	return parseHLP(file, pl)
 }
 
 func isHLP(file *os.File) bool {
@@ -33,19 +34,18 @@ func isHLP(file *os.File) bool {
 	return true
 }
 
-func parseHLP(file *os.File) (*parse.ParsedLayout, error) {
+func parseHLP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Document,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.Document
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

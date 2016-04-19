@@ -1,6 +1,7 @@
 package exe
 
 // Python bytecode
+
 // STATUS: 1%
 
 import (
@@ -33,12 +34,12 @@ var (
 	}
 )
 
-func PYTHON(file *os.File) (*parse.ParsedLayout, error) {
+func PYTHON(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isPYTHON(file) {
 		return nil, nil
 	}
-	return parsePYTHON(file)
+	return parsePYTHON(file, pl)
 }
 
 func isPYTHON(file *os.File) bool {
@@ -56,21 +57,20 @@ func isPYTHON(file *os.File) bool {
 	return false
 }
 
-func parsePYTHON(file *os.File) (*parse.ParsedLayout, error) {
+func parsePYTHON(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le}, // XXX decode to python version
-			}}}}
+	pl.FileKind = parse.Executable
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le}, // XXX decode to python version
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }
 
 /*

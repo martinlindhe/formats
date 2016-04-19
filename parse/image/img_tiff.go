@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func TIFF(file *os.File) (*parse.ParsedLayout, error) {
+func TIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isTIFF(file) {
 		return nil, nil
 	}
-	return parseTIFF(file)
+	return parseTIFF(file, pl)
 }
 
 func isTIFF(file *os.File) bool {
@@ -31,19 +31,18 @@ func isTIFF(file *os.File) bool {
 	return true
 }
 
-func parseTIFF(file *os.File) (*parse.ParsedLayout, error) {
+func parseTIFF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Image,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4,
-			Info:   "file header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.Image
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4,
+		Info:   "file header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

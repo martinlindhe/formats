@@ -3,7 +3,7 @@ package formats
 import (
 	"github.com/martinlindhe/formats/parse"
 	"github.com/martinlindhe/formats/parse/archive"
-	"github.com/martinlindhe/formats/parse/av" // a/v
+	"github.com/martinlindhe/formats/parse/av"
 	"github.com/martinlindhe/formats/parse/bin"
 	"github.com/martinlindhe/formats/parse/doc"
 	"github.com/martinlindhe/formats/parse/exe"
@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	parsers = map[string]func(*os.File) (*parse.ParsedLayout, error){
+	parsers = map[string]func(*os.File, [0xffff]byte, parse.ParsedLayout) (*parse.ParsedLayout, error){
 		"7z":    archive.SEVENZIP,
 		"arj":   archive.ARJ,
 		"bzip2": archive.BZIP2,
@@ -43,7 +43,7 @@ var (
 		"gba-rom":  bin.GBAROM,
 		"n64-rom":  bin.N64ROM,
 		"sqlite3":  bin.SQLITE3,
-		"pdb":      bin.PDB, // visual studio debug info
+		"pdb":      bin.PDB,
 		"chm":      doc.CHM,
 		"hlp":      doc.HLP,
 		"pdf":      doc.PDF,
@@ -79,17 +79,27 @@ var (
 	}
 )
 
+// ParseLayout returns a ParsedLayout for the file
+func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
+
+	return matchParser(file)
+}
+
 func matchParser(file *os.File) (*parse.ParsedLayout, error) {
-	for name, parse := range parsers {
-		parsed, err := parse(file)
-		if err != nil {
-			return nil, err
-		}
-		if parsed != nil {
-			parsed.FormatName = name
-			parsed.FileName = fileGetName(file)
-			parsed.FileSize = fileSize(file)
-			return parsed, nil
+
+	var b [0xffff]byte
+	// XXX read into arr ...
+
+	for name, parser := range parsers {
+
+		layout := parse.ParsedLayout{
+			FormatName: name,
+			FileName:   fileGetName(file),
+			FileSize:   fileSize(file)}
+
+		pl, err := parser(file, b, layout)
+		if pl != nil {
+			return pl, err
 		}
 	}
 
@@ -100,10 +110,4 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 func fileGetName(file *os.File) string {
 	stat, _ := file.Stat()
 	return stat.Name()
-}
-
-// ParseLayout returns a ParsedLayout for the file
-func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
-
-	return matchParser(file)
 }

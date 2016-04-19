@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func MP4(file *os.File) (*parse.ParsedLayout, error) {
+func MP4(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isMP4(file) {
 		return nil, nil
 	}
-	return parseMP4(file)
+	return parseMP4(file, pl)
 }
 
 func isMP4(file *os.File) bool {
@@ -32,19 +32,18 @@ func isMP4(file *os.File) bool {
 	return true
 }
 
-func parseMP4(file *os.File) (*parse.ParsedLayout, error) {
+func parseMP4(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.AudioVideo,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.AudioVideo
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

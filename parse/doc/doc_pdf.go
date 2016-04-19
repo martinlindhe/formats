@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func PDF(file *os.File) (*parse.ParsedLayout, error) {
+func PDF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isPDF(file) {
 		return nil, nil
 	}
-	return parsePDF(file)
+	return parsePDF(file, pl)
 }
 
 func isPDF(file *os.File) bool {
@@ -31,19 +31,18 @@ func isPDF(file *os.File) bool {
 	return true
 }
 
-func parsePDF(file *os.File) (*parse.ParsedLayout, error) {
+func parsePDF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Document,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.Document
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

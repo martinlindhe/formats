@@ -6,10 +6,10 @@ package windows
 //   MS Word documents (.doc, .pps, .ppt, .xls)
 //   Thumbs.DB
 
-// STATUS: 1%
-
 // http://www.forensicswiki.org/wiki/Thumbs.db
 // http://www.forensicswiki.org/wiki/OLE_Compound_File
+
+// STATUS: 1%
 
 import (
 	"encoding/binary"
@@ -17,12 +17,12 @@ import (
 	"os"
 )
 
-func OLECF(file *os.File) (*parse.ParsedLayout, error) {
+func OLECF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isOLECF(file) {
 		return nil, nil
 	}
-	return parseOLECF(file)
+	return parseOLECF(file, pl)
 }
 
 func isOLECF(file *os.File) bool {
@@ -38,19 +38,18 @@ func isOLECF(file *os.File) bool {
 	return true
 }
 
-func parseOLECF(file *os.File) (*parse.ParsedLayout, error) {
+func parseOLECF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.WindowsResource,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 8, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 8, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.WindowsResource
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 8, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 8, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

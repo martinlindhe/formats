@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func TD2(file *os.File) (*parse.ParsedLayout, error) {
+func TD2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isTD2(file) {
 		return nil, nil
 	}
-	return parseTD2(file)
+	return parseTD2(file, pl)
 }
 
 func isTD2(file *os.File) bool {
@@ -31,20 +31,19 @@ func isTD2(file *os.File) bool {
 	return true
 }
 
-func parseTD2(file *os.File) (*parse.ParsedLayout, error) {
+func parseTD2(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 3,
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 3, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 3,
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 3, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

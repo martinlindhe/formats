@@ -7,15 +7,19 @@ import (
 	"fmt"
 	"github.com/martinlindhe/formats/parse"
 	"os"
-	"sort"
 )
 
-func MZ(file *os.File) (*parse.ParsedLayout, error) {
+var (
+	mzHeaderLen  = int64(28) // XXX
+	subHeaderLen = int64(36) // XXX
+)
+
+func MZ(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isMZ(file) {
 		return nil, nil
 	}
-	return parseMZ(file)
+	return parseMZ(file, pl)
 }
 
 func isMZ(file *os.File) bool {
@@ -33,13 +37,10 @@ func isMZ(file *os.File) bool {
 	return true
 }
 
-func parseMZ(file *os.File) (*parse.ParsedLayout, error) {
+func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable}
-
+	pl.FileKind = parse.Executable
 	pos := int64(0)
-	mzHeaderLen := int64(28) // XXX
 	mz := parse.Layout{
 		Offset: pos,
 		Length: mzHeaderLen,
@@ -62,11 +63,11 @@ func parseMZ(file *os.File) (*parse.ParsedLayout, error) {
 			{Offset: pos + 26, Length: 2, Info: "overlay", Type: parse.Uint16le},
 		}}
 
-	res.Layout = append(res.Layout, mz)
+	pl.Layout = append(pl.Layout, mz)
 
 	custom := findCustomDOSHeaders(file)
 	if custom != nil {
-		res.Layout = append(res.Layout, *custom)
+		pl.Layout = append(pl.Layout, *custom)
 	}
 
 	hdrSizeInParagraphs, _ := parse.ReadUint16le(file, pos+8)
@@ -78,8 +79,7 @@ func parseMZ(file *os.File) (*parse.ParsedLayout, error) {
 		// 0x40 for new-(NE,LE,LX,W3,PE etc.) executable
 		pos += mzHeaderLen
 
-		subHeaderLen := int64(36) // XXX
-		res.Layout = append(res.Layout, parse.Layout{
+		pl.Layout = append(pl.Layout, parse.Layout{
 			Offset: pos,
 			Length: subHeaderLen,
 			Info:   "sub header", // XXX name
@@ -101,18 +101,18 @@ func parseMZ(file *os.File) (*parse.ParsedLayout, error) {
 		case "LX":
 			// OS/2 (32-bit)
 			header, _ := parseMZ_LXHeader(file, pos)
-			res.Layout = append(res.Layout, header...)
+			pl.Layout = append(pl.Layout, header...)
 		case "LE":
 			// OS/2 (mixed 16/32-bit)
 			panic("LE")
 		case "NE":
 			// Win16, OS/2
 			header, _ := parseMZ_NEHeader(file, pos)
-			res.Layout = append(res.Layout, header...)
+			pl.Layout = append(pl.Layout, header...)
 		case "PE":
 			// Win32, Win64
 			header, _ := parseMZ_PEHeader(file, pos)
-			res.Layout = append(res.Layout, header...)
+			pl.Layout = append(pl.Layout, header...)
 		default:
 			// XXX get samples of LE, W3 files
 			panic("unknown newHeaderId =" + newHeaderId)
@@ -134,7 +134,7 @@ func parseMZ(file *os.File) (*parse.ParsedLayout, error) {
 				}...)
 				pos += 4
 			}
-			res.Layout = append(res.Layout, reloc)
+			pl.Layout = append(pl.Layout, reloc)
 		}
 	}
 
@@ -151,11 +151,11 @@ func parseMZ(file *os.File) (*parse.ParsedLayout, error) {
 			{Offset: pos, Length: 4, Info: "XXX", Type: parse.Bytes},
 		}}
 
-	res.Layout = append(res.Layout, codeChunk)
+	pl.Layout = append(pl.Layout, codeChunk)
 
-	sort.Sort(parse.ByLayout(res.Layout))
+	pl.Sort()
 
-	return &res, nil
+	return &pl, nil
 }
 
 /*

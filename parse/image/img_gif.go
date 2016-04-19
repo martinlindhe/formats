@@ -1,9 +1,10 @@
 package image
 
-// STATUS ~80%: gif89 most files ok, gif87 broken!
-
 // XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
 // XXX samples/gif/gif_87a_001.gif is broken!
+
+// STATUS: 80%
+// XXX gif89 most files ok, gif87 broken!
 
 import (
 	"encoding/binary"
@@ -46,12 +47,12 @@ const (
 	imgDescriptorLen = 10
 )
 
-func GIF(file *os.File) (*parse.ParsedLayout, error) {
+func GIF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isGIF(file) {
 		return nil, nil
 	}
-	return parseGIF(file)
+	return parseGIF(file, pl)
 }
 
 func isGIF(file *os.File) bool {
@@ -71,26 +72,25 @@ func isGIF(file *os.File) bool {
 	return true
 }
 
-func parseGIF(file *os.File) (*parse.ParsedLayout, error) {
+func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Image,
-	}
+	pl.FileKind = parse.Image
 
-	res.Layout = append(res.Layout, gifHeader(file))
-	res.Layout = append(res.Layout, gifLogicalDescriptor(file))
+	pl.Layout = append(pl.Layout, gifHeader(file))
+	pl.Layout = append(pl.Layout, gifLogicalDescriptor(file))
 
 	// XXX 1. make test using a specific file, with known PACKED value, and use that to test the decode stuff!
 
 	// XXX hack... decodeBitfieldFromInfo should return 1 but returns 2 now for soem reason?!
-	if res.DecodeBitfieldFromInfo(file, "global color table flag") != 0 {
-		if res.DecodeBitfieldFromInfo(file, "global color table flag") != 1 {
-			fmt.Println(res.DecodeBitfieldFromInfo(file, "global color table flag"))
+	globalColorTableFlag := pl.DecodeBitfieldFromInfo(file, "global color table flag")
+	if globalColorTableFlag != 0 {
+		if globalColorTableFlag != 1 {
+			fmt.Println(globalColorTableFlag)
 			panic("res is odd!")
 		}
-		sizeOfGCT := res.DecodeBitfieldFromInfo(file, "size of global color table")
+		sizeOfGCT := pl.DecodeBitfieldFromInfo(file, "size of global color table")
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
-			res.Layout = append(res.Layout, gifGlobalColorTable(file, gctByteLen))
+			pl.Layout = append(pl.Layout, gifGlobalColorTable(file, gctByteLen))
 		}
 	}
 
@@ -102,7 +102,7 @@ func parseGIF(file *os.File) (*parse.ParsedLayout, error) {
 		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
 				fmt.Println("XXX did not find gif trailer!")
-				return &res, nil
+				return &pl, nil
 			}
 			return nil, err
 		}
@@ -113,19 +113,19 @@ func parseGIF(file *os.File) (*parse.ParsedLayout, error) {
 			if err != nil {
 				return nil, err
 			}
-			res.Layout = append(res.Layout, *gfxExt)
+			pl.Layout = append(pl.Layout, *gfxExt)
 
 		case sImageDescriptor:
 			imgDescriptor := gifImageDescriptor(file, offset)
 			if imgDescriptor != nil {
-				res.Layout = append(res.Layout, *imgDescriptor)
+				pl.Layout = append(pl.Layout, *imgDescriptor)
 			}
-			if res.DecodeBitfieldFromInfo(file, "local color table flag") == 1 {
+			if pl.DecodeBitfieldFromInfo(file, "local color table flag") == 1 {
 				// XXX this is untested due to lack of sample with a local color table
-				sizeOfLCT := res.DecodeBitfieldFromInfo(file, "size of local color table")
+				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "size of local color table")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
 					localTbl := gifLocalColorTable(file, offset+imgDescriptorLen, lctByteLen)
-					res.Layout = append(res.Layout, localTbl)
+					pl.Layout = append(pl.Layout, localTbl)
 				}
 			}
 
@@ -133,11 +133,11 @@ func parseGIF(file *os.File) (*parse.ParsedLayout, error) {
 			if err != nil {
 				return nil, err
 			}
-			res.Layout = append(res.Layout, *imgData)
+			pl.Layout = append(pl.Layout, *imgData)
 
 		case sTrailer:
-			res.Layout = append(res.Layout, gifTrailer(file, offset))
-			return &res, nil
+			pl.Layout = append(pl.Layout, gifTrailer(file, offset))
+			return &pl, nil
 		}
 	}
 }
@@ -185,10 +185,9 @@ func gifImageDescriptor(file *os.File, pos int64) *parse.Layout {
 func gifGlobalColorTable(file *os.File, byteLen int64) parse.Layout {
 
 	pos := int64(0x0d)
-
 	childs := []parse.Layout{}
-
 	cnt := 0
+
 	for i := int64(0); i < byteLen; i += 3 {
 		cnt++
 		childs = append(childs, parse.Layout{
@@ -209,14 +208,15 @@ func gifGlobalColorTable(file *os.File, byteLen int64) parse.Layout {
 func gifLocalColorTable(file *os.File, pos int64, byteLen int64) parse.Layout {
 
 	childs := []parse.Layout{}
-
 	cnt := 0
+
 	for i := int64(0); i < byteLen; i += 3 {
 		cnt++
+		id := fmt.Sprintf("%d", cnt)
 		childs = append(childs, parse.Layout{
 			Offset: pos + i,
 			Length: 3,
-			Info:   fmt.Sprintf("color %d", cnt),
+			Info:   "color " + id,
 			Type:   parse.RGB})
 	}
 
@@ -237,8 +237,8 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 
 	typeSpecific := []parse.Layout{}
 	typeInfo := ""
-
 	size := int64(0)
+
 	switch extType {
 	case eText:
 		size = 13
@@ -335,7 +335,7 @@ func gifReadBlock(file *os.File) (int, error) {
 
 func gifLogicalDescriptor(file *os.File) parse.Layout {
 
-	pos := int64(0x06)
+	pos := int64(6)
 	return parse.Layout{
 		Offset: pos,
 		Length: 7,

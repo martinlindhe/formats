@@ -1,9 +1,10 @@
 package image
 
-// STATUS: 80%
 // TODO need sample with exif data
 // XXX samples/jpg/jpeg_002.jpg parse OK!
 // XXX samples/jpg/jpeg_001.jpg loops forever
+
+// STATUS: 80%
 
 import (
 	"encoding/binary"
@@ -30,12 +31,12 @@ var (
 	}
 )
 
-func JPEG(file *os.File) (*parse.ParsedLayout, error) {
+func JPEG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isJPEG(file) {
 		return nil, nil
 	}
-	return parseJPEG(file)
+	return parseJPEG(file, pl)
 }
 
 func isJPEG(file *os.File) bool {
@@ -56,11 +57,10 @@ func isJPEG(file *os.File) bool {
 	return true
 }
 
-func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
+func parseJPEG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Image}
+	pl.FileKind = parse.Image
 
 	for {
 		magic, _ := parse.ReadUint8(file, pos)
@@ -74,28 +74,26 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 
 		if marker == 0xd8 { // start of image
 			// NOTE: this marker dont have any content
-			res.Layout = append(res.Layout, parse.Layout{
+			pl.Layout = append(pl.Layout, parse.Layout{
 				Offset: pos,
 				Length: 2,
 				Info:   jpegChunkTypes[marker],
 				Type:   parse.Group,
 				Childs: []parse.Layout{
 					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16le},
-				},
-			})
+				}})
 			pos += 2
 			continue
 		}
 		if marker == 0xd9 {
-			res.Layout = append(res.Layout, parse.Layout{
+			pl.Layout = append(pl.Layout, parse.Layout{
 				Offset: pos,
 				Type:   parse.Group,
 				Length: 2,
 				Info:   jpegChunkTypes[marker],
 				Childs: []parse.Layout{
 					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16le},
-				},
-			})
+				}})
 			// fmt.Println("Ending parser since EOI marker was detected")
 			break
 		}
@@ -112,8 +110,7 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 					{Offset: pos, Length: 2, Info: "type", Type: parse.Uint16be},
 					{Offset: pos + 2, Length: 2, Info: "length", Type: parse.Uint16be},
 					{Offset: pos + 4, Length: 1, Info: "color components", Type: parse.Uint8},
-				},
-			}
+				}}
 			pos += chunk.Length
 
 			for i := 0; i < int(components); i++ {
@@ -140,7 +137,7 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 			// fmt.Printf("starting at %04x\n", offset)
 			dataStart := pos
 			rewind := false
-			res.Layout = append(res.Layout, chunk)
+			pl.Layout = append(pl.Layout, chunk)
 
 			for {
 				var b uint16
@@ -158,7 +155,7 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 					// eoi
 					dataLen := pos - dataStart - 2
 
-					res.Layout = append(res.Layout, parse.Layout{
+					pl.Layout = append(pl.Layout, parse.Layout{
 						Offset: dataStart,
 						Length: dataLen,
 						Info:   "image data",
@@ -183,7 +180,7 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 
 		if marker == 0xe0 {
 			// APP0
-			res.Layout = append(res.Layout, parse.Layout{
+			pl.Layout = append(pl.Layout, parse.Layout{
 				Offset: pos,
 				Length: 18,
 				Info:   jpegChunkTypes[marker],
@@ -205,7 +202,7 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 
 		chunkLen, _ := parse.ReadUint16be(file, pos+2)
 
-		res.Layout = append(res.Layout, parse.Layout{
+		pl.Layout = append(pl.Layout, parse.Layout{
 			Offset: pos,
 			Length: 2 + int64(chunkLen),
 			Info:   jpegChunkTypes[marker],
@@ -218,5 +215,5 @@ func parseJPEG(file *os.File) (*parse.ParsedLayout, error) {
 		pos += 2 + int64(chunkLen)
 	}
 
-	return &res, nil
+	return &pl, nil
 }

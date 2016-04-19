@@ -1,6 +1,7 @@
 package font
 
-// truetype fonts
+// TrueType font
+
 // STATUS: 1%
 
 import (
@@ -9,12 +10,12 @@ import (
 	"os"
 )
 
-func TTF(file *os.File) (*parse.ParsedLayout, error) {
+func TTF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isTTF(file) {
 		return nil, nil
 	}
-	return parseTTF(file)
+	return parseTTF(file, pl)
 }
 
 func isTTF(file *os.File) bool {
@@ -31,19 +32,18 @@ func isTTF(file *os.File) bool {
 	return true
 }
 
-func parseTTF(file *os.File) (*parse.ParsedLayout, error) {
+func parseTTF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Font,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.Font
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

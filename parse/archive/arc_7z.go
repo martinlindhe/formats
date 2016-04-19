@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func SEVENZIP(file *os.File) (*parse.ParsedLayout, error) {
+func SEVENZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isSEVENZIP(file) {
 		return nil, nil
 	}
-	return parseSEVENZIP(file)
+	return parseSEVENZIP(file, pl)
 }
 
 func isSEVENZIP(file *os.File) bool {
@@ -32,20 +32,18 @@ func isSEVENZIP(file *os.File) bool {
 	return true
 }
 
-func parseSEVENZIP(file *os.File) (*parse.ParsedLayout, error) {
+func parseSEVENZIP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 6,
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 6,
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
-			}}}}
-
-	return &res, nil
+	return &pl, nil
 }

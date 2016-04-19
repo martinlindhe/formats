@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func MIDI(file *os.File) (*parse.ParsedLayout, error) {
+func MIDI(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isMIDI(file) {
 		return nil, nil
 	}
-	return parseMIDI(file)
+	return parseMIDI(file, pl)
 }
 
 func isMIDI(file *os.File) bool {
@@ -29,19 +29,18 @@ func isMIDI(file *os.File) bool {
 	return true
 }
 
-func parseMIDI(file *os.File) (*parse.ParsedLayout, error) {
+func parseMIDI(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.AudioVideo,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.AudioVideo
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

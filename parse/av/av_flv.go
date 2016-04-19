@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func FLV(file *os.File) (*parse.ParsedLayout, error) {
+func FLV(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isFLV(file) {
 		return nil, nil
 	}
-	return parseFLV(file)
+	return parseFLV(file, pl)
 }
 
 func isFLV(file *os.File) bool {
@@ -31,19 +31,18 @@ func isFLV(file *os.File) bool {
 	return true
 }
 
-func parseFLV(file *os.File) (*parse.ParsedLayout, error) {
+func parseFLV(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.AudioVideo,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 3, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 3, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.AudioVideo
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 3, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 3, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

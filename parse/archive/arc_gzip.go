@@ -1,6 +1,6 @@
 package archive
 
-// STATUS 1% , XXX
+// STATUS: 1%
 
 import (
 	"encoding/binary"
@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func GZIP(file *os.File) (*parse.ParsedLayout, error) {
+func GZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isGZIP(file) {
 		return nil, nil
 	}
-	return parseGZIP(file)
+	return parseGZIP(file, pl)
 }
 
 func isGZIP(file *os.File) bool {
@@ -29,20 +29,18 @@ func isGZIP(file *os.File) bool {
 	return true
 }
 
-func parseGZIP(file *os.File) (*parse.ParsedLayout, error) {
+func parseGZIP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 2,
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 2, Info: "magic", Type: parse.Uint16le}, // XXX le/be ?
+		}}}
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 2,
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 2, Info: "magic", Type: parse.Uint16le}, // XXX le/be ?
-			}}}}
-
-	return &res, nil
+	return &pl, nil
 }

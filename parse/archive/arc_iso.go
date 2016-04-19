@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func ISO(file *os.File) (*parse.ParsedLayout, error) {
+func ISO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isISO(file) {
 		return nil, nil
 	}
-	return parseISO(file)
+	return parseISO(file, pl)
 }
 
 func isISO(file *os.File) bool {
@@ -36,20 +36,18 @@ func isISO(file *os.File) bool {
 	return true
 }
 
-func parseISO(file *os.File) (*parse.ParsedLayout, error) {
+func parseISO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0x8000)
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 3,
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 3, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 3,
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 3, Info: "magic", Type: parse.Bytes},
-			}}}}
-
-	return &res, nil
+	return &pl, nil
 }

@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func ZIP(file *os.File) (*parse.ParsedLayout, error) {
+func ZIP(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isZIP(file) {
 		return nil, nil
 	}
-	return parseZIP(file)
+	return parseZIP(file, pl)
 }
 
 func isZIP(file *os.File) bool {
@@ -29,20 +29,20 @@ func isZIP(file *os.File) bool {
 	return true
 }
 
-func parseZIP(file *os.File) (*parse.ParsedLayout, error) {
+func parseZIP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 6, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
-			}}}}
-	return &res, nil
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 6, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 6, Info: "magic", Type: parse.Bytes},
+		}}}
+
+	return &pl, nil
 }
 
 /*

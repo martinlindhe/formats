@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func BZIP2(file *os.File) (*parse.ParsedLayout, error) {
+func BZIP2(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isBZIP2(file) {
 		return nil, nil
 	}
-	return parseBZIP2(file)
+	return parseBZIP2(file, pl)
 }
 
 func isBZIP2(file *os.File) bool {
@@ -35,22 +35,20 @@ func isBZIP2(file *os.File) bool {
 	return true
 }
 
-func parseBZIP2(file *os.File) (*parse.ParsedLayout, error) {
+func parseBZIP2(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4,
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 2, Info: "magic", Type: parse.ASCII},
+			{Offset: pos + 2, Length: 1, Info: "encoding", Type: parse.Uint8},          // XXX h = huffman
+			{Offset: pos + 3, Length: 1, Info: "compression level", Type: parse.ASCII}, // 0=worst, 9=best<
+		}}}
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4,
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 2, Info: "magic", Type: parse.ASCII},
-				{Offset: pos + 2, Length: 1, Info: "encoding", Type: parse.Uint8},          // XXX h = huffman
-				{Offset: pos + 3, Length: 1, Info: "compression level", Type: parse.ASCII}, // 0=worst, 9=best<
-			}}}}
-
-	return &res, nil
+	return &pl, nil
 }

@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func TTC(file *os.File) (*parse.ParsedLayout, error) {
+func TTC(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isTTC(file) {
 		return nil, nil
 	}
-	return parseTTC(file)
+	return parseTTC(file, pl)
 }
 
 func isTTC(file *os.File) bool {
@@ -30,19 +30,18 @@ func isTTC(file *os.File) bool {
 	return true
 }
 
-func parseTTC(file *os.File) (*parse.ParsedLayout, error) {
+func parseTTC(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Font,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
-			}}}}
+	pl.FileKind = parse.Font
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

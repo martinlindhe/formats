@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func MKV(file *os.File) (*parse.ParsedLayout, error) {
+func MKV(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isMKV(file) {
 		return nil, nil
 	}
-	return parseMKV(file)
+	return parseMKV(file, pl)
 }
 
 func isMKV(file *os.File) bool {
@@ -31,19 +31,18 @@ func isMKV(file *os.File) bool {
 	return true
 }
 
-func parseMKV(file *os.File) (*parse.ParsedLayout, error) {
+func parseMKV(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.AudioVideo,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.AudioVideo
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

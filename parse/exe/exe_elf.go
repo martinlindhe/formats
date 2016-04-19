@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/martinlindhe/formats/parse"
 	"os"
-	"sort"
 )
 
 var (
@@ -95,12 +94,12 @@ var (
 	}
 )
 
-func ELF(file *os.File) (*parse.ParsedLayout, error) {
+func ELF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isELF(file) {
 		return nil, nil
 	}
-	return parseELF(file)
+	return parseELF(file, pl)
 }
 
 func isELF(file *os.File) bool {
@@ -119,39 +118,15 @@ func isELF(file *os.File) bool {
 	return false
 }
 
-func parseELF(file *os.File) (*parse.ParsedLayout, error) {
+func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	elfClass, _ := parse.ReadUint8(file, pos+4)
-	className := "?"
-	if val, ok := elfClasses[elfClass]; ok {
-		className = val
-	}
-
-	encoding, _ := parse.ReadUint8(file, pos+5)
-	encodingName := "?"
-	if val, ok := elfDataEncodings[encoding]; ok {
-		encodingName = val
-	}
-
-	osABI, _ := parse.ReadUint8(file, pos+7)
-	osABIName := "?"
-	if val, ok := elfOSABIs[osABI]; ok {
-		osABIName = val
-	}
-
-	elfType, _ := parse.ReadUint16le(file, pos+16)
-	typeName := "?"
-	if val, ok := elfTypes[elfType]; ok {
-		typeName = val
-	}
-
-	machine, _ := parse.ReadUint16le(file, pos+18)
-	machineName := "?"
-	if val, ok := elfMachines[machine]; ok {
-		machineName = val
-	}
+	className, _ := parse.ReadToMap(file, parse.Uint8, pos+4, elfClasses)
+	encodingName, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfDataEncodings)
+	osABIName, _ := parse.ReadToMap(file, parse.Uint8, pos+7, elfOSABIs)
+	typeName, _ := parse.ReadToMap(file, parse.Uint16le, pos+16, elfTypes)
+	machineName, _ := parse.ReadToMap(file, parse.Uint16le, pos+18, elfMachines)
 
 	phOffset, _ := parse.ReadUint32le(file, pos+28)
 	phEntrySize, _ := parse.ReadUint16le(file, pos+42)
@@ -161,46 +136,45 @@ func parseELF(file *os.File) (*parse.ParsedLayout, error) {
 	shEntrySize, _ := parse.ReadUint16le(file, pos+46)
 	shCount, _ := parse.ReadUint16le(file, pos+48)
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 52, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
-				{Offset: pos + 4, Length: 1, Info: "class = " + className, Type: parse.Uint8},
-				{Offset: pos + 5, Length: 1, Info: "data encoding = " + encodingName, Type: parse.Uint8},
-				{Offset: pos + 6, Length: 1, Info: "header version", Type: parse.Uint8},
-				{Offset: pos + 7, Length: 1, Info: "os abi = " + osABIName, Type: parse.Bytes},
-				{Offset: pos + 9, Length: 7, Info: "reserved", Type: parse.Bytes},
-				{Offset: pos + 16, Length: 2, Info: "type = " + typeName, Type: parse.Uint16le},
-				{Offset: pos + 18, Length: 2, Info: "machine = " + machineName, Type: parse.Uint16le},
-				{Offset: pos + 20, Length: 4, Info: "version", Type: parse.Uint32le},
-				{Offset: pos + 24, Length: 4, Info: "entry", Type: parse.Uint32le},
-				{Offset: pos + 28, Length: 4, Info: "program header offset", Type: parse.Uint32le},
-				{Offset: pos + 32, Length: 4, Info: "section header offset", Type: parse.Uint32le},
-				{Offset: pos + 36, Length: 4, Info: "flags", Type: parse.Uint32le},
-				{Offset: pos + 40, Length: 2, Info: "elf header size", Type: parse.Uint16le},
-				{Offset: pos + 42, Length: 2, Info: "program header entry size", Type: parse.Uint16le},
-				{Offset: pos + 44, Length: 2, Info: "program header count", Type: parse.Uint16le},
-				{Offset: pos + 46, Length: 2, Info: "section header entry size", Type: parse.Uint16le},
-				{Offset: pos + 48, Length: 2, Info: "section header count", Type: parse.Uint16le},
-				{Offset: pos + 50, Length: 2, Info: "section header strndx", Type: parse.Uint16le}, // XXX map
-			}}}}
+	pl.FileKind = parse.Executable
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 52, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
+			{Offset: pos + 4, Length: 1, Info: "class = " + className, Type: parse.Uint8},
+			{Offset: pos + 5, Length: 1, Info: "data encoding = " + encodingName, Type: parse.Uint8},
+			{Offset: pos + 6, Length: 1, Info: "header version", Type: parse.Uint8},
+			{Offset: pos + 7, Length: 1, Info: "os abi = " + osABIName, Type: parse.Bytes},
+			{Offset: pos + 9, Length: 7, Info: "reserved", Type: parse.Bytes},
+			{Offset: pos + 16, Length: 2, Info: "type = " + typeName, Type: parse.Uint16le},
+			{Offset: pos + 18, Length: 2, Info: "machine = " + machineName, Type: parse.Uint16le},
+			{Offset: pos + 20, Length: 4, Info: "version", Type: parse.Uint32le},
+			{Offset: pos + 24, Length: 4, Info: "entry", Type: parse.Uint32le},
+			{Offset: pos + 28, Length: 4, Info: "program header offset", Type: parse.Uint32le},
+			{Offset: pos + 32, Length: 4, Info: "section header offset", Type: parse.Uint32le},
+			{Offset: pos + 36, Length: 4, Info: "flags", Type: parse.Uint32le},
+			{Offset: pos + 40, Length: 2, Info: "elf header size", Type: parse.Uint16le},
+			{Offset: pos + 42, Length: 2, Info: "program header entry size", Type: parse.Uint16le},
+			{Offset: pos + 44, Length: 2, Info: "program header count", Type: parse.Uint16le},
+			{Offset: pos + 46, Length: 2, Info: "section header entry size", Type: parse.Uint16le},
+			{Offset: pos + 48, Length: 2, Info: "section header count", Type: parse.Uint16le},
+			{Offset: pos + 50, Length: 2, Info: "section header strndx", Type: parse.Uint16le}, // XXX map
+		}}}
 
 	if phOffset > 0 && phCount > 0 {
-		res.Layout = append(res.Layout, parseElfPhEntries(file, int64(phOffset), phEntrySize, phCount)...)
+		pl.Layout = append(pl.Layout, parseElfPhEntries(file, int64(phOffset), phEntrySize, phCount)...)
 	}
 
 	if shOffset > 0 {
-		res.Layout = append(res.Layout, parseElfShEntries(file, int64(shOffset), shEntrySize, shCount)...)
+		pl.Layout = append(pl.Layout, parseElfShEntries(file, int64(shOffset), shEntrySize, shCount)...)
 	}
 
-	sort.Sort(parse.ByLayout(res.Layout))
+	pl.Sort()
 
-	return &res, nil
+	return &pl, nil
 }
 
 func elfStrtabOffset(file *os.File, pos int64, shCount uint16) int64 {
@@ -232,17 +206,12 @@ func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uin
 	res := []parse.Layout{}
 
 	if int64(phEntrySize) != phHeaderSize {
-		fmt.Println("warning: unexpected ph entry size. expected", phHeaderSize, ", saw", int64(phEntrySize))
+		fmt.Println("warning: ph entry size - expected", phHeaderSize, ", saw", int64(phEntrySize))
 	}
 
 	for i := 1; i <= int(phCount); i++ {
 
-		phType, _ := parse.ReadUint32le(file, pos)
-		phTypeName := "?"
-		if val, ok := elfPhTypes[phType]; ok {
-			phTypeName = val
-		}
-
+		phTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos, elfPhTypes)
 		phOffset, _ := parse.ReadUint32le(file, pos+4)
 		phSize, _ := parse.ReadUint32le(file, pos+16)
 
@@ -297,18 +266,11 @@ func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uin
 
 	for i := 1; i <= int(shCount); i++ {
 
-		shType, _ := parse.ReadUint32le(file, pos+4)
-		shTypeName := "?"
-		if val, ok := elfShTypes[shType]; ok {
-			shTypeName = val
-		}
-
+		shTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+4, elfShTypes)
 		shOffset, _ := parse.ReadUint32le(file, pos+16)
 		shSize, _ := parse.ReadUint32le(file, pos+20)
-
 		nameOffset, _ := parse.ReadUint32le(file, pos)
 		name, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, strtabOffset+int64(nameOffset), 32)
-
 		res = append(res, parse.Layout{
 			Offset: pos,
 			Length: shHeaderSize,

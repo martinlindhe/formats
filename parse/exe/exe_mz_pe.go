@@ -12,20 +12,22 @@ import (
 )
 
 var (
-	optHeaderMainLen = int64(96)
+	peHeaderLen        = int64(24)
+	peSectionHeaderLen = int64(40)
+	peOptHeaderMainLen = int64(96)
 
 	peTypes = map[uint16]string{
 		0x10b: "PE32",
 		0x20b: "PE32+ (64-bit)",
 	}
 	peMachines = map[uint16]string{
-		0x14c:  "Intel 386",
+		0x14c:  "intel 386",
 		0x8664: "AMD64",
 	}
 	peSubsystems = map[uint16]string{
-		1: "Native",
+		1: "native",
 		2: "GUI",
-		3: "Console",
+		3: "console",
 		5: "OS/2",
 		7: "POSIX",
 	}
@@ -43,18 +45,9 @@ var (
 // parses 32/64-bit Windows executables
 func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
-	peHeaderLen := int64(24)
-	sectionHeaderLen := int64(40)
 	optHeaderSize, _ := parse.ReadUint16le(file, pos+20)
 	numberOfSections, _ := parse.ReadUint16le(file, pos+6)
-
-	machine, _ := parse.ReadUint16le(file, pos+4)
-
-	machineName := "?"
-	if val, ok := peMachines[machine]; ok {
-		machineName = val
-	}
-
+	machineName, _ := parse.ReadToMap(file, parse.Uint8, pos+4, peMachines)
 	res := []parse.Layout{{
 		Offset: pos,
 		Length: peHeaderLen,
@@ -80,7 +73,7 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	sectionHeader := parse.Layout{
 		Offset: pos,
-		Length: int64(numberOfSections) * sectionHeaderLen,
+		Length: int64(numberOfSections) * peSectionHeaderLen,
 		Info:   "section header",
 		Type:   parse.Group}
 
@@ -123,7 +116,7 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 			}}}
 
 		sectionHeader.Childs = append(sectionHeader.Childs, chunk...)
-		pos += sectionHeaderLen
+		pos += peSectionHeaderLen
 	}
 
 	res = append(res, sectionHeader)
@@ -131,55 +124,44 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	return res, nil
 }
 
-func parsePEOptHeader(file *os.File, offset int64, size uint16) parse.Layout {
+func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {
 
-	typeId, _ := parse.ReadUint16le(file, offset)
-	typeName := "?"
-	if val, ok := peTypes[typeId]; ok {
-		typeName = val
-	}
-
-	subsystem, _ := parse.ReadUint16le(file, offset+68)
-	subsystemName := "?"
-	if val, ok := peSubsystems[subsystem]; ok {
-		subsystemName = val
-	}
-
-	numberOfRva, _ := parse.ReadUint32le(file, offset+92)
-
+	typeName, _ := parse.ReadToMap(file, parse.Uint16le, pos, peTypes)
+	subsystemName, _ := parse.ReadToMap(file, parse.Uint16le, pos+68, peSubsystems)
+	numberOfRva, _ := parse.ReadUint32le(file, pos+92)
 	optHeader := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Info:   "PE optional header",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: offset, Length: 2, Info: "type = " + typeName, Type: parse.Uint16le},
-			{Offset: offset + 2, Length: 2, Info: "linker version", Type: parse.MajorMinor16le},
-			{Offset: offset + 4, Length: 4, Info: "size of code", Type: parse.Uint32le},
-			{Offset: offset + 8, Length: 4, Info: "size of initialized data", Type: parse.Uint32le},
-			{Offset: offset + 12, Length: 4, Info: "size of uninitialized data", Type: parse.Uint32le},
-			{Offset: offset + 16, Length: 4, Info: "address of entry point", Type: parse.Uint32le},
-			{Offset: offset + 20, Length: 4, Info: "base of code", Type: parse.Uint32le},
-			{Offset: offset + 24, Length: 4, Info: "base of data", Type: parse.Uint32le},
-			{Offset: offset + 28, Length: 4, Info: "image base", Type: parse.Uint32le},
-			{Offset: offset + 32, Length: 4, Info: "section alignment", Type: parse.Uint32le},
-			{Offset: offset + 36, Length: 4, Info: "file alignment", Type: parse.Uint32le},
-			{Offset: offset + 40, Length: 4, Info: "os version", Type: parse.MajorMinor32le},
-			{Offset: offset + 44, Length: 4, Info: "image version", Type: parse.MajorMinor32le},
-			{Offset: offset + 48, Length: 4, Info: "subsystem version", Type: parse.MajorMinor32le},
-			{Offset: offset + 52, Length: 4, Info: "win32 version value", Type: parse.Uint32le},
-			{Offset: offset + 56, Length: 4, Info: "size of image", Type: parse.Uint32le},
-			{Offset: offset + 60, Length: 4, Info: "size of headers", Type: parse.Uint32le},
-			{Offset: offset + 64, Length: 4, Info: "checksum", Type: parse.Uint32le},
-			{Offset: offset + 68, Length: 2, Info: "subsystem = " + subsystemName, Type: parse.Uint16le},
-			{Offset: offset + 70, Length: 2, Info: "dll characteristics", Type: parse.Uint16le},
-			{Offset: offset + 72, Length: 4, Info: "size of stack reserve", Type: parse.Uint32le},
-			{Offset: offset + 76, Length: 4, Info: "size of stack commit", Type: parse.Uint32le},
-			{Offset: offset + 80, Length: 4, Info: "size of heap reserve", Type: parse.Uint32le},
-			{Offset: offset + 84, Length: 4, Info: "size of heap commit", Type: parse.Uint32le},
-			{Offset: offset + 88, Length: 4, Info: "loader flags", Type: parse.Uint32le},
-			{Offset: offset + 92, Length: 4, Info: "number of rva and sizes", Type: parse.Uint32le},
+			{Offset: pos, Length: 2, Info: "type = " + typeName, Type: parse.Uint16le},
+			{Offset: pos + 2, Length: 2, Info: "linker version", Type: parse.MajorMinor16le},
+			{Offset: pos + 4, Length: 4, Info: "size of code", Type: parse.Uint32le},
+			{Offset: pos + 8, Length: 4, Info: "size of initialized data", Type: parse.Uint32le},
+			{Offset: pos + 12, Length: 4, Info: "size of uninitialized data", Type: parse.Uint32le},
+			{Offset: pos + 16, Length: 4, Info: "address of entry point", Type: parse.Uint32le},
+			{Offset: pos + 20, Length: 4, Info: "base of code", Type: parse.Uint32le},
+			{Offset: pos + 24, Length: 4, Info: "base of data", Type: parse.Uint32le},
+			{Offset: pos + 28, Length: 4, Info: "image base", Type: parse.Uint32le},
+			{Offset: pos + 32, Length: 4, Info: "section alignment", Type: parse.Uint32le},
+			{Offset: pos + 36, Length: 4, Info: "file alignment", Type: parse.Uint32le},
+			{Offset: pos + 40, Length: 4, Info: "os version", Type: parse.MajorMinor32le},
+			{Offset: pos + 44, Length: 4, Info: "image version", Type: parse.MajorMinor32le},
+			{Offset: pos + 48, Length: 4, Info: "subsystem version", Type: parse.MajorMinor32le},
+			{Offset: pos + 52, Length: 4, Info: "win32 version value", Type: parse.Uint32le},
+			{Offset: pos + 56, Length: 4, Info: "size of image", Type: parse.Uint32le},
+			{Offset: pos + 60, Length: 4, Info: "size of headers", Type: parse.Uint32le},
+			{Offset: pos + 64, Length: 4, Info: "checksum", Type: parse.Uint32le},
+			{Offset: pos + 68, Length: 2, Info: "subsystem = " + subsystemName, Type: parse.Uint16le},
+			{Offset: pos + 70, Length: 2, Info: "dll characteristics", Type: parse.Uint16le},
+			{Offset: pos + 72, Length: 4, Info: "size of stack reserve", Type: parse.Uint32le},
+			{Offset: pos + 76, Length: 4, Info: "size of stack commit", Type: parse.Uint32le},
+			{Offset: pos + 80, Length: 4, Info: "size of heap reserve", Type: parse.Uint32le},
+			{Offset: pos + 84, Length: 4, Info: "size of heap commit", Type: parse.Uint32le},
+			{Offset: pos + 88, Length: 4, Info: "loader flags", Type: parse.Uint32le},
+			{Offset: pos + 92, Length: 4, Info: "number of rva and sizes", Type: parse.Uint32le},
 		}}
-	offset += optHeaderMainLen
+	pos += peOptHeaderMainLen
 
 	if numberOfRva != 16 {
 		panic("odd number of RVA:s = " + fmt.Sprintf("%d", numberOfRva))
@@ -187,7 +169,7 @@ func parsePEOptHeader(file *os.File, offset int64, size uint16) parse.Layout {
 
 	ddLen := int64(8)
 
-	optHeader.Length = optHeaderMainLen + (int64(numberOfRva) * ddLen)
+	optHeader.Length = peOptHeaderMainLen + (int64(numberOfRva) * ddLen)
 	if optHeader.Length != int64(size) {
 		fmt.Println("error: PE unexpected opt header len. expected ", size, " actual =", optHeader.Length)
 	}
@@ -200,10 +182,10 @@ func parsePEOptHeader(file *os.File, offset int64, size uint16) parse.Layout {
 		}
 
 		optHeader.Childs = append(optHeader.Childs, []parse.Layout{
-			{Offset: offset, Length: 4, Info: info + " RVA", Type: parse.Uint32le},
-			{Offset: offset + 4, Length: 4, Info: info + " size", Type: parse.Uint32le},
+			{Offset: pos, Length: 4, Info: info + " RVA", Type: parse.Uint32le},
+			{Offset: pos + 4, Length: 4, Info: info + " size", Type: parse.Uint32le},
 		}...)
-		offset += 8
+		pos += 8
 	}
 
 	return optHeader

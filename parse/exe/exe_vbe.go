@@ -1,6 +1,8 @@
 package exe
 
 // VBScript Encoded Script File
+
+// http://lifeinhex.com/tag/vbe/
 // https://en.wikipedia.org/wiki/VBScript
 // http://fileformats.archiveteam.org/wiki/VBScript
 
@@ -12,12 +14,12 @@ import (
 	"os"
 )
 
-func VBE(file *os.File) (*parse.ParsedLayout, error) {
+func VBE(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isVBE(file) {
 		return nil, nil
 	}
-	return parseVBE(file)
+	return parseVBE(file, pl)
 }
 
 func isVBE(file *os.File) bool {
@@ -35,19 +37,18 @@ func isVBE(file *os.File) bool {
 	return true
 }
 
-func parseVBE(file *os.File) (*parse.ParsedLayout, error) {
+func parseVBE(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
-			}}}}
+	pl.FileKind = parse.Executable
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

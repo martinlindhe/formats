@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func WOFF(file *os.File) (*parse.ParsedLayout, error) {
+func WOFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isWOFF(file) {
 		return nil, nil
 	}
-	return parseWOFF(file)
+	return parseWOFF(file, pl)
 }
 
 func isWOFF(file *os.File) bool {
@@ -30,19 +30,18 @@ func isWOFF(file *os.File) bool {
 	return true
 }
 
-func parseWOFF(file *os.File) (*parse.ParsedLayout, error) {
+func parseWOFF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Font,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.Font
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

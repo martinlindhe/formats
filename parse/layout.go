@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 )
 
 // ...
@@ -17,8 +18,8 @@ const (
 
 	// little endian
 	Int16le
-	Uint16le
 	Int32le
+	Uint16le
 	Uint32le
 	Uint64le
 
@@ -239,24 +240,6 @@ func (pl *ParsedLayout) PrettyPrint() string {
 	return res
 }
 
-func (pl *ParsedLayout) UpdateLabel(label string, newLabel string) {
-
-	for layoutIdx, layout := range pl.Layout {
-		if layout.Info == label {
-			pl.Layout[layoutIdx].Info = newLabel
-			return
-		}
-		for childIdx, child := range layout.Childs {
-			if child.Info == label {
-				pl.Layout[layoutIdx].Childs[childIdx].Info = newLabel
-				return
-			}
-		}
-	}
-
-	panic("label not found: " + label)
-}
-
 // NOTE: went public for testing
 func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint32 {
 
@@ -330,4 +313,8 @@ func (slice ByLayout) Less(i, j int) bool {
 
 func (slice ByLayout) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
+}
+
+func (pl *ParsedLayout) Sort() {
+	sort.Sort(ByLayout(pl.Layout))
 }

@@ -1,8 +1,10 @@
 package macos
 
-// STATUS: 0% - borked!
 // http://search.cpan.org/~wiml/Mac-Finder-DSStore/DSStoreFormat.pod
 // https://en.wikipedia.org/wiki/.DS_Store
+
+// STATUS: 0%
+// XXX borked
 
 import (
 	"encoding/binary"
@@ -10,12 +12,12 @@ import (
 	"os"
 )
 
-func DSSTORE(file *os.File) (*parse.ParsedLayout, error) {
+func DSSTORE(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isDSSTORE(file) {
 		return nil, nil
 	}
-	return parseDSSTORE(file)
+	return parseDSSTORE(file, pl)
 }
 
 func isDSSTORE(file *os.File) bool {
@@ -33,7 +35,7 @@ func isDSSTORE(file *os.File) bool {
 	return false
 }
 
-func parseDSSTORE(file *os.File) (*parse.ParsedLayout, error) {
+func parseDSSTORE(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 	header := parse.Layout{
@@ -83,9 +85,8 @@ func parseDSSTORE(file *os.File) (*parse.ParsedLayout, error) {
 
 	layout := []parse.Layout{header}
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout:   layout}
+	pl.FileKind = parse.Executable
+	pl.Layout = layout
 
-	return &res, nil
+	return &pl, nil
 }

@@ -1,7 +1,7 @@
 package exe
 
 // 16-bit NE exe (Win16, OS/2)
-// STATUS: 70 %
+// STATUS: 70%
 
 // XXX: http://www.program-transformation.org/Transform/NeFormat
 
@@ -41,13 +41,7 @@ var (
 func parseMZ_NEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	res := []parse.Layout{}
-	targetOSId, _ := parse.ReadUint8(file, pos+54)
-	targetOS := "unknown"
-
-	if val, ok := neTargetOS[targetOSId]; ok {
-		targetOS = val
-	}
-
+	targetOS, _ := parse.ReadToMap(file, parse.Uint8, pos+54, neTargetOS)
 	res = append(res, parse.Layout{
 		Offset: pos,
 		Length: 64, // XXX

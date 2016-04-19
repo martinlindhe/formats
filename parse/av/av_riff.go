@@ -9,12 +9,12 @@ import (
 	"os"
 )
 
-func RIFF(file *os.File) (*parse.ParsedLayout, error) {
+func RIFF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isRIFF(file) {
 		return nil, nil
 	}
-	return parseRIFF(file)
+	return parseRIFF(file, pl)
 }
 
 func isRIFF(file *os.File) bool {
@@ -32,19 +32,18 @@ func isRIFF(file *os.File) bool {
 	return true
 }
 
-func parseRIFF(file *os.File) (*parse.ParsedLayout, error) {
+func parseRIFF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.AudioVideo,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
-			}}}}
+	pl.FileKind = parse.AudioVideo
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.ASCII},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

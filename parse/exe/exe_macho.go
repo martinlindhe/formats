@@ -35,12 +35,12 @@ var (
 	}
 )
 
-func MachO(file *os.File) (*parse.ParsedLayout, error) {
+func MachO(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isMachO(file) {
 		return nil, nil
 	}
-	return parseMachO(file)
+	return parseMachO(file, pl)
 }
 
 func isMachO(file *os.File) bool {
@@ -58,32 +58,25 @@ func isMachO(file *os.File) bool {
 	return false
 }
 
-func parseMachO(file *os.File) (*parse.ParsedLayout, error) {
+func parseMachO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-
-	cpuType, _ := parse.ReadUint32le(file, pos+4)
-	cpuTypeName := "?"
-	if val, ok := machoCpuTypes[cpuType]; ok {
-		cpuTypeName = val
-	}
-
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 28, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
-				{Offset: pos + 4, Length: 4, Info: "cpu type = " + cpuTypeName, Type: parse.Uint32le},
-				{Offset: pos + 8, Length: 4, Info: "cpu subtype", Type: parse.Uint32le}, // XXX map ...
-				{Offset: pos + 12, Length: 4, Info: "file type", Type: parse.Uint32le},  // XXX ?
-				{Offset: pos + 16, Length: 4, Info: "n cmds", Type: parse.Uint32le},
-				{Offset: pos + 20, Length: 4, Info: "size of cmds", Type: parse.Uint32le},
-				{Offset: pos + 24, Length: 4, Info: "flags", Type: parse.Uint32le},
-			}}}}
+	cpuTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+4, machoCpuTypes)
+	pl.FileKind = parse.Executable
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 28, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
+			{Offset: pos + 4, Length: 4, Info: "cpu type = " + cpuTypeName, Type: parse.Uint32le},
+			{Offset: pos + 8, Length: 4, Info: "cpu subtype", Type: parse.Uint32le}, // XXX map ...
+			{Offset: pos + 12, Length: 4, Info: "file type", Type: parse.Uint32le},  // XXX ?
+			{Offset: pos + 16, Length: 4, Info: "n cmds", Type: parse.Uint32le},
+			{Offset: pos + 20, Length: 4, Info: "size of cmds", Type: parse.Uint32le},
+			{Offset: pos + 24, Length: 4, Info: "flags", Type: parse.Uint32le},
+		}}}
 
 	/* XXX
 
@@ -102,5 +95,5 @@ func parseMachO(file *os.File) (*parse.ParsedLayout, error) {
 	   };
 	*/
 
-	return &res, nil
+	return &pl, nil
 }

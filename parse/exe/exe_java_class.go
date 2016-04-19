@@ -10,12 +10,12 @@ import (
 	"os"
 )
 
-func JAVA(file *os.File) (*parse.ParsedLayout, error) {
+func JAVA(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isJAVA(file) {
 		return nil, nil
 	}
-	return parseJAVA(file)
+	return parseJAVA(file, pl)
 }
 
 func isJAVA(file *os.File) bool {
@@ -32,19 +32,18 @@ func isJAVA(file *os.File) bool {
 	return false
 }
 
-func parseJAVA(file *os.File) (*parse.ParsedLayout, error) {
+func parseJAVA(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Executable,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 4, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32be},
-			}}}}
+	pl.FileKind = parse.Executable
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 4, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32be},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

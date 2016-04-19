@@ -45,6 +45,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if layout == nil {
+		fmt.Println("ERR: layout is nil")
+		os.Exit(1)
+	}
+
 	fileLayout = *layout
 	mappedPct = fileLayout.PercentMapped(fileLayout.FileSize)
 

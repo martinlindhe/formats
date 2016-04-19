@@ -39,13 +39,14 @@ func findCustomDOSHeaders(file *os.File) *parse.Layout {
 			Info:   "LZEXE header",
 			Type:   parse.Group,
 			Childs: []parse.Layout{
-				{Offset: pos, Length: 4, Info: "identifier", Type: parse.ASCII},
+				{Offset: pos, Length: 2, Info: "identifier", Type: parse.ASCII},
+				{Offset: pos + 2, Length: 2, Info: "version", Type: parse.ASCII},
 				{Offset: pos + 4, Length: 2, Info: "exe version", Type: parse.MajorMinor16le},
 			}}
 
-		// XXX
-		// "LZ09" = v 0.9
-		// "LZ91" = v 0.91
+		// XXX version
+		// "09" = v 0.9
+		// "91" = v 0.91
 	}
 
 	u32tok, _ := parse.ReadUint32le(file, 0x1c)

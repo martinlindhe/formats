@@ -1,6 +1,6 @@
 package archive
 
-// STATUS 1% , XXX
+// STATUS: 1%
 
 import (
 	"encoding/binary"
@@ -8,12 +8,12 @@ import (
 	"os"
 )
 
-func WINIMG(file *os.File) (*parse.ParsedLayout, error) {
+func WINIMG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isWINIMG(file) {
 		return nil, nil
 	}
-	return parseWINIMG(file)
+	return parseWINIMG(file, pl)
 }
 
 func isWINIMG(file *os.File) bool {
@@ -35,20 +35,19 @@ func isWINIMG(file *os.File) bool {
 	return true
 }
 
-func parseWINIMG(file *os.File) (*parse.ParsedLayout, error) {
+func parseWINIMG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Archive,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 2,
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 2, Info: "magic", Type: parse.Uint16le}, // XXX le/be ?
-			}}}}
+	pl.FileKind = parse.Archive
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 2,
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 2, Info: "magic", Type: parse.Uint16le}, // XXX le/be ?
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

@@ -1,6 +1,7 @@
 package windows
 
 // Windows Program Information File (PIF)
+
 // STATUS: 1%
 
 import (
@@ -8,12 +9,12 @@ import (
 	"os"
 )
 
-func PIF(file *os.File) (*parse.ParsedLayout, error) {
+func PIF(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isPIF(file) {
 		return nil, nil
 	}
-	return parsePIF(file)
+	return parsePIF(file, pl)
 }
 
 func isPIF(file *os.File) bool {
@@ -28,19 +29,18 @@ func isPIF(file *os.File) bool {
 	return false
 }
 
-func parsePIF(file *os.File) (*parse.ParsedLayout, error) {
+func parsePIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0x171)
-	res := parse.ParsedLayout{
-		FileKind: parse.WindowsResource,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 15, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 15, Info: "magic", Type: parse.Uint32le},
-			}}}}
+	pl.FileKind = parse.WindowsResource
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 15, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 15, Info: "magic", Type: parse.Uint32le},
+		}}}
 
-	return &res, nil
+	return &pl, nil
 }

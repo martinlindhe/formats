@@ -1,9 +1,8 @@
-# TODO cmd/XXX
+# TODO cmd/typelister
 
     new cmd that lists all files recursively from given dir, and show match/unknown...
 
     scan windows/macos/linux installs with it, experiment
-
 
 
 # TODO cmd/formats

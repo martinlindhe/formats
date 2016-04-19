@@ -1,6 +1,6 @@
 package image
 
-// STATUS 1%
+// STATUS: 10%
 
 import (
 	"encoding/binary"
@@ -21,12 +21,12 @@ var (
 	}
 )
 
-func PCX(file *os.File) (*parse.ParsedLayout, error) {
+func PCX(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isPCX(file) {
 		return nil, nil
 	}
-	return parsePCX(file)
+	return parsePCX(file, pl)
 }
 
 func isPCX(file *os.File) bool {
@@ -45,7 +45,7 @@ func isPCX(file *os.File) bool {
 	return true
 }
 
-func parsePCX(file *os.File) (*parse.ParsedLayout, error) {
+func parsePCX(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 
@@ -61,42 +61,39 @@ func parsePCX(file *os.File) (*parse.ParsedLayout, error) {
 		paletteTypeName = val
 	}
 
-	fileLen := parse.FileSize(file)
+	pl.FileKind = parse.Image
+	pl.Layout = []parse.Layout{{
+		Offset: pos,
+		Length: 128, // XXX
+		Info:   "header",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 1, Info: "magic", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 1, Info: "version = " + versionName, Type: parse.Uint8},
+			{Offset: pos + 2, Length: 1, Info: "encoding", Type: parse.Uint8},
+			{Offset: pos + 3, Length: 1, Info: "bits per plane", Type: parse.Uint8},
+			{Offset: pos + 4, Length: 2, Info: "x min", Type: parse.Uint16le},
+			{Offset: pos + 6, Length: 2, Info: "y min", Type: parse.Uint16le},
+			{Offset: pos + 8, Length: 2, Info: "x max", Type: parse.Uint16le},
+			{Offset: pos + 10, Length: 2, Info: "y max", Type: parse.Uint16le},
+			{Offset: pos + 12, Length: 2, Info: "vertical dpi", Type: parse.Uint16le},
+			{Offset: pos + 14, Length: 2, Info: "horizontal dpi", Type: parse.Uint16le},
+			{Offset: pos + 16, Length: 48, Info: "palette", Type: parse.Bytes},
+			{Offset: pos + 64, Length: 1, Info: "reserved", Type: parse.Uint8},
+			{Offset: pos + 65, Length: 1, Info: "color planes", Type: parse.Uint8},
+			{Offset: pos + 66, Length: 2, Info: "bytes per plane line", Type: parse.Uint16le},
+			{Offset: pos + 68, Length: 2, Info: "palette type = " + paletteTypeName, Type: parse.Uint16le},
+			{Offset: pos + 70, Length: 2, Info: "hScrSize", Type: parse.Uint16le},
+			{Offset: pos + 72, Length: 2, Info: "vScrSize", Type: parse.Uint16le},
+			{Offset: pos + 74, Length: 54, Info: "padding", Type: parse.Bytes}, // XXX may be 56 byte if horiz dpi is absent
+		}}, {
+		Offset: pos + 128,
+		Length: pl.FileSize - 128,
+		Info:   "image data",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos + 128, Length: pl.FileSize - 128, Info: "image data", Type: parse.Bytes},
+		}}}
 
-	res := parse.ParsedLayout{
-		FileKind: parse.Image,
-		Layout: []parse.Layout{{
-			Offset: pos,
-			Length: 128, // XXX
-			Info:   "header",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos, Length: 1, Info: "magic", Type: parse.Uint8},
-				{Offset: pos + 1, Length: 1, Info: "version = " + versionName, Type: parse.Uint8},
-				{Offset: pos + 2, Length: 1, Info: "encoding", Type: parse.Uint8},
-				{Offset: pos + 3, Length: 1, Info: "bits per plane", Type: parse.Uint8},
-				{Offset: pos + 4, Length: 2, Info: "x min", Type: parse.Uint16le},
-				{Offset: pos + 6, Length: 2, Info: "y min", Type: parse.Uint16le},
-				{Offset: pos + 8, Length: 2, Info: "x max", Type: parse.Uint16le},
-				{Offset: pos + 10, Length: 2, Info: "y max", Type: parse.Uint16le},
-				{Offset: pos + 12, Length: 2, Info: "vertical dpi", Type: parse.Uint16le},
-				{Offset: pos + 14, Length: 2, Info: "horizontal dpi", Type: parse.Uint16le},
-				{Offset: pos + 16, Length: 48, Info: "palette", Type: parse.Bytes},
-				{Offset: pos + 64, Length: 1, Info: "reserved", Type: parse.Uint8},
-				{Offset: pos + 65, Length: 1, Info: "color planes", Type: parse.Uint8},
-				{Offset: pos + 66, Length: 2, Info: "bytes per plane line", Type: parse.Uint16le},
-				{Offset: pos + 68, Length: 2, Info: "palette type = " + paletteTypeName, Type: parse.Uint16le},
-				{Offset: pos + 70, Length: 2, Info: "hScrSize", Type: parse.Uint16le},
-				{Offset: pos + 72, Length: 2, Info: "vScrSize", Type: parse.Uint16le},
-				{Offset: pos + 74, Length: 54, Info: "padding", Type: parse.Bytes}, // XXX may be 56 byte if horiz dpi is absent
-			}}, {
-			Offset: pos + 128,
-			Length: fileLen - 128,
-			Info:   "image data",
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: pos + 128, Length: fileLen - 128, Info: "image data", Type: parse.Bytes},
-			}}}}
-
-	return &res, nil
+	return &pl, nil
 }

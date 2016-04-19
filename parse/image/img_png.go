@@ -1,8 +1,9 @@
 package image
 
-// handles PNG and MNG images
+// handles PNG, APNG and MNG images
+
 // STATUS: 80% PNG/APNG
-// STATUS: 20% MNG. parsing gives up after first IEND, should continue...
+// STATUS: 20% MNG (XXX parsing gives up after first IEND, should continue...)
 
 import (
 	"encoding/binary"
@@ -12,12 +13,12 @@ import (
 	"os"
 )
 
-func PNG(file *os.File) (*parse.ParsedLayout, error) {
+func PNG(file *os.File, hdr [0xffff]byte, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	if !isPNG(file) {
 		return nil, nil
 	}
-	return parsePNG(file)
+	return parsePNG(file, pl)
 }
 
 func isPNG(file *os.File) bool {
@@ -38,11 +39,10 @@ func isPNG(file *os.File) bool {
 	return false
 }
 
-func parsePNG(file *os.File) (*parse.ParsedLayout, error) {
+func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	res := parse.ParsedLayout{
-		FileKind: parse.Image}
+	pl.FileKind = parse.Image
 
 	b, err := getPNGHeader(file)
 	if err != nil {
@@ -62,7 +62,7 @@ func parsePNG(file *os.File) (*parse.ParsedLayout, error) {
 			{Offset: 0, Length: 8, Info: "magic = " + fileType, Type: parse.Bytes},
 		}}
 
-	res.Layout = append(res.Layout, fileHeader)
+	pl.Layout = append(pl.Layout, fileHeader)
 
 	pos = 8
 
@@ -131,9 +131,9 @@ func parsePNG(file *os.File) (*parse.ParsedLayout, error) {
 		}
 	}
 
-	res.Layout = append(res.Layout, chunks...)
+	pl.Layout = append(pl.Layout, chunks...)
 
-	return &res, nil
+	return &pl, nil
 }
 
 func getPNGHeader(file *os.File) ([8]byte, error) {

@@ -11,7 +11,8 @@ func RAW(file *os.File) (*ParsedLayout, error) {
 	// TODO: make cmd/formats work without any Layout
 
 	return &ParsedLayout{
-		FileKind: Binary,
+		FormatName: "raw",
+		FileKind:   Binary,
 		Layout: []Layout{{
 			Offset: 0,
 			Length: 0,

@@ -49,6 +49,6 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Println(fi.Name(), ":", layout.ShortPrint())
+		fmt.Printf("%s: %s\n", fileName, layout.ShortPrint())
 	}
 }

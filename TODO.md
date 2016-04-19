@@ -5,6 +5,12 @@
 
 # TODO cmd/formats
 
+if "raw"
+    - check if its a text.
+    check line endings + try find encoding
+
+
+
 TOP, FIX THESE: ARJ, GIF, JPEG
 
 

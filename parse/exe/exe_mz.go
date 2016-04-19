@@ -33,6 +33,7 @@ func isMZ(hdr *[0xffff]byte) bool {
 
 func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
+	pl.FormatName = "mz"
 	pl.FileKind = parse.Executable
 	pos := int64(0)
 	mz := parse.Layout{
@@ -93,17 +94,23 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 
 		switch newHeaderId {
 		case "LX":
+			pl.FormatName = "mz-lx"
 			// OS/2 (32-bit)
 			header, _ := parseMZ_LXHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
-		//case "LE":
-		// OS/2 (mixed 16/32-bit)
-		//panic("LE")
+		case "LE":
+			// OS/2 (mixed 16/32-bit)
+			pl.FormatName = "mz-le"
+			header, _ := parseMZ_LEHeader(file, pos)
+			pl.Layout = append(pl.Layout, header...)
+
 		case "NE":
+			pl.FormatName = "mz-ne"
 			// Win16, OS/2
 			header, _ := parseMZ_NEHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
 		case "PE":
+			pl.FormatName = "mz-pe"
 			// Win32, Win64
 			header, _ := parseMZ_PEHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)

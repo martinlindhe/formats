@@ -295,7 +295,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		}
 
 	default:
-		fmt.Printf("gif: unknown extension 0x%.2x", extType)
+		fmt.Printf("gif: unknown extension 0x%.2x\n", extType)
 	}
 
 	// skip past all data

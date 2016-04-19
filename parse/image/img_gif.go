@@ -1,5 +1,7 @@
 package image
 
+// XXX 1. packed byte in header must be read
+
 // XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
 // XXX samples/gif/gif_87a_001.gif is broken!
 
@@ -148,6 +150,29 @@ func gifHeader(file *os.File) parse.Layout {
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 3, Info: "signature", Type: parse.ASCII},
 			{Offset: pos + 3, Length: 3, Info: "version", Type: parse.ASCII},
+		},
+	}
+}
+
+func gifLogicalDescriptor(file *os.File) parse.Layout {
+
+	pos := int64(6)
+	return parse.Layout{
+		Offset: pos,
+		Length: 7,
+		Info:   "logical screen descriptor",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 2, Info: "width", Type: parse.Uint16le},
+			{Offset: pos + 2, Length: 2, Info: "height", Type: parse.Uint16le},
+			{Offset: pos + 4, Length: 1, Info: "packed", Type: parse.Uint8, Masks: []parse.Mask{
+				{Low: 0, Length: 3, Info: "global color table size"},
+				{Low: 3, Length: 1, Info: "sort flag"},
+				{Low: 4, Length: 3, Info: "color resolution"},
+				{Low: 7, Length: 1, Info: "global color table flag"},
+			}},
+			{Offset: pos + 5, Length: 1, Info: "background color", Type: parse.Uint8},
+			{Offset: pos + 6, Length: 1, Info: "aspect ratio", Type: parse.Uint8},
 		},
 	}
 }
@@ -326,29 +351,6 @@ func gifReadBlock(file *os.File) (int, error) {
 
 	// return io.ReadFull(file, d.tmp[:n])
 	return 0, nil
-}
-
-func gifLogicalDescriptor(file *os.File) parse.Layout {
-
-	pos := int64(6)
-	return parse.Layout{
-		Offset: pos,
-		Length: 7,
-		Info:   "logical screen descriptor",
-		Type:   parse.Group,
-		Childs: []parse.Layout{
-			{Offset: pos, Length: 2, Info: "width", Type: parse.Uint16le},
-			{Offset: pos + 2, Length: 2, Info: "height", Type: parse.Uint16le},
-			{Offset: pos + 4, Length: 1, Info: "packed", Type: parse.Uint8, Masks: []parse.Mask{
-				{Low: 0, Length: 3, Info: "size of global color table"},
-				{Low: 3, Length: 1, Info: "color table sort flag"},
-				{Low: 4, Length: 3, Info: "color resolution"},
-				{Low: 7, Length: 1, Info: "global color table flag"},
-			}},
-			{Offset: pos + 5, Length: 1, Info: "background color", Type: parse.Uint8},
-			{Offset: pos + 6, Length: 1, Info: "aspect ratio", Type: parse.Uint8},
-		},
-	}
 }
 
 func gifImageData(file *os.File, pos int64) (*parse.Layout, error) {

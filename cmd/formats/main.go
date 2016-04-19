@@ -99,8 +99,8 @@ func uiLoop(file *os.File) {
 	}
 
 	boxPar = termui.NewPar("")
-	boxPar.Height = 8
-	boxPar.Width = 28
+	boxPar.Height = 14
+	boxPar.Width = 48 // 34
 	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite
 	boxPar.BorderLabel = fileLayout.FormatName + " " + formatKind
@@ -110,7 +110,7 @@ func uiLoop(file *os.File) {
 	boxFooter.Border = false
 	boxFooter.Height = 1
 	boxFooter.X = 75
-	boxFooter.Y = 7
+	boxFooter.Y = boxPar.Height - 1
 
 	statsPar = termui.NewPar("")
 	statsPar.Border = false

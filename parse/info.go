@@ -7,6 +7,23 @@ import (
 	"os"
 )
 
+var (
+	bitmaskMap = map[int]uint32{
+		1:  1,
+		2:  3,
+		3:  7,
+		4:  0xf,
+		5:  0x1f,
+		6:  0x3f,
+		7:  0x7f,
+		8:  0xff,
+		9:  0x1ff,
+		10: 0x3ff,
+		11: 0x7ff,
+		12: 0xfff,
+	}
+)
+
 // CurrentFieldInfo renders info of current field
 func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string {
 
@@ -49,6 +66,36 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	f.Seek(field.Offset, os.SEEK_SET)
 
 	res := field.Info + "\n\n"
+
+	// decode bit mask
+	if len(field.Masks) > 0 {
+		var b uint32
+
+		switch field.Type {
+		case Uint8:
+			val, _ := ReadUint8(f, field.Offset)
+			b = uint32(val)
+
+		default:
+			panic("unknown bitmask size " + field.Type.String())
+		}
+
+		for _, mask := range field.Masks {
+
+			if bitmask, ok := bitmaskMap[mask.Length]; ok {
+
+				xx := bitmask << uint32(mask.Low) // XXX byte/short
+				xx2 := (b & xx) >> uint32(mask.Low)
+
+				res += fmt.Sprintf("%d: %s:%d = ", mask.Low, mask.Info, mask.Length) +
+					fmt.Sprintf("%d", xx2) + "\n"
+
+			} else {
+				panic("need mask for len " + fmt.Sprintf("%d", mask.Length))
+			}
+		}
+		return res
+	}
 
 	// decode data based on type and show
 

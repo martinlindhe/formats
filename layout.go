@@ -2,7 +2,6 @@ package formats
 
 import (
 	"encoding/binary"
-	"fmt"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"

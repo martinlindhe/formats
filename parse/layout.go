@@ -243,9 +243,9 @@ func (pl *ParsedLayout) PrettyPrint() string {
 // NOTE: went public for testing
 func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint32 {
 
-	layout := pl.findBitfieldLayout(info)
-	if layout == nil {
-		fmt.Println("ERROR: layout", info, "not found")
+	field := pl.findBitfieldLayout(info)
+	if field == nil {
+		fmt.Println("ERROR: field", info, "not found")
 		return 0
 	}
 
@@ -255,26 +255,25 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 		return 0
 	}
 
-	file.Seek(layout.Offset, os.SEEK_SET)
+	var b uint32
 
-	var b byte
-	binary.Read(file, binary.LittleEndian, &b)
+	switch field.Type {
+	case Uint8:
+		val, _ := ReadUint8(file, field.Offset)
+		b = uint32(val)
 
-	// XXX mask bits accordingly ....
-
-	m := uint32(0)
-	if mask.Low == 0 {
-		switch mask.Length {
-		case 3:
-			m = 7
-		default:
-			panic("FIXME unhandled mask len!")
-		}
-
-		return uint32(b) & m
+	default:
+		panic("unknown bitmask size " + field.Type.String())
 	}
 
-	panic("XXX fixme handle bit shifts stuff and tests")
+	if bitmask, ok := bitmaskMap[mask.Length]; ok {
+
+		tmp := bitmask << uint32(mask.Low)
+		val := (b & tmp) >> uint32(mask.Low)
+		return val
+	}
+
+	panic("need mask for len " + fmt.Sprintf("%d", mask.Length))
 }
 
 func (pl *ParsedLayout) ReadUint32leFromInfo(file *os.File, info string) (uint32, error) {

@@ -84,11 +84,11 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 
 			if bitmask, ok := bitmaskMap[mask.Length]; ok {
 
-				xx := bitmask << uint32(mask.Low) // XXX byte/short
-				xx2 := (b & xx) >> uint32(mask.Low)
+				tmp := bitmask << uint32(mask.Low)
+				val := (b & tmp) >> uint32(mask.Low)
 
 				res += fmt.Sprintf("%d: %s:%d = ", mask.Low, mask.Info, mask.Length) +
-					fmt.Sprintf("%d", xx2) + "\n"
+					fmt.Sprintf("%d", val) + "\n"
 
 			} else {
 				panic("need mask for len " + fmt.Sprintf("%d", mask.Length))

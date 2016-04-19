@@ -1,7 +1,5 @@
 package image
 
-// XXX 1. packed byte in header must be read
-
 // XXX samples/gif/gif_89a_002_anim.gif  lzw block decode seems broken, start offset wrong?
 // XXX samples/gif/gif_87a_001.gif is broken!
 
@@ -119,7 +117,7 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			}
 			if pl.DecodeBitfieldFromInfo(file, "local color table flag") == 1 {
 				// XXX this is untested due to lack of sample with a local color table
-				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "size of local color table")
+				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "local color table size")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
 					localTbl := gifLocalColorTable(file, offset+imgDescriptorLen, lctByteLen)
 					pl.Layout = append(pl.Layout, localTbl)
@@ -191,14 +189,12 @@ func gifImageDescriptor(file *os.File, pos int64) *parse.Layout {
 			{Offset: pos + 5, Length: 2, Info: "image width", Type: parse.Uint16le},
 			{Offset: pos + 7, Length: 2, Info: "image height", Type: parse.Uint16le},
 			{Offset: pos + 9, Length: 1, Info: "packed #3", Type: parse.Uint8, Masks: []parse.Mask{
-				{Low: 0, Length: 2, Info: "size of local color table"},
+				{Low: 0, Length: 2, Info: "local color table size"},
 				{Low: 3, Length: 2, Info: "reserved"},
 				{Low: 5, Length: 1, Info: "sort flag"},
 				{Low: 6, Length: 1, Info: "interlace flag"},
 				{Low: 7, Length: 1, Info: "local color table flag"},
-			}},
-		},
-	}
+			}}}}
 	return &res
 }
 
@@ -334,8 +330,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 1, Info: "block id (extension)", Type: parse.Uint8},
 			{Offset: pos + 1, Length: 1, Info: typeInfo, Type: parse.Uint8},
-		},
-	}
+		}}
 
 	res.Childs = append(res.Childs, typeSpecific...)
 
@@ -380,8 +375,7 @@ func gifImageData(file *os.File, pos int64) (*parse.Layout, error) {
 		Length: length,
 		Info:   "image data",
 		Type:   parse.Group,
-		Childs: childs,
-	}
+		Childs: childs}
 
 	return &res, nil
 }
@@ -427,14 +421,12 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 
 func gifTrailer(file *os.File, pos int64) parse.Layout {
 
-	res := parse.Layout{
+	return parse.Layout{
 		Offset: pos,
 		Length: 1,
 		Info:   "trailer",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 1, Info: "trailer", Type: parse.Uint8},
-		},
-	}
-	return res
+		}}
 }

@@ -1,6 +1,8 @@
 package exe
 
 // Executable and Linkable Format
+// https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
+
 // STATUS: 70%
 
 import (
@@ -115,12 +117,6 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 
-	className, _ := parse.ReadToMap(file, parse.Uint8, pos+4, elfClasses)
-	encodingName, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfDataEncodings)
-	osABIName, _ := parse.ReadToMap(file, parse.Uint8, pos+7, elfOSABIs)
-	typeName, _ := parse.ReadToMap(file, parse.Uint16le, pos+16, elfTypes)
-	machineName, _ := parse.ReadToMap(file, parse.Uint16le, pos+18, elfMachines)
-
 	phOffset, _ := parse.ReadUint32le(file, pos+28)
 	phEntrySize, _ := parse.ReadUint16le(file, pos+42)
 	phCount, _ := parse.ReadUint16le(file, pos+44)
@@ -129,8 +125,32 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	shEntrySize, _ := parse.ReadUint16le(file, pos+46)
 	shCount, _ := parse.ReadUint16le(file, pos+48)
 
+	header := elfHeader(file, pos)
 	pl.FileKind = parse.Executable
-	pl.Layout = []parse.Layout{{
+	pl.Layout = []parse.Layout{header}
+
+	if phOffset > 0 && phCount > 0 {
+		pl.Layout = append(pl.Layout, parseElfPhEntries(file, int64(phOffset), phEntrySize, phCount)...)
+	}
+
+	if shOffset > 0 {
+		pl.Layout = append(pl.Layout, parseElfShEntries(file, int64(shOffset), shEntrySize, shCount)...)
+	}
+
+	pl.Sort()
+
+	return &pl, nil
+}
+
+func elfHeader(file *os.File, pos int64) parse.Layout {
+
+	className, _ := parse.ReadToMap(file, parse.Uint8, pos+4, elfClasses)
+	encodingName, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfDataEncodings)
+	osABIName, _ := parse.ReadToMap(file, parse.Uint8, pos+7, elfOSABIs)
+	typeName, _ := parse.ReadToMap(file, parse.Uint16le, pos+16, elfTypes)
+	machineName, _ := parse.ReadToMap(file, parse.Uint16le, pos+18, elfMachines)
+
+	return parse.Layout{
 		Offset: pos,
 		Length: 52, // XXX
 		Info:   "header",
@@ -138,9 +158,10 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
 			{Offset: pos + 4, Length: 1, Info: "class = " + className, Type: parse.Uint8},
-			{Offset: pos + 5, Length: 1, Info: "data encoding = " + encodingName, Type: parse.Uint8},
+			{Offset: pos + 5, Length: 1, Info: "endian = " + encodingName, Type: parse.Uint8},
 			{Offset: pos + 6, Length: 1, Info: "header version", Type: parse.Uint8},
 			{Offset: pos + 7, Length: 1, Info: "os abi = " + osABIName, Type: parse.Bytes},
+			{Offset: pos + 8, Length: 1, Info: "abi version", Type: parse.Uint8},
 			{Offset: pos + 9, Length: 7, Info: "reserved", Type: parse.Bytes},
 			{Offset: pos + 16, Length: 2, Info: "type = " + typeName, Type: parse.Uint16le},
 			{Offset: pos + 18, Length: 2, Info: "machine = " + machineName, Type: parse.Uint16le},
@@ -155,19 +176,7 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			{Offset: pos + 46, Length: 2, Info: "section header entry size", Type: parse.Uint16le},
 			{Offset: pos + 48, Length: 2, Info: "section header count", Type: parse.Uint16le},
 			{Offset: pos + 50, Length: 2, Info: "section header strndx", Type: parse.Uint16le}, // XXX map
-		}}}
-
-	if phOffset > 0 && phCount > 0 {
-		pl.Layout = append(pl.Layout, parseElfPhEntries(file, int64(phOffset), phEntrySize, phCount)...)
-	}
-
-	if shOffset > 0 {
-		pl.Layout = append(pl.Layout, parseElfShEntries(file, int64(shOffset), shEntrySize, shCount)...)
-	}
-
-	pl.Sort()
-
-	return &pl, nil
+		}}
 }
 
 func elfStrtabOffset(file *os.File, pos int64, shCount uint16) int64 {
@@ -255,7 +264,6 @@ func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uin
 	}
 
 	strtabOffset := elfStrtabOffset(file, pos, shCount)
-	fmt.Printf("strtab offset = %04x\n", strtabOffset)
 
 	for i := 1; i <= int(shCount); i++ {
 

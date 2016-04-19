@@ -75,7 +75,7 @@ func TestParsedLayout(t *testing.T) {
 				}
 			}
 			if sum != l.Length {
-				t.Fatalf("child sum for %s, field %s is %d, but group length is %d, %v", path, l.Info, sum, l.Length, l)
+				t.Fatalf("child sum for %s, field %s is %d, but group length is %d", path, l.Info, sum, l.Length)
 			}
 		}
 		return nil

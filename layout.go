@@ -74,9 +74,10 @@ var (
 		"png":      image.PNG,
 		"tiff":     image.TIFF,
 		"ds_store": macos.DSSTORE,
-		"pif":      windows.PIF,
+		"grp":      windows.GRP,
 		"lnk":      windows.LNK,
 		"ole-cf":   windows.OLECF,
+		"pif":      windows.PIF,
 	}
 )
 

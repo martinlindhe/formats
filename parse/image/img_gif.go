@@ -354,16 +354,14 @@ func gifReadBlock(file *os.File) (int, error) {
 
 func gifImageData(file *os.File, pos int64) (*parse.Layout, error) {
 
-	// XXX need to decode first bytes of lzw stream to decode stream length
-
-	file.Seek(pos+1, os.SEEK_SET)
-
 	length := int64(1)
 	childs := []parse.Layout{{
 		Offset: pos,
 		Length: 1,
 		Info:   "lzw code size",
 		Type:   parse.Uint8}}
+
+	// decodes first bytes of lzw stream to calculate stream length
 
 	lzwSubBlocks, err := gifSubBlocks(file, pos+1)
 	if err != nil {

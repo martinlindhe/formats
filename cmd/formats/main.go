@@ -100,7 +100,7 @@ func uiLoop(file *os.File) {
 
 	boxPar = termui.NewPar("")
 	boxPar.Height = 14
-	boxPar.Width = 48 // 34
+	boxPar.Width = 34
 	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite
 	boxPar.BorderLabel = fileLayout.FormatName + " " + formatKind
@@ -294,11 +294,20 @@ func prettyStatString() string {
 
 	group := fileLayout.Layout[hexView.CurrentGroup]
 
+	warn := ""
+
 	// if in sub field view
 	if hexView.BrowseMode == parse.ByFieldInGroup {
 		field := group.Childs[hexView.CurrentField]
-		return fmt.Sprintf("selected %d bytes (%x) from %04x", field.Length, field.Length, field.Offset)
+
+		if field.Offset+field.Length > fileLayout.FileSize {
+			warn = " [PAST EOF](fg-red)"
+		}
+		return fmt.Sprintf("selected %d bytes (%x) from %04x", field.Length, field.Length, field.Offset) + warn
 	}
 
-	return fmt.Sprintf("selected %d bytes (%x) from %04x", group.Length, group.Length, group.Offset)
+	if group.Offset+group.Length > fileLayout.FileSize {
+		warn = " [PAST EOF](fg-red)"
+	}
+	return fmt.Sprintf("selected %d bytes (%x) from %04x", group.Length, group.Length, group.Offset) + warn
 }

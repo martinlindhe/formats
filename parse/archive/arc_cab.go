@@ -9,6 +9,15 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
+var (
+	cabFlags = map[uint16]string{
+		0: "none",
+		1: "prev cabinet",
+		2: "next cabinet",
+		4: "reserve present",
+	}
+)
+
 func CAB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isCAB(&c.Header) {
@@ -29,6 +38,9 @@ func isCAB(hdr *[0xffff]byte) bool {
 func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	flags, _ := parse.ReadUint16le(file, pos+30)
+	cabFlagName, _ := parse.ReadToMap(file, parse.Uint16le, pos+30, cabFlags)
+
 	pl.FileKind = parse.Archive
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
@@ -45,27 +57,43 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			{Offset: pos + 24, Length: 2, Info: "format version", Type: parse.MinorMajor16le},
 			{Offset: pos + 26, Length: 2, Info: "CFFOLDER entries", Type: parse.Uint16le},
 			{Offset: pos + 28, Length: 2, Info: "CFFILE entries", Type: parse.Uint16le},
-			{Offset: pos + 30, Length: 2, Info: "flags", Type: parse.Uint16le},
+			{Offset: pos + 30, Length: 2, Info: "flags = " + cabFlagName, Type: parse.Uint16le},
 			{Offset: pos + 32, Length: 2, Info: "set id", Type: parse.Uint16le},
 			{Offset: pos + 34, Length: 2, Info: "cabinet number", Type: parse.Uint16le},
 		}}}
 
-	/* XXX
-	   u2  cbCFHeader;       // (optional) size of per-cabinet reserved area
-	   u1  cbCFFolder;       // (optional) size of per-folder reserved area
-	   u1  cbCFData;         // (optional) size of per-datablock reserved area
-	   u1  abReserve[];      // (optional) per-cabinet reserved area
-	   u1  szCabinetPrev[];  // (optional) name of previous cabinet file
-	   u1  szDiskPrev[];     // (optional) name of previous disk
-	   u1  szCabinetNext[];  // (optional) name of next cabinet file
-	   u1  szDiskNext[];     // (optional) name of next disk
-	*/
+	if flags&4 > 0 {
+		panic("flags&4 SAMPLE PLZ")
+		/*
+			ushort cbCFHeader;      // (optional) size of per-cabinet reserved area
+			ubyte  cbCFFolder;      // (optional) size of per-folder reserved area
+			ubyte  cbCFData;        // (optional) size of per-datablock reserved area
+
+			if(cbCFHeader > 0)
+				char abReserve[cbCFHeader];  // (optional) per-cabinet reserved area
+		*/
+
+	}
+	if flags&1 > 0 {
+		panic("flags&1 SAMPLE PLZ")
+		/*
+			char    szCabinetPrev[];// (optional) name of previous cabinet file
+			char    szDiskPrev[];   // (optional) name of previous disk
+		*/
+	}
+	if flags&2 > 0 {
+		panic("flags&2 SAMPLE PLZ")
+		/*
+			char    szCabinetNext[];    // (optional) name of next cabinet file
+			char    szDiskNext[];       // (optional) name of next disk
+		*/
+	}
 
 	pos += 36 // XXX
 
 	dirEntries, _ := parse.ReadUint16le(file, 26)
 
-	cfDataBlocks := map[uint32]uint16{}
+	dataBlocks := map[uint32]uint16{}
 
 	for i := 0; i < int(dirEntries); i++ {
 		chunk := parse.Layout{
@@ -83,7 +111,7 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 		cfdataPos, _ := parse.ReadUint32le(file, pos)
 		cfdataBlocks, _ := parse.ReadUint16le(file, pos+4)
-		cfDataBlocks[cfdataPos] = cfdataBlocks
+		dataBlocks[cfdataPos] = cfdataBlocks
 		pl.Layout = append(pl.Layout, chunk)
 		pos += chunk.Length
 	}
@@ -121,10 +149,10 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	}
 
 	// map the compressed data
-	for dataOffset, cnt := range cfDataBlocks {
+	for dataOffset, cnt := range dataBlocks {
 		pos = int64(dataOffset)
-		for i := 1; i < int(cnt); i++ {
-			cbLen, _ := parse.ReadUint16le(file, int64(dataOffset)+4)
+		for i := 1; i <= int(cnt); i++ {
+			cbLen, _ := parse.ReadUint16le(file, pos+4)
 			pl.Layout = append(pl.Layout, parse.Layout{
 				Offset: pos,
 				Length: 8 + int64(cbLen),

@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples"
+	searchDir := "./samples/exe/exe-mz"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -177,6 +177,7 @@ trailer (0044), group
 	assert.Equal(t, uint32(0), layout.DecodeBitfieldFromInfo(file, "local color table flag"))
 }
 
+/*
 func TestParseARJ(t *testing.T) {
 
 	file, err := os.Open("samples/archives/arj/arj_001_tiny.arj")
@@ -211,6 +212,7 @@ main header (0024), group
   ext header size (004d), uint32-le
 `, layout.PrettyPrint())
 }
+*/
 
 func TestParseBMP(t *testing.T) {
 

@@ -134,13 +134,15 @@ func parseMZ_NEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	fastloadAreaOffset, _ := parse.ReadUint16le(file, pos+56)
 	fastloadAreaLength, _ := parse.ReadUint16le(file, pos+58)
 
-	// XXX how to parse this stuff
 	// XXX offset seems wrong
 	res = append(res, parse.Layout{
 		Offset: int64(fastloadAreaOffset) * 16,
 		Length: int64(fastloadAreaLength),
 		Info:   "fast-load area", // XXX
-		Type:   parse.Group})
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: int64(fastloadAreaOffset) * 16, Length: int64(fastloadAreaLength), Info: "fast-load data", Type: parse.Bytes},
+		}})
 
 	return res, nil
 }

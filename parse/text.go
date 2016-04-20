@@ -50,11 +50,6 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 	c.ParsedLayout.FormatName = "text"
 
 	pos := int64(0)
-	data := ReadBytesFrom(c.File, pos, 5)
-	hdr := string(data)
-	if strings.ToLower(hdr) == "<?xml" {
-		c.ParsedLayout.FormatName = "xml"
-	}
 
 	layout := Layout{
 		Offset: pos,
@@ -70,7 +65,13 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 			Info:   bom.String() + " bom",
 			Type:   Bytes})
 
+		layout.Length += bomLen
 		pos += bomLen
+	}
+
+	data := ReadBytesFrom(c.File, pos, 5)
+	if strings.ToLower(string(data)) == "<?xml" {
+		c.ParsedLayout.FormatName = "xml"
 	}
 
 	line := 1

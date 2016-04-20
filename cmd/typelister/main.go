@@ -34,7 +34,11 @@ func main() {
 
 		fmt.Printf("%s:", fileName)
 
-		file, _ := os.Open(fileName)
+		file, err := os.Open(fileName)
+		if err != nil {
+			fmt.Println("error:", err)
+			continue
+		}
 		fi, _ := file.Stat()
 		if fi.IsDir() {
 			continue

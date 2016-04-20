@@ -91,7 +91,10 @@ func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
 
 func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 
-	fileSize := fileSize(file)
+	fileSize, err := fileSize(file)
+	if err != nil {
+		return nil, err
+	}
 	maxLen := int64(0xffff)
 	len := fileSize
 	if len > maxLen {
@@ -117,12 +120,12 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 
 	for name, parser := range parsers {
 
-		pl, err := parser(&checker)
+		pl, err2 := parser(&checker)
 		if pl != nil {
 			if pl.FormatName == "" {
 				pl.FormatName = name
 			}
-			return pl, err
+			return pl, err2
 		}
 	}
 

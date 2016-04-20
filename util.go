@@ -1,7 +1,6 @@
 package formats
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
@@ -37,11 +36,11 @@ func fileExt(file *os.File) string {
 	return ext
 }
 
-func fileSize(file *os.File) int64 {
+func fileSize(file *os.File) (int64, error) {
 
 	fi, err := file.Stat()
 	if err != nil {
-		log.Fatal("fileSize error: ", err)
+		return 0, err
 	}
-	return fi.Size()
+	return fi.Size(), nil
 }

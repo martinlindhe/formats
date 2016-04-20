@@ -2,6 +2,8 @@ package image
 
 // STATUS: 90%
 
+// XXX problems parsing samples/images/gif/gif_89a_005_with_application.gif
+
 import (
 	"encoding/binary"
 	"fmt"
@@ -21,6 +23,12 @@ var (
 		5: 64 * 3,
 		6: 128 * 3,
 		7: 256 * 3,
+	}
+	gifExtensions = map[byte]string{
+		1:    "text",
+		0xf9: "graphic control",
+		0xfe: "comment",
+		0xff: "application",
 	}
 )
 
@@ -49,7 +57,7 @@ func GIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	if !isGIF(&c.Header) {
 		return nil, nil
 	}
-	return parseGIF(c.File, c.ParsedLayout)
+	return parseGIF(c)
 }
 
 func isGIF(hdr *[0xffff]byte) bool {
@@ -64,34 +72,38 @@ func isGIF(hdr *[0xffff]byte) bool {
 	return true
 }
 
-func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	pl := c.ParsedLayout
 	pl.FileKind = parse.Image
 
-	header := gifHeader(file)
+	header := gifHeader(c.File)
 	pl.Layout = append(pl.Layout, header)
 	pos += header.Length
 
-	logicalDesc := gifLogicalDescriptor(file)
+	logicalDesc := gifLogicalDescriptor(c.File)
 	pl.Layout = append(pl.Layout, logicalDesc)
 	pos += logicalDesc.Length
 
-	globalColorTableFlag := pl.DecodeBitfieldFromInfo(file, "global color table flag")
+	globalColorTableFlag := pl.DecodeBitfieldFromInfo(c.File, "global color table flag")
 	if globalColorTableFlag != 0 {
-		sizeOfGCT := pl.DecodeBitfieldFromInfo(file, "global color table size")
+		sizeOfGCT := pl.DecodeBitfieldFromInfo(c.File, "global color table size")
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
-			pl.Layout = append(pl.Layout, gifGlobalColorTable(file, gctByteLen))
+			pl.Layout = append(pl.Layout, gifGlobalColorTable(c.File, gctByteLen))
 			pos += gctByteLen
 		}
 	}
 
 	for {
-
-		file.Seek(pos, os.SEEK_SET)
+		fmt.Printf("move to %04x\n", pos)
+		_, err := c.File.Seek(pos, os.SEEK_SET)
+		if err != nil {
+			fmt.Println("seek err", err)
+		}
 
 		var b byte
-		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		if err := binary.Read(c.File, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
 				fmt.Println("warning: did not find gif trailer")
 				return &pl, nil
@@ -99,10 +111,9 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			return nil, err
 		}
 
-		fmt.Printf("ext %02x at %04x\n", b, pos)
 		switch b {
 		case sExtension:
-			gfxExt, err := gifExtension(file, pos)
+			gfxExt, err := gifExtension(c.File, pos)
 			if err != nil {
 				return nil, err
 			}
@@ -110,21 +121,21 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			pos += gfxExt.Length
 
 		case sImageDescriptor:
-			imgDescriptor := gifImageDescriptor(file, pos)
+			imgDescriptor := gifImageDescriptor(c.File, pos)
 			if imgDescriptor != nil {
 				pl.Layout = append(pl.Layout, *imgDescriptor)
 				pos += imgDescriptor.Length
 			}
-			if pl.DecodeBitfieldFromInfo(file, "local color table flag") > 0 {
-				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "local color table size")
+			if pl.DecodeBitfieldFromInfo(c.File, "local color table flag") > 0 {
+				sizeOfLCT := pl.DecodeBitfieldFromInfo(c.File, "local color table size")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
-					localTbl := gifLocalColorTable(file, pos, lctByteLen)
+					localTbl := gifLocalColorTable(c.File, pos, lctByteLen)
 					pl.Layout = append(pl.Layout, localTbl)
 					pos += localTbl.Length
 				}
 			}
 
-			imgData, err := gifImageData(file, pos)
+			imgData, err := gifImageData(c.File, pos)
 			if err != nil {
 				return nil, err
 			}
@@ -132,8 +143,11 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			pos += imgData.Length
 
 		case sTrailer:
-			pl.Layout = append(pl.Layout, gifTrailer(file, pos))
+			pl.Layout = append(pl.Layout, gifTrailer(c.File, pos))
 			return &pl, nil
+
+		default:
+			fmt.Printf("warning: unknown gif section id %02x at %04x\n", b, pos)
 		}
 	}
 }
@@ -247,64 +261,71 @@ func gifLocalColorTable(file *os.File, pos int64, byteLen int64) parse.Layout {
 
 func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 
-	var extType byte
-	if err := binary.Read(file, binary.LittleEndian, &extType); err != nil {
-		return nil, err
-	}
-
+	extType, _ := parse.ReadUint8(file, pos+1)
+	typeInfo, _ := parse.ReadToMap(file, parse.Uint8, pos+1, gifExtensions)
 	typeSpecific := []parse.Layout{}
-	typeInfo := ""
 	size := int64(0)
+	res := parse.Layout{
+		Offset: pos,
+		Length: size + 1,
+		Info:   typeInfo + " extension",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 1, Info: "block id (extension)", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 1, Info: "type = " + typeInfo, Type: parse.Uint8},
+		}}
+	pos += 2
 
 	switch extType {
 	case eText:
 		size = 13
-		typeInfo = "text"
 
 	case eGraphicControl:
 		size = 7
-		typeInfo = "graphic control"
 		typeSpecific = []parse.Layout{
-			{Offset: pos + 2, Length: 1, Info: "byte size", Type: parse.Uint8},
-			{Offset: pos + 3, Length: 1, Info: "packed #2", Type: parse.Uint8},
-			{Offset: pos + 4, Length: 2, Info: "delay time", Type: parse.Uint16le},
-			{Offset: pos + 6, Length: 1, Info: "transparent color index", Type: parse.Uint8},
-			{Offset: pos + 7, Length: 1, Info: "block terminator", Type: parse.Uint8},
+			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 1, Info: "packed #2", Type: parse.Uint8},
+			{Offset: pos + 2, Length: 2, Info: "delay time", Type: parse.Uint16le},
+			{Offset: pos + 4, Length: 1, Info: "transparent color index", Type: parse.Uint8},
+			{Offset: pos + 5, Length: 1, Info: "block terminator", Type: parse.Uint8},
 		}
 
 	case eComment:
 		// nothing to do but read the data.
-		typeInfo = "comment"
-
-		var lenByte byte
-		if err := binary.Read(file, binary.LittleEndian, &lenByte); err != nil {
-			return nil, err
-		}
+		lenByte, _ := parse.ReadUint8(file, pos)
 
 		size = 2 + int64(lenByte) + 1 // including terminating 0
 
 		typeSpecific = []parse.Layout{
-			{Offset: pos + 2, Length: 1, Info: "byte size", Type: parse.Uint8},
-			{Offset: pos + 3, Length: size - 2, Info: "data", Type: parse.ASCIIZ},
+			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
+			{Offset: pos + 1, Length: size - 2, Info: "data", Type: parse.ASCIIZ},
 		}
 
+		/*
+
+		   			struct APPLICATIONEXTENTION {
+		                   UBYTE ExtensionIntroducer; // 0x21
+		                   UBYTE ApplicationLabel; // 0xFF
+
+		                   struct APPLICATIONSUBBLOCK {
+		                       UBYTE   BlockSize;
+		                       char    ApplicationIdentifier[8];
+		                       char    ApplicationAuthenticationCode[3];
+		                   } ApplicationSubBlock;
+		                   DATASUBBLOCKS ApplicationData;
+		               } ApplicationExtension;
+		*/
 	case eApplication:
-		typeInfo = "application"
-		var lenByte byte
-		if err := binary.Read(file, binary.LittleEndian, &lenByte); err != nil {
-			return nil, err
-		}
-
-		size = 2 + int64(lenByte)
-
+		size = 14
 		typeSpecific = []parse.Layout{
-			{Offset: pos + 2, Length: 1, Info: "byte size", Type: parse.Uint8},
-			{Offset: pos + 3, Length: size - 2, Info: "data", Type: parse.Uint8},
+			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 8, Info: "application id", Type: parse.ASCII},
+			{Offset: pos + 9, Length: 3, Info: "application authentication code", Type: parse.ASCII},
 		}
+		extData, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+3, 8)
+		authCode, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+11, 3)
 
-		extData := parse.ReadBytesFrom(file, pos+3, size-2)
-
-		if string(extData) == "NETSCAPE2.0" {
+		if extData == "NETSCAPE" && authCode == "2.0" {
 			// animated gif extension
 			subBlocks, err := gifSubBlocks(file, pos+3+11)
 			if err != nil {
@@ -320,19 +341,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		fmt.Printf("gif: unknown extension 0x%.2x\n", extType)
 	}
 
-	// skip past all data
-	file.Seek(pos+size+1, os.SEEK_SET)
-
-	res := parse.Layout{
-		Offset: pos,
-		Length: size + 1,
-		Info:   typeInfo + " extension",
-		Type:   parse.Group,
-		Childs: []parse.Layout{
-			{Offset: pos, Length: 1, Info: "block id (extension)", Type: parse.Uint8},
-			{Offset: pos + 1, Length: 1, Info: "type = " + typeInfo, Type: parse.Uint8},
-		}}
-
+	res.Length += size
 	res.Childs = append(res.Childs, typeSpecific...)
 
 	return &res, nil

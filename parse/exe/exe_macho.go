@@ -47,7 +47,7 @@ func MachO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 func isMachO(hdr *[0xffff]byte) bool {
 
 	b := *hdr
-	if b[3] == 0xfe && b[2] == 0xed && b[1] == 0xfa && b[0] == 0xcf {
+	if b[3] == 0xfe && b[2] == 0xed && b[1] == 0xfa && (b[0] == 0xce || b[0] == 0xcf) {
 		return true
 	}
 
@@ -58,6 +58,7 @@ func parseMachO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, erro
 
 	pos := int64(0)
 	cpuTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+4, machoCpuTypes)
+	pl.FormatName = "mach-o " + cpuTypeName
 	pl.FileKind = parse.Executable
 	pl.Layout = []parse.Layout{{
 		Offset: pos,

@@ -28,6 +28,7 @@ var (
 		"rar":            archive.RAR,
 		"td2":            archive.TD2,
 		"vdi":            archive.VDI,
+		"wim":            archive.WIM,
 		"winimg":         archive.WINIMG,
 		"xz":             archive.XZ,
 		"zip":            archive.ZIP,

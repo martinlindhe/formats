@@ -2,16 +2,31 @@ package exe
 
 // MacOS Mach-O executable
 // NOTE: on MacOS, there is C headers in /usr/include/mach-o
+// TODO: handle the CIGAM byte ordered files (ppc, need samples)
 
 // STATUS: 1%
 
 import (
+	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
 
+const (
+	MH_MAGIC    = 0xfeedface
+	MH_MAGIC_64 = 0xfeedfacf
+	MH_CIGAM    = 0xcefaedfe
+	MH_CIGAM_64 = 0xcffaedfe
+)
+
 var (
+	machoMagicTypes = map[uint32]string{
+		MH_MAGIC:    "MH_MAGIC",
+		MH_MAGIC_64: "MH_MAGIC_64",
+		MH_CIGAM:    "MH_CIGAM",
+		MH_CIGAM_64: "MH_CIGAM_64",
+	}
 	machoCpuTypes = map[uint32]string{
 		1:         "vax",
 		2:         "romp",
@@ -47,16 +62,19 @@ func MachO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 func isMachO(hdr *[0xffff]byte) bool {
 
 	b := *hdr
-	if b[3] == 0xfe && b[2] == 0xed && b[1] == 0xfa && (b[0] == 0xce || b[0] == 0xcf) {
+
+	val := binary.LittleEndian.Uint32(b[:])
+
+	if val == MH_MAGIC || val == MH_MAGIC_64 || val == MH_CIGAM || val == MH_CIGAM_64 {
 		return true
 	}
-
 	return false
 }
 
 func parseMachO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	mhName, _ := parse.ReadToMap(file, parse.Uint32le, pos, machoMagicTypes)
 	cpuTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+4, machoCpuTypes)
 	pl.FormatName = "mach-o " + cpuTypeName
 	pl.FileKind = parse.Executable
@@ -66,7 +84,7 @@ func parseMachO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, erro
 		Info:   "header",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
+			{Offset: pos, Length: 4, Info: "magic = " + mhName, Type: parse.Uint32le},
 			{Offset: pos + 4, Length: 4, Info: "cpu type = " + cpuTypeName, Type: parse.Uint32le},
 			{Offset: pos + 8, Length: 4, Info: "cpu subtype", Type: parse.Uint32le}, // XXX map ...
 			{Offset: pos + 12, Length: 4, Info: "file type", Type: parse.Uint32le},  // XXX ?

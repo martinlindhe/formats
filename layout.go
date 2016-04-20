@@ -27,6 +27,7 @@ var (
 		"lzma":           archive.LZMA,
 		"rar":            archive.RAR,
 		"td2":            archive.TD2,
+		"vdi":            archive.VDI,
 		"winimg":         archive.WINIMG,
 		"xz":             archive.XZ,
 		"zip":            archive.ZIP,

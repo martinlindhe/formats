@@ -53,9 +53,9 @@ func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (stri
 }
 
 // return string, bytes read, error
-func ReadZeroTerminatedASCIIUntil(file *os.File, offset int64, maxLen int) (string, int, error) {
+func ReadZeroTerminatedASCIIUntil(file *os.File, pos int64, maxLen int) (string, int, error) {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 
 	var c byte
 	s := ""
@@ -77,9 +77,9 @@ func ReadZeroTerminatedASCIIUntil(file *os.File, offset int64, maxLen int) (stri
 	return s, readCnt, nil
 }
 
-func ReadBytesFrom(file *os.File, offset int64, size int64) []byte {
+func ReadBytesFrom(file *os.File, pos int64, size int64) []byte {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 
 	b := make([]byte, size)
 	binary.Read(file, binary.LittleEndian, &b)
@@ -98,41 +98,41 @@ func ReadUnsignedInt(file *os.File, field *Layout) uint32 {
 	panic("ReadUnsignedInt: unhandled type " + field.Type.String())
 }
 
-func ReadUint8(file *os.File, offset int64) (uint8, error) {
+func ReadUint8(file *os.File, pos int64) (uint8, error) {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 	var b uint8
 	binary.Read(file, binary.LittleEndian, &b)
 	return b, nil
 }
 
-func ReadUint16be(file *os.File, offset int64) (uint16, error) {
+func ReadUint16be(file *os.File, pos int64) (uint16, error) {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 	var b uint16
 	binary.Read(file, binary.BigEndian, &b)
 	return b, nil
 }
 
-func ReadUint16le(file *os.File, offset int64) (uint16, error) {
+func ReadUint16le(file *os.File, pos int64) (uint16, error) {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 	var b uint16
 	binary.Read(file, binary.LittleEndian, &b)
 	return b, nil
 }
 
-func ReadUint32be(file *os.File, offset int64) (uint32, error) {
+func ReadUint32be(file *os.File, pos int64) (uint32, error) {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 	var b uint32
 	binary.Read(file, binary.BigEndian, &b)
 	return b, nil
 }
 
-func ReadUint32le(file *os.File, offset int64) (uint32, error) {
+func ReadUint32le(file *os.File, pos int64) (uint32, error) {
 
-	file.Seek(offset, os.SEEK_SET)
+	file.Seek(pos, os.SEEK_SET)
 	var b uint32
 	binary.Read(file, binary.LittleEndian, &b)
 	return b, nil

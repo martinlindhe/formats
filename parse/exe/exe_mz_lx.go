@@ -1,14 +1,14 @@
 package exe
 
 // OS/2 Lineear eXecutable
+// http://www.virtualbox.org/svn/kstuff-mirror/trunk/include/k/kLdrFmts/lx.h
+
 // STATUS: 10%
 
 import (
 	"github.com/martinlindhe/formats/parse"
 	"os"
 )
-
-// http://www.virtualbox.org/svn/kstuff-mirror/trunk/include/k/kLdrFmts/lx.h
 
 // parse OS/2 Linear eXecutable header
 func parseMZ_LXHeader(file *os.File, pos int64) ([]parse.Layout, error) {

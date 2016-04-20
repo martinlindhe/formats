@@ -26,7 +26,7 @@ var (
 	v4len = 68
 )
 
-func BMP(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func BMP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isBMP(&c.Header) {
 		return nil, nil

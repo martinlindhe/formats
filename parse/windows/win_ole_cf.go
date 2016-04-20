@@ -17,7 +17,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OLECF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func OLECF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isOLECF(&c.Header) {
 		return nil, nil

@@ -213,12 +213,7 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *parse.Layout
 		for i := 1; i <= int(entries); i++ {
 			switch segNumber {
 			case 0xff:
-				int3f, _ := parse.ReadUint16le(file, offset+1)
-
 				entryTableLen += 6
-				if int3f != 0x3fcd {
-					fmt.Println("PARSE ERROR in NE - entry points. int3f == " + fmt.Sprintf("%04x", int3f))
-				}
 
 				id := fmt.Sprintf("%d", i)
 				res.Childs = append(res.Childs, []parse.Layout{

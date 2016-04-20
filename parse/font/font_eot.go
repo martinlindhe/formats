@@ -11,7 +11,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func EOT(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func EOT(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isEOT(&c.Header) {
 		return nil, nil

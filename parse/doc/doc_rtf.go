@@ -10,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RTF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func RTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isRTF(&c.Header) {
 		return nil, nil

@@ -14,7 +14,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func VBE(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func VBE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isVBE(&c.Header) {
 		return nil, nil

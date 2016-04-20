@@ -8,7 +8,7 @@ import (
 
 func RAW(file *os.File) (*ParsedLayout, error) {
 
-	// TODO: make cmd/formats work without any Layout
+	// TODO: make cmd/formats work without any Layout, to avoid a 0-length selected area
 
 	return &ParsedLayout{
 		FormatName: "raw",

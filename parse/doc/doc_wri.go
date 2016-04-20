@@ -9,7 +9,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WRI(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func WRI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isWRI(&c.Header) {
 		return nil, nil

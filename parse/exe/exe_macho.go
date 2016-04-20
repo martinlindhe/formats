@@ -36,7 +36,7 @@ var (
 	}
 )
 
-func MachO(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func MachO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isMachO(&c.Header) {
 		return nil, nil

@@ -10,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func HLP(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func HLP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isHLP(&c.Header) {
 		return nil, nil

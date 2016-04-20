@@ -10,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LNK(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func LNK(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isLNK(&c.Header) {
 		return nil, nil

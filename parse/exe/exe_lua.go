@@ -9,7 +9,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LUA(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func LUA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isLUA(&c.Header) {
 		return nil, nil

@@ -10,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CHM(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func CHM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isCHM(&c.Header) {
 		return nil, nil

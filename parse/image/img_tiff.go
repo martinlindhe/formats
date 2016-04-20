@@ -8,7 +8,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TIFF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func TIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isTIFF(&c.Header) {
 		return nil, nil

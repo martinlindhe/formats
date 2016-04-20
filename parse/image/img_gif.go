@@ -44,7 +44,7 @@ const (
 	imgDescriptorLen = 10
 )
 
-func GIF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func GIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isGIF(&c.Header) {
 		return nil, nil
@@ -93,7 +93,7 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		var b byte
 		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
-				fmt.Println("XXX did not find gif trailer!")
+				fmt.Println("warning: did not find gif trailer")
 				return &pl, nil
 			}
 			return nil, err

@@ -8,7 +8,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OTF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func OTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isOTF(&c.Header) {
 		return nil, nil

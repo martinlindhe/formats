@@ -1,9 +1,10 @@
-# TODO cmd/typelister
-
-    scan windows/macos/linux installs with it to find more file types
-
-
 # TODO cmd/formats
+
+
+tiff verkar broken? osx samples detectas ej!
+
+
+
 
 if "raw"
     - check if its a text.
@@ -17,6 +18,15 @@ if "raw"
 
 basic detection of the following formats:
   - MSI exec
+  - plist (macos)
+
+
+
+# TODO cmd/typelister
+
+scan windows/macos/linux installs with it to find more file types
+
+
 
 # TODO
 .doc, .pps, .ppt, .xls: all are detected as "word" documents now.

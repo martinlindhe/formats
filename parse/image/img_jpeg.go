@@ -39,7 +39,7 @@ var (
 	}
 )
 
-func JPEG(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func JPEG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isJPEG(&c.Header) {
 		return nil, nil

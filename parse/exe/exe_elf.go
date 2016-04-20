@@ -95,7 +95,7 @@ var (
 	}
 )
 
-func ELF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func ELF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isELF(&c.Header) {
 		return nil, nil

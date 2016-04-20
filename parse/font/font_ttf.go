@@ -10,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TTF(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func TTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isTTF(&c.Header) {
 		return nil, nil

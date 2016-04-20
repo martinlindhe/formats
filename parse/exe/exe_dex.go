@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func DEX(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func DEX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isDEX(&c.Header) {
 		return nil, nil

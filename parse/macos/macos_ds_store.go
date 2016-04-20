@@ -36,6 +36,7 @@ func isDSSTORE(hdr *[0xffff]byte) bool {
 func parseDSSTORE(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
+	pl.FileKind = parse.MacOSResource
 	header := parse.Layout{
 		Offset: pos,
 		Info:   "header",
@@ -81,10 +82,7 @@ func parseDSSTORE(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, er
 
 	}
 
-	layout := []parse.Layout{header}
-
-	pl.FileKind = parse.Executable
-	pl.Layout = layout
+	pl.Layout = []parse.Layout{header}
 
 	return &pl, nil
 }

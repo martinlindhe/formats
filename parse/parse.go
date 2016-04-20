@@ -232,6 +232,9 @@ func ReadBytesUntilNewline(file *os.File, pos int64) ([]byte, int64, error) {
 
 	for {
 		if err := binary.Read(file, binary.LittleEndian, &c); err != nil {
+			if err == io.EOF {
+				break
+			}
 			return b, 0, err
 		}
 		readCnt++

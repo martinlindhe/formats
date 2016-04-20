@@ -7,27 +7,32 @@ package parse
 
 import (
 	"fmt"
+	"io"
 	"strings"
 )
 
 func Text(c *ParseChecker) (*ParsedLayout, error) {
 
-	if !isText(&c.Header) {
+	if !isText(c) {
 		return nil, fmt.Errorf("no match")
 	}
 
 	return parseText(c)
 }
 
-func isText(hdr *[0xffff]byte) bool {
+func isText(c *ParseChecker) bool {
 
-	b := *hdr
+	b := c.Header
 
-	for pos := 0; pos < 10; pos++ {
+	for pos := int64(0); pos < 10; pos++ {
+		if pos >= c.ParsedLayout.FileSize {
+			break
+		}
+
 		// US-ASCII check
 		c := b[pos]
 		if c < 32 || c > 126 {
-			if c != '\n' && c != '\r' {
+			if c != '\n' && c != '\r' && c != '\t' {
 				return false
 			}
 		}
@@ -55,7 +60,9 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 
 		_, len, err := ReadBytesUntilNewline(c.File, pos)
 		if err != nil {
-			fmt.Println("err!", err)
+			if err != io.EOF {
+				fmt.Println("err!", err)
+			}
 			break
 		}
 

@@ -32,6 +32,8 @@ func main() {
 
 	for _, fileName := range fileList {
 
+		fmt.Printf("%s:", fileName)
+
 		file, _ := os.Open(fileName)
 		fi, _ := file.Stat()
 		if fi.IsDir() {
@@ -49,6 +51,6 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("%s: %s\n", fileName, layout.ShortPrint())
+		fmt.Printf("%s\n", layout.ShortPrint())
 	}
 }

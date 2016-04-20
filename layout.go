@@ -75,6 +75,7 @@ var (
 		"png":      image.PNG,
 		"tiff":     image.TIFF,
 		"ds_store": macos.DSSTORE,
+		"bplist":   macos.BPLIST,
 		"grp":      windows.GRP,
 		"lnk":      windows.LNK,
 		"ole-cf":   windows.OLECF,

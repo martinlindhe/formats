@@ -1,5 +1,8 @@
 package av
 
+// A/V container format
+// .mp4, .mov (quicktime)
+
 // STATUS: 1%
 
 import (
@@ -20,8 +23,10 @@ func isMP4(hdr *[0xffff]byte) bool {
 
 	b := *hdr
 	// TODO what is right magic bytes? just guessing
-	if b[0] != 0 || b[1] != 0 || b[2] != 0 || b[3] != 0x18 {
-		return false
+	if b[0] != 0 || b[1] != 0 || b[2] != 0 {
+		if b[3] != 0x18 && b[3] != 0x20 {
+			return false
+		}
 	}
 	return true
 }

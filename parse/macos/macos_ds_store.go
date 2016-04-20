@@ -12,7 +12,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func DSSTORE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func DSStore(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isDSSTORE(&c.Header) {
 		return nil, nil

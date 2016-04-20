@@ -2,7 +2,7 @@ package macos
 
 // Binary plist
 // used by .nib (NeXT Interface Builder)
-// dont find any docs
+// cant find any docs
 
 // STATUS: 1%
 

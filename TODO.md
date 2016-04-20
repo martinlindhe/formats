@@ -8,6 +8,7 @@ tiff verkar broken? osx samples detectas ej!
 * FIX  ARJ (parser broken)
 * FIX TIFF detection (big endian files)
 * FIX TTF detection (magic ids ??? - or just parse struct?)
+* improve MP4 / MOV parser
 
 
 
@@ -54,5 +55,4 @@ JAR (java archive)
         - IMAGES: width + height + bpp
         - ARCHIVES: files in archive, total expanded size
         - exec: show sections
-
-    1st: mark all parsers of format group:
+        - A/V: duration, codecs

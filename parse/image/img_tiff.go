@@ -1,5 +1,8 @@
 package image
 
+// TIFF image
+// TODO understand byte order in the magic bytes
+
 // STATUS: 1%
 
 import (
@@ -20,10 +23,14 @@ func isTIFF(hdr *[0xffff]byte) bool {
 
 	b := *hdr
 	// XXX dont know magic numbers just guessing
-	if b[0] != 'I' || b[1] != 'I' || b[2] != '*' || b[3] != 0 {
-		return false
+	if b[0] == 'I' && b[1] == 'I' && b[2] == '*' && b[3] == 0 {
+		return true
 	}
-	return true
+	// XXX different byte order of file
+	if b[0] == 'M' && b[1] == 'M' && b[2] == 0 && b[3] == '*' {
+		return true
+	}
+	return false
 }
 
 func parseTIFF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

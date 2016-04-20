@@ -222,3 +222,40 @@ func (pl *ParsedLayout) PercentMapped(totalSize int64) float64 {
 func (pl *ParsedLayout) PercentUnmapped(totalSize int64) float64 {
 	return 100 - pl.PercentMapped(totalSize)
 }
+
+func ReadBytesUntilNewline(file *os.File, pos int64) ([]byte, int64, error) {
+
+	var c byte
+	var b []byte
+	readCnt := int64(0)
+	file.Seek(pos, os.SEEK_SET)
+
+	for {
+		if err := binary.Read(file, binary.LittleEndian, &c); err != nil {
+			return b, 0, err
+		}
+		readCnt++
+		b = appendByte(b, c)
+
+		if c == '\r' || c == '\n' {
+			break
+		}
+	}
+
+	return b, readCnt, nil
+}
+
+// from http://blog.golang.org/go-slices-usage-and-internals
+func appendByte(slice []byte, data ...byte) []byte {
+	m := len(slice)
+	n := m + len(data)
+	if n > cap(slice) { // if necessary, reallocate
+		// allocate double what's needed, for future growth.
+		newSlice := make([]byte, (n+1)*2)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:n]
+	copy(slice[m:n], data)
+	return slice
+}

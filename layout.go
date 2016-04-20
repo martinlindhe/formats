@@ -124,7 +124,14 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 		}
 	}
 
-	raw, _ := parse.RAW(file)
+	// try text detector
+	text, err := parse.Text(&checker)
+	if err == nil {
+		return text, nil
+	}
+
+	// fall back to raw
+	raw, _ := parse.RAW(&checker)
 	return raw, nil
 }
 

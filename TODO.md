@@ -5,20 +5,13 @@ tiff verkar broken? osx samples detectas ej!
 
 
 
-
-if "raw"
-    - check if its a text.
-    check line endings + try find encoding
-
-
-
 * FIX  ARJ
 
 
 
 basic detection of the following formats:
   - MSI exec
-  - plist (macos)
+  - plist (macos)  = xml doc
 
 
 

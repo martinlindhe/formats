@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/archives"
+	searchDir := "./samples"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -43,6 +43,9 @@ func TestParsedLayout(t *testing.T) {
 			if l.Type != parse.Group {
 				t.Fatalf("root level must be group %v, %s", l, path)
 			}
+			if len(l.Masks) > 0 {
+				t.Fatalf("can not have masks on root level group %v, %s", l, path)
+			}
 			if l.Type == parse.RGB && l.Length != 3 {
 				t.Fatalf("RGB field must be %d bytes, was %d", 3, l.Length)
 			}
@@ -68,10 +71,21 @@ func TestParsedLayout(t *testing.T) {
 			for _, child := range l.Childs {
 				sum += child.Length
 				if child.Type == parse.Group {
-					t.Fatalf("child level cant be group %v, %s", l, path)
+					t.Fatalf("child level cant be group %s:%s, %s", l.Info, child.Info, path)
 				}
 				if child.Offset+child.Length > layout.FileSize {
-					t.Fatalf("%s (child) data extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
+					t.Fatalf("%s:%s (child) data extends above end of file with %d bytes", l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
+				}
+
+				if len(child.Masks) > 0 {
+					expectedTot := child.GetBitSize()
+					tot := 0
+					for _, mask := range child.Masks {
+						tot += mask.Length
+					}
+					if tot != expectedTot {
+						t.Fatalf("%s %s:%s (child) masks size dont add up. expected %d bits, got %d", path, l.Info, child.Info, expectedTot, tot)
+					}
 				}
 			}
 			if sum != l.Length {

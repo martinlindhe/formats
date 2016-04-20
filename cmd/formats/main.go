@@ -65,10 +65,11 @@ func uiLoop(file *os.File) {
 	fileLen, _ := file.Seek(0, os.SEEK_END)
 
 	err := termui.Init()
-	if err != nil {
-		panic(err)
-	}
 	defer termui.Close()
+	if err != nil {
+		fmt.Println("uiLoop error:", err)
+		return
+	}
 
 	calcVisibleRows()
 

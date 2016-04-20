@@ -1,8 +1,10 @@
 package exe
 
 import (
-	"github.com/martinlindhe/formats/parse"
+	"fmt"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 // TODO EXEPACK: http://www.shikadi.net/moddingwiki/Microsoft_EXEPACK
@@ -30,7 +32,7 @@ func findCustomDOSHeaders(file *os.File) *parse.Layout {
 			}}
 	}
 
-	tok, _, _ = parse.ReadZeroTerminatedASCIIUntil(file, 0x1c, 4)
+	tok, _, _ = parse.ReadZeroTerminatedASCIIUntil(file, pos, 4)
 	if tok == "LZ09" || tok == "LZ91" {
 
 		return &parse.Layout{
@@ -49,10 +51,19 @@ func findCustomDOSHeaders(file *os.File) *parse.Layout {
 		// "91" = v 0.91
 	}
 
-	u32tok, _ := parse.ReadUint32le(file, 0x1c)
+	u32tok, _ := parse.ReadUint32le(file, pos)
 	if u32tok == 0x018a0001 {
 
-		panic("TOPSPEED")
+		fmt.Println("info: TOPSPEED sample plz!")
+
+		return &parse.Layout{
+			Offset: pos,
+			Length: 4, // XXX
+			Info:   "TOPSPEED header",
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "identifier", Type: parse.Uint32le},
+			}}
 		/*
 			return &Layout{
 				Offset: offset,

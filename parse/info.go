@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 var (
@@ -73,16 +74,8 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 
 	// decode bit mask
 	if len(field.Masks) > 0 {
-		var b uint32
 
-		switch field.Type {
-		case Uint8:
-			val, _ := ReadUint8(f, field.Offset)
-			b = uint32(val)
-
-		default:
-			panic("unknown bitmask size " + field.Type.String())
-		}
+		b := ReadUnsignedInt(f, field)
 
 		for _, mask := range field.Masks {
 
@@ -195,6 +188,14 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 		}
 		res += fmt.Sprintf("%d.%d", b[0], b[1])
 
+	case DOSDateTime:
+		var b uint32
+		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+			return fmt.Sprintf("%v", err)
+		}
+		t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
+		res += fmt.Sprintf("%v", t)
+
 	case Bytes:
 		res += fmt.Sprintf("chunk of bytes")
 
@@ -227,11 +228,9 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 			return fmt.Sprintf("%v", err)
 		}
 		res += fmt.Sprintf("%d, %d, %d", buf[0], buf[1], buf[2])
-		//val := uint64(buf[0])<<16 | uint64(buf[1])<<8 | uint64(buf[2])
-		//res += fmt.Sprintf("%06x", val)
 
 	default:
-		res += "XXX unhandled " + field.Type.String()
+		res += "unhandled type " + field.Type.String()
 	}
 
 	return res

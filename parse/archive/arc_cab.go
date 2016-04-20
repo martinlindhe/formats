@@ -63,7 +63,7 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		}}}
 
 	if flags&4 > 0 {
-		panic("flags&4 SAMPLE PLZ")
+		fmt.Println("flags&4 SAMPLE PLZ")
 		/*
 			ushort cbCFHeader;      // (optional) size of per-cabinet reserved area
 			ubyte  cbCFFolder;      // (optional) size of per-folder reserved area
@@ -75,14 +75,14 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	}
 	if flags&1 > 0 {
-		panic("flags&1 SAMPLE PLZ")
+		fmt.Println("flags&1 SAMPLE PLZ")
 		/*
 			char    szCabinetPrev[];// (optional) name of previous cabinet file
 			char    szDiskPrev[];   // (optional) name of previous disk
 		*/
 	}
 	if flags&2 > 0 {
-		panic("flags&2 SAMPLE PLZ")
+		fmt.Println("flags&2 SAMPLE PLZ")
 		/*
 			char    szCabinetNext[];    // (optional) name of next cabinet file
 			char    szDiskNext[];       // (optional) name of next disk

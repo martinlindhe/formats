@@ -1,5 +1,7 @@
 package windows
 
+// Windows shortcut (.lnk)
+// http://lifeinhex.com/analyzing-malicious-lnk-file/
 // https://github.com/libyal/liblnk/blob/master/documentation/Windows%20Shortcut%20File%20%28LNK%29%20format.asciidoc
 
 // STATUS: 1%
@@ -42,7 +44,24 @@ func parseLNK(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			// XXX type GUID / CLSID  GUID: {00021401-0000-0000-c000-000000000046}
 			{Offset: pos + 4, Length: 16, Info: "guid", Type: parse.Bytes},
 
-			{Offset: pos + 20, Length: 4, Info: "data flags", Type: parse.Uint32le},
+			{Offset: pos + 20, Length: 4, Info: "data flags", Type: parse.Uint32le, Masks: []parse.Mask{
+				// XXX flags
+				{Low: 0, Length: 18, Info: "unused"},
+				{Low: 18, Length: 1, Info: "encrypted"},
+				{Low: 19, Length: 1, Info: "not content indexed"},
+				{Low: 20, Length: 1, Info: "offline"},
+				{Low: 21, Length: 1, Info: "compressed"},
+				{Low: 22, Length: 1, Info: "reparse point"},
+				{Low: 23, Length: 1, Info: "sparse file"},
+				{Low: 24, Length: 1, Info: "temporary"},
+				{Low: 25, Length: 1, Info: "normal"},
+				{Low: 26, Length: 1, Info: "archive"},
+				{Low: 27, Length: 1, Info: "directory"},
+				{Low: 28, Length: 1, Info: "reserved"},
+				{Low: 29, Length: 1, Info: "system"},
+				{Low: 30, Length: 1, Info: "hidden"},
+				{Low: 31, Length: 1, Info: "readonly"},
+			}},
 			{Offset: pos + 24, Length: 4, Info: "file attribute flags", Type: parse.Uint32le},
 			{Offset: pos + 28, Length: 8, Info: "created FILETIME", Type: parse.Bytes},  // XXX decode type
 			{Offset: pos + 36, Length: 8, Info: "accessed FILETIME", Type: parse.Bytes}, // XXX decode type

@@ -57,7 +57,7 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 			{Offset: pos, Length: 4, Info: "identifier", Type: parse.ASCIIZ},
 			{Offset: pos + 4, Length: 2, Info: "machine = " + machineName, Type: parse.Uint16le},
 			{Offset: pos + 6, Length: 2, Info: "number of sections", Type: parse.Uint16le},
-			{Offset: pos + 8, Length: 4, Info: "timestamp", Type: parse.Uint32le}, // XXX format, convert, etc: var TimeDateStamp = NumberOfSections.RelativeToLittleEndianDateStamp("TimeDateStamp");
+			{Offset: pos + 8, Length: 4, Info: "timestamp", Type: parse.DOSDateTime},
 			{Offset: pos + 12, Length: 4, Info: "symbol table offset", Type: parse.Uint32le},
 			{Offset: pos + 16, Length: 4, Info: "symbol table entries", Type: parse.Uint32le},
 			{Offset: pos + 20, Length: 2, Info: "optional header size", Type: parse.Uint16le},

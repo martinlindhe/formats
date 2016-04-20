@@ -1,12 +1,7 @@
 # TODO cmd/formats
 
-
-tiff verkar broken? osx samples detectas ej!
-
-
-
+ * improve LNK parser, see http://lifeinhex.com/analyzing-malicious-lnk-file/
 * FIX  ARJ (parser broken)
-* FIX TIFF detection (big endian files)
 * FIX TTF detection (magic ids ??? - or just parse struct?)
 * improve MP4 / MOV parser
 

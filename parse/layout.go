@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 )
 
 // ...
@@ -33,6 +32,9 @@ const (
 	MajorMinor16be // first byte = major, last = minor
 	MajorMinor32le // first word = major, last = minor
 	MinorMajor16le // first byte = minor, last = major
+
+	// timestamps
+	DOSDateTime
 
 	// groups of bytes
 	Bytes
@@ -71,13 +73,18 @@ var (
 		MajorMinor16be: "major.minor-16be",
 		MajorMinor32le: "major.minor-32le",
 		MinorMajor16le: "minor.major-16le",
+		DOSDateTime:    "datetime.dos-32le",
 		Bytes:          "bytes",
 		ASCII:          "ASCII",
 		ASCIIC:         "ASCIIC",
 		ASCIIZ:         "ASCIIZ",
 		RGB:            "RGB",
 	}
-
+	dataTypeBitsizes = map[DataType]int{
+		Uint8:    8,
+		Uint16le: 16,
+		Uint32le: 32,
+	}
 	FileKinds = map[FileKind]string{
 		Image:           "image",
 		Archive:         "archive",
@@ -129,9 +136,18 @@ func (dt DataType) String() string {
 		return val
 	}
 
-	// NOTE should only be able to panic during dev (as in:
+	// NOTE: this should only be able to panic during dev (as in:
 	// adding a new datatype and forgetting to add it to the map)
 	panic(int(dt))
+}
+
+func (l *Layout) GetBitSize() int {
+
+	if val, ok := dataTypeBitsizes[l.Type]; ok {
+		return val
+	}
+
+	panic("GetBitSize: dont know size of " + l.Type.String())
 }
 
 func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error) {
@@ -255,17 +271,7 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 		return 0
 	}
 
-	var b uint32
-
-	switch field.Type {
-	case Uint8:
-		val, _ := ReadUint8(file, field.Offset)
-		b = uint32(val)
-
-	default:
-		panic("unknown bitmask size " + field.Type.String())
-	}
-
+	b := ReadUnsignedInt(file, field)
 	if bitmask, ok := bitmaskMap[mask.Length]; ok {
 
 		tmp := bitmask << uint32(mask.Low)
@@ -298,22 +304,4 @@ func (pl *ParsedLayout) readBytesFromInfo(file *os.File, info string) ([]byte, e
 	}
 
 	return ReadBytesFrom(file, layout.Offset, layout.Length), nil
-}
-
-type ByLayout []Layout
-
-func (slice ByLayout) Len() int {
-	return len(slice)
-}
-
-func (slice ByLayout) Less(i, j int) bool {
-	return slice[i].Offset < slice[j].Offset
-}
-
-func (slice ByLayout) Swap(i, j int) {
-	slice[i], slice[j] = slice[j], slice[i]
-}
-
-func (pl *ParsedLayout) Sort() {
-	sort.Sort(ByLayout(pl.Layout))
 }

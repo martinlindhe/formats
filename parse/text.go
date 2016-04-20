@@ -1,5 +1,10 @@
 package parse
 
+// STATUS: 50%
+
+// XXX detect bom
+// XXX try to guess encoding (utf8 / ascii..)
+
 import (
 	"fmt"
 	"strings"
@@ -22,20 +27,15 @@ func isText(hdr *[0xffff]byte) bool {
 		// US-ASCII check
 		c := b[pos]
 		if c < 32 || c > 126 {
-			return false
+			if c != '\n' && c != '\r' {
+				return false
+			}
 		}
 	}
 	return true
 }
 
 func parseText(c *ParseChecker) (*ParsedLayout, error) {
-
-	// XXX detect bom
-
-	// XXX detect line endings
-	// XXX try to guess encoding (utf8 / ascii..)
-
-	// XXX parse line by line as blocks
 
 	c.ParsedLayout.FormatName = "text"
 
@@ -47,7 +47,6 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 
 	layout := Layout{
 		Offset: pos,
-		Length: 0,
 		Info:   "text",
 		Type:   Group}
 
@@ -64,8 +63,9 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 			Offset: pos,
 			Length: len,
 			Info:   "line " + fmt.Sprintf("%d", line),
-			Type:   Bytes})
+			Type:   ASCII})
 
+		layout.Length += len
 		pos += len
 		line++
 		if pos >= c.ParsedLayout.FileSize {

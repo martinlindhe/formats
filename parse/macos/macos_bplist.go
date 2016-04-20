@@ -4,7 +4,7 @@ package macos
 // used by .nib (NeXT Interface Builder)
 // dont find any docs
 
-// STATUS: 0%
+// STATUS: 1%
 
 import (
 	"os"

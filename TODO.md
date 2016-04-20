@@ -5,7 +5,9 @@ tiff verkar broken? osx samples detectas ej!
 
 
 
-* FIX  ARJ,   TIFF detection
+* FIX  ARJ (parser broken)
+* FIX TIFF detection (big endian files)
+* FIX TTF detection (magic ids ??? - or just parse struct?)
 
 
 

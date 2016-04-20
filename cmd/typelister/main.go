@@ -36,7 +36,7 @@ func main() {
 
 		file, err := os.Open(fileName)
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Println(err)
 			continue
 		}
 		fi, _ := file.Stat()

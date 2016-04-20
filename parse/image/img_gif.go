@@ -66,29 +66,29 @@ func isGIF(hdr *[0xffff]byte) bool {
 
 func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	offset := int64(0)
+	pos := int64(0)
 	pl.FileKind = parse.Image
 
 	header := gifHeader(file)
 	pl.Layout = append(pl.Layout, header)
-	offset += header.Length
+	pos += header.Length
 
 	logicalDesc := gifLogicalDescriptor(file)
 	pl.Layout = append(pl.Layout, logicalDesc)
-	offset += logicalDesc.Length
+	pos += logicalDesc.Length
 
 	globalColorTableFlag := pl.DecodeBitfieldFromInfo(file, "global color table flag")
 	if globalColorTableFlag != 0 {
 		sizeOfGCT := pl.DecodeBitfieldFromInfo(file, "global color table size")
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
 			pl.Layout = append(pl.Layout, gifGlobalColorTable(file, gctByteLen))
-			offset += gctByteLen
+			pos += gctByteLen
 		}
 	}
 
 	for {
 
-		file.Seek(offset, os.SEEK_SET)
+		file.Seek(pos, os.SEEK_SET)
 
 		var b byte
 		if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
@@ -99,39 +99,40 @@ func parseGIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			return nil, err
 		}
 
+		fmt.Printf("ext %02x at %04x\n", b, pos)
 		switch b {
 		case sExtension:
-			gfxExt, err := gifExtension(file, offset)
+			gfxExt, err := gifExtension(file, pos)
 			if err != nil {
 				return nil, err
 			}
 			pl.Layout = append(pl.Layout, *gfxExt)
-			offset += gfxExt.Length
+			pos += gfxExt.Length
 
 		case sImageDescriptor:
-			imgDescriptor := gifImageDescriptor(file, offset)
+			imgDescriptor := gifImageDescriptor(file, pos)
 			if imgDescriptor != nil {
 				pl.Layout = append(pl.Layout, *imgDescriptor)
-				offset += imgDescriptor.Length
+				pos += imgDescriptor.Length
 			}
 			if pl.DecodeBitfieldFromInfo(file, "local color table flag") > 0 {
 				sizeOfLCT := pl.DecodeBitfieldFromInfo(file, "local color table size")
 				if lctByteLen, ok := gctToLengthMap[byte(sizeOfLCT)]; ok {
-					localTbl := gifLocalColorTable(file, offset, lctByteLen)
+					localTbl := gifLocalColorTable(file, pos, lctByteLen)
 					pl.Layout = append(pl.Layout, localTbl)
-					offset += localTbl.Length
+					pos += localTbl.Length
 				}
 			}
 
-			imgData, err := gifImageData(file, offset)
+			imgData, err := gifImageData(file, pos)
 			if err != nil {
 				return nil, err
 			}
 			pl.Layout = append(pl.Layout, *imgData)
-			offset += imgData.Length
+			pos += imgData.Length
 
 		case sTrailer:
-			pl.Layout = append(pl.Layout, gifTrailer(file, offset))
+			pl.Layout = append(pl.Layout, gifTrailer(file, pos))
 			return &pl, nil
 		}
 	}

@@ -94,17 +94,12 @@ func uiLoop(file *os.File) {
 	asciiPar.BorderLabel = "ascii"
 	asciiPar.BorderFg = termui.ColorCyan
 
-	formatKind := ""
-	if val, ok := parse.FileKinds[fileLayout.FileKind]; ok {
-		formatKind = val
-	}
-
 	boxPar = termui.NewPar("")
 	boxPar.Height = 14
 	boxPar.Width = 34
 	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite
-	boxPar.BorderLabel = fileLayout.FormatName + " " + formatKind
+	boxPar.BorderLabel = fileLayout.TypeSummary()
 	boxPar.BorderFg = termui.ColorCyan
 
 	boxFooter = termui.NewPar("")

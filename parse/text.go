@@ -1,8 +1,9 @@
 package parse
 
-// STATUS: 50%
+// STATUS: 60%
 
-// XXX detect bom
+// https://en.wikipedia.org/wiki/Byte_order_mark
+
 // XXX try to guess encoding (utf8 / ascii..)
 
 import (
@@ -23,6 +24,10 @@ func Text(c *ParseChecker) (*ParsedLayout, error) {
 func isText(c *ParseChecker) bool {
 
 	b := c.Header
+
+	if hasRecognizedBOM(c) {
+		return true
+	}
 
 	for pos := int64(0); pos < 10; pos++ {
 		if pos >= c.ParsedLayout.FileSize {
@@ -45,7 +50,8 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 	c.ParsedLayout.FormatName = "text"
 
 	pos := int64(0)
-	hdr, _, _ := ReadZeroTerminatedASCIIUntil(c.File, pos, 5)
+	data := ReadBytesFrom(c.File, pos, 5)
+	hdr := string(data)
 	if strings.ToLower(hdr) == "<?xml" {
 		c.ParsedLayout.FormatName = "xml"
 	}
@@ -55,9 +61,20 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 		Info:   "text",
 		Type:   Group}
 
+	bom, bomLen := parseBOMMark(c, pos)
+	if bomLen > 0 {
+		c.ParsedLayout.TextEncoding = bom
+		layout.Childs = append(layout.Childs, Layout{
+			Offset: pos,
+			Length: bomLen,
+			Info:   bom.String() + " bom",
+			Type:   Bytes})
+
+		pos += bomLen
+	}
+
 	line := 1
 	for {
-
 		_, len, err := ReadBytesUntilNewline(c.File, pos)
 		if err != nil {
 			if err != io.EOF {
@@ -84,4 +101,34 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 	c.ParsedLayout.Layout = []Layout{layout}
 
 	return &c.ParsedLayout, nil
+}
+
+func parseBOMMark(c *ParseChecker, pos int64) (TextEncoding, int64) {
+
+	b := c.Header
+	if b[0] == 0xff && b[1] == 0xfe && b[2] == 0 && b[3] == 0 {
+		return UTF32le, 2
+	}
+	if b[0] == 0 && b[1] == 0 && b[2] == 0xfe && b[3] == 0xff {
+		return UTF32be, 4
+	}
+	if b[0] == 0xfe && b[1] == 0xff {
+		return UTF16be, 2
+	}
+	if b[0] == 0xff && b[1] == 0xfe {
+		return UTF16le, 2
+	}
+	if b[0] == 0xef && b[1] == 0xbb && b[2] == 0xbf {
+		return UTF8, 3
+	}
+	return None, 0
+}
+
+func hasRecognizedBOM(c *ParseChecker) bool {
+
+	_, len := parseBOMMark(c, 0)
+	if len > 0 {
+		return true
+	}
+	return false
 }

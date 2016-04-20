@@ -138,24 +138,57 @@ func ReadUint32le(file *os.File, pos int64) (uint32, error) {
 	return b, nil
 }
 
+type LineEnding int
+
+const (
+	Crlf = 1 + iota // windows
+	Cr              // old mac os
+	Lf              // linux + modern mac os
+)
+
 func ReadBytesUntilNewline(file *os.File, pos int64) ([]byte, int64, error) {
 
 	var c byte
 	var b []byte
 	readCnt := int64(0)
-	file.Seek(pos, os.SEEK_SET)
 
+	lineEnding := Lf
 	for {
+		file.Seek(pos, os.SEEK_SET)
+
 		if err := binary.Read(file, binary.LittleEndian, &c); err != nil {
 			if err == io.EOF {
 				break
 			}
 			return b, 0, err
 		}
+		pos++
 		readCnt++
 		b = appendByte(b, c)
 
-		if c == '\r' || c == '\n' {
+		if c == '\r' {
+			if lineEnding != Crlf {
+				if err := binary.Read(file, binary.LittleEndian, &c); err != nil {
+					if err == io.EOF {
+						break
+					}
+					return b, 0, err
+				}
+				if c == '\n' {
+					lineEnding = Crlf
+				}
+			}
+
+			if lineEnding == Crlf {
+				pos++
+				readCnt++
+			} else {
+				lineEnding = Cr
+			}
+			break
+		}
+
+		if c == '\n' || c == '\r' {
 			break
 		}
 	}

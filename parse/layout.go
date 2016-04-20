@@ -56,6 +56,15 @@ const (
 	MacOSResource
 )
 
+const (
+	None TextEncoding = iota
+	UTF8
+	UTF16le
+	UTF16be
+	UTF32le
+	UTF32be
+)
+
 var (
 	dataTypes = map[DataType]string{
 		Group:          "group",
@@ -79,6 +88,14 @@ var (
 		ASCIIC:         "ASCIIC",
 		ASCIIZ:         "ASCIIZ",
 		RGB:            "RGB",
+	}
+	textEncodings = map[TextEncoding]string{
+		None:    "none",
+		UTF8:    "utf8",
+		UTF16le: "utf16le",
+		UTF32le: "utf32le",
+		UTF16be: "utf16be",
+		UTF32be: "utf32be",
 	}
 	dataTypeBitsizes = map[DataType]int{
 		Uint8:    8,
@@ -106,12 +123,15 @@ type FileKind int
 
 // ParsedLayout ...
 type ParsedLayout struct {
-	FormatName string
-	FileName   string
-	FileSize   int64
-	FileKind   FileKind
-	Layout     []Layout
+	FormatName   string
+	FileName     string
+	FileSize     int64
+	FileKind     FileKind
+	TextEncoding TextEncoding
+	Layout       []Layout
 }
+
+type TextEncoding int
 
 // Layout represents a parsed file structure
 type Layout struct {
@@ -128,6 +148,17 @@ type Mask struct {
 	Low    int
 	Length int
 	Info   string
+}
+
+func (e TextEncoding) String() string {
+
+	if val, ok := textEncodings[e]; ok {
+		return val
+	}
+
+	// NOTE: this should only be able to panic during dev (as in:
+	// adding a new datatype and forgetting to add it to the map)
+	panic(int(e))
 }
 
 func (dt DataType) String() string {
@@ -230,11 +261,21 @@ func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
 // the output of cmd/prober --short
 func (pl *ParsedLayout) ShortPrint() string {
 
+	return pl.TypeSummary()
+}
+
+func (pl *ParsedLayout) TypeSummary() string {
+
+	kindName := ""
 	if val, ok := FileKinds[pl.FileKind]; ok {
-		return pl.FormatName + " " + val
+		kindName = val
 	}
 
-	return pl.FormatName
+	s := pl.FormatName + " " + kindName
+	if pl.TextEncoding != None {
+		s += " " + pl.TextEncoding.String()
+	}
+	return s
 }
 
 // the output of cmd/prober

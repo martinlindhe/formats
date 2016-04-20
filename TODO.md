@@ -5,7 +5,7 @@ tiff verkar broken? osx samples detectas ej!
 
 
 
-* FIX  ARJ
+* FIX  ARJ,   TIFF detection
 
 
 

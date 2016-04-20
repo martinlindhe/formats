@@ -68,6 +68,7 @@ var (
 		"woff2":    font.WOFF2,
 		"bmp":      image.BMP,
 		"gif":      image.GIF,
+		"icns":     image.ICNS,
 		"ico":      image.ICO,
 		"jpeg":     image.JPEG,
 		"pcx":      image.PCX,

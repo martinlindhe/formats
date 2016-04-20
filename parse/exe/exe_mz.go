@@ -14,7 +14,7 @@ var (
 	subHeaderLen = int64(36) // XXX
 )
 
-func MZ(c *parse.ParseChecker)(*parse.ParsedLayout, error) {
+func MZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isMZ(&c.Header) {
 		return nil, nil
@@ -33,7 +33,6 @@ func isMZ(hdr *[0xffff]byte) bool {
 
 func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
-	pl.FormatName = "mz"
 	pl.FileKind = parse.Executable
 	pos := int64(0)
 	mz := parse.Layout{
@@ -74,6 +73,7 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 		// 0x40 for new-(NE,LE,LX,W3,PE etc.) executable
 		pos += mzHeaderLen
 
+		newHeaderPos, _ := parse.ReadUint32le(file, pos+32)
 		pl.Layout = append(pl.Layout, parse.Layout{
 			Offset: pos,
 			Length: subHeaderLen,
@@ -87,38 +87,53 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 				{Offset: pos + 32, Length: 4, Info: "start of ext header", Type: parse.Uint32le},
 			}})
 
-		newHeaderPos, _ := parse.ReadUint32le(file, pos+32)
-
 		pos = int64(newHeaderPos)
 		newHeaderId, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos, 2)
 
 		switch newHeaderId {
 		case "LX":
-			pl.FormatName = "mz-lx"
 			// OS/2 (32-bit)
+			pl.FormatName = "mz-lx"
 			header, _ := parseMZ_LXHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
+
 		case "LE":
-			// OS/2 (mixed 16/32-bit)
+			// Win, OS/2 (mixed 16/32-bit)
 			pl.FormatName = "mz-le"
 			header, _ := parseMZ_LEHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
 
 		case "NE":
-			pl.FormatName = "mz-ne"
 			// Win16, OS/2
+			pl.FormatName = "mz-ne"
 			header, _ := parseMZ_NEHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
+
 		case "PE":
-			pl.FormatName = "mz-pe"
 			// Win32, Win64
+			pl.FormatName = "mz-pe"
 			header, _ := parseMZ_PEHeader(file, pos)
 			pl.Layout = append(pl.Layout, header...)
+
 		default:
-			// XXX get samples of LE, W3 files
-			fmt.Println("mz-error: unknown newHeaderId =" + newHeaderId)
-			return nil, nil
+			fmt.Println("mz-error: unknown newHeaderId: " + newHeaderId)
 		}
+
+		exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)
+
+		dosStubLen := int64(newHeaderPos) - exeStart
+		pos = exeStart
+		dosStub := parse.Layout{
+			Offset: pos,
+			Length: dosStubLen,
+			Info:   "dos stub",
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: dosStubLen, Info: "dos stub", Type: parse.Bytes},
+			}}
+
+		pl.Layout = append(pl.Layout, dosStub)
+
 	} else {
 		relocItems, _ := parse.ReadUint16le(file, pos+6)
 		if relocItems > 0 {
@@ -139,21 +154,6 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 			pl.Layout = append(pl.Layout, reloc)
 		}
 	}
-
-	exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)
-
-	// XXX disasm until first ret or sth ???
-	pos = exeStart
-	codeChunk := parse.Layout{
-		Offset: pos,
-		Length: 4, // XXX
-		Info:   "dos entry point",
-		Type:   parse.Group,
-		Childs: []parse.Layout{
-			{Offset: pos, Length: 4, Info: "XXX", Type: parse.Bytes},
-		}}
-
-	pl.Layout = append(pl.Layout, codeChunk)
 
 	pl.Sort()
 
@@ -291,38 +291,5 @@ public long FileOffsetFromVirtualAddress(long va)
     Log("FATAL ERROR not found for va " + va.ToString("x8"));
     return va;
     //throw new Exception("not found for va " + va.ToString("x8"));
-}
-
-private static string ByteArrayToString(byte[] arr)
-{
-    var s = new StringBuilder();
-    foreach (byte b in arr)
-        s.Append((char)b);
-
-    return s.ToString();
-}
-
-// Calculates the 16-bit checksum used in the orginal MZ header
-public ushort CalculateChecksum16bit()
-{
-    // based on code from http://support.microsoft.com/KB/71971
-    BaseStream.Position = 0;
-
-    ushort sum16 = 0;
-
-    // NOTE if we skip offset 0x0012, we get 0x0000 ???
-
-    for (int x = 0; x < BaseStream.Length / 2; x++) {
-        //if (x == 0x0006)
-        //    continue;
-        sum16 += ReadUInt16();
-    }
-
-    // make sure and get the last byte if odd size...
-    if (BaseStream.Length % 2 != 0) {
-        sum16 += ReadByte();
-    }
-
-    return sum16;
 }
 */

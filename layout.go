@@ -117,7 +117,9 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 
 		pl, err := parser(&checker)
 		if pl != nil {
-			pl.FormatName = name
+			if pl.FormatName == "" {
+				pl.FormatName = name
+			}
 			return pl, err
 		}
 	}

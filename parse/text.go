@@ -29,16 +29,19 @@ func isText(c *ParseChecker) bool {
 		return true
 	}
 
+	seemsLike := US_ASCII
+
 	for pos := int64(0); pos < 10; pos++ {
 		if pos >= c.ParsedLayout.FileSize {
 			break
 		}
 
-		// US-ASCII check
-		c := b[pos]
-		if c < 32 || c > 126 {
-			if c != '\n' && c != '\r' && c != '\t' {
-				return false
+		if seemsLike == US_ASCII {
+			c := b[pos]
+			if c < 32 {
+				if c != '\n' && c != '\r' && c != '\t' {
+					return false
+				}
 			}
 		}
 	}

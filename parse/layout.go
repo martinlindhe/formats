@@ -58,6 +58,7 @@ const (
 
 const (
 	None TextEncoding = iota
+	US_ASCII
 	UTF8
 	UTF16le
 	UTF16be
@@ -90,12 +91,13 @@ var (
 		RGB:            "RGB",
 	}
 	textEncodings = map[TextEncoding]string{
-		None:    "none",
-		UTF8:    "utf8",
-		UTF16le: "utf16le",
-		UTF32le: "utf32le",
-		UTF16be: "utf16be",
-		UTF32be: "utf32be",
+		None:     "none",
+		US_ASCII: "us-ascii",
+		UTF8:     "utf8",
+		UTF16le:  "utf16le",
+		UTF32le:  "utf32le",
+		UTF16be:  "utf16be",
+		UTF32be:  "utf32be",
 	}
 	dataTypeBitsizes = map[DataType]int{
 		Uint8:    8,

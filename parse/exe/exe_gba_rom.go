@@ -1,4 +1,4 @@
-package bin
+package exe
 
 // Gameboy Advance ROM image
 
@@ -6,8 +6,9 @@ package bin
 
 import (
 	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -46,7 +47,7 @@ func isGBAROM(file *os.File) bool {
 func parseGBAROM(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	pl.FileKind = parse.Binary
+	pl.FileKind = parse.Executable
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 192, // XXX

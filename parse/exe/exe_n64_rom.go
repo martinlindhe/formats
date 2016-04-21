@@ -1,4 +1,4 @@
-package bin
+package exe
 
 // Nintendo 64 ROM image
 
@@ -30,7 +30,7 @@ func isN64ROM(hdr *[0xffff]byte) bool {
 func parseN64ROM(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	pl.FileKind = parse.Binary
+	pl.FileKind = parse.Executable
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 4, // XXX

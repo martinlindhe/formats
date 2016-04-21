@@ -1,4 +1,4 @@
-package bin
+package exe
 
 /*
 public PlaystationBiosReader(FileStream fs) : base(fs)

@@ -20,29 +20,18 @@ func main() {
 	kingpin.CommandLine.HelpFlag.Short('h')
 	kingpin.Parse()
 
-	fileList := []string{}
-	err := filepath.Walk(*path, func(path string, f os.FileInfo, err error) error {
-		fileList = append(fileList, path)
-		return nil
-	})
-	if err != nil {
-		fmt.Println("ERR: ", err)
-		os.Exit(1)
-	}
-
-	for _, fileName := range fileList {
-
-		fmt.Printf("%s:", fileName)
+	err := filepath.Walk(*path, func(fileName string, f os.FileInfo, err error) error {
 
 		file, err := os.Open(fileName)
 		if err != nil {
-			fmt.Println(err)
-			continue
+			return nil
 		}
 		fi, _ := file.Stat()
 		if fi.IsDir() {
-			continue
+			return nil
 		}
+
+		fmt.Printf("%s:", fileName)
 
 		layout, err := formats.ParseLayout(file)
 		if err != nil {
@@ -56,5 +45,11 @@ func main() {
 		}
 
 		fmt.Printf("%s\n", layout.ShortPrint())
+
+		return nil
+	})
+	if err != nil {
+		fmt.Println("ERR: ", err)
+		os.Exit(1)
 	}
 }

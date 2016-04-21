@@ -94,13 +94,17 @@ var (
 		"code_directory": macos.CodeDirectory,
 		"ds_store":       macos.DSStore,
 		"keychain":       macos.Keychain,
+		"ari8":           windows.ARI8,
 		"dxbc":           windows.DXBC,
 		"grp":            windows.GRP,
+		"hwrs":           windows.HWRS,
 		"lnk":            windows.LNK,
 		"ole-cf":         windows.OLECF,
 		"p7x":            windows.P7X,
 		"pif":            windows.PIF,
 		"pri":            windows.PRI,
+		"rbs":            windows.RBS,
+		"rsrc":           windows.RSRC,
 		"xbf":            windows.XBF,
 		"tga":            image.TGA, // XXX has loose detection, so put it last for now
 	}

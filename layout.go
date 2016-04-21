@@ -22,6 +22,7 @@ var (
 		"arj":            archive.ARJ,
 		"bzip2":          archive.BZIP2,
 		"cab":            archive.CAB,
+		"deb":            archive.DEB,
 		"gzip":           archive.GZIP,
 		"iso":            archive.ISO,
 		"lzma":           archive.LZMA,
@@ -81,10 +82,14 @@ var (
 		"code_directory": macos.CodeDirectory,
 		"ds_store":       macos.DSStore,
 		"keychain":       macos.Keychain,
+		"dxbc":           windows.DXBC,
 		"grp":            windows.GRP,
 		"lnk":            windows.LNK,
 		"ole-cf":         windows.OLECF,
+		"p7x":            windows.P7X,
 		"pif":            windows.PIF,
+		"pri":            windows.PRI,
+		"xbf":            windows.XBF,
 	}
 )
 

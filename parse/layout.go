@@ -299,7 +299,6 @@ func (pl *ParsedLayout) PrettyPrint() string {
 	return res
 }
 
-// NOTE: went public for testing
 func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint32 {
 
 	field := pl.findBitfieldLayout(info)
@@ -315,14 +314,9 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 	}
 
 	b := ReadUnsignedInt(file, field)
-	if bitmask, ok := bitmaskMap[mask.Length]; ok {
+	val := CalcBitmask(mask, b)
 
-		tmp := bitmask << uint32(mask.Low)
-		val := (b & tmp) >> uint32(mask.Low)
-		return val
-	}
-
-	panic("need mask for len " + fmt.Sprintf("%d", mask.Length))
+	return val
 }
 
 func (pl *ParsedLayout) ReadUint32leFromInfo(file *os.File, info string) (uint32, error) {

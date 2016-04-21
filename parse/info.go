@@ -79,159 +79,239 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 
 		for _, mask := range field.Masks {
 
-			if bitmask, ok := bitmaskMap[mask.Length]; ok {
-
-				tmp := bitmask << uint32(mask.Low)
-				val := (b & tmp) >> uint32(mask.Low)
-
-				res += fmt.Sprintf("%d: %s:%d = ", mask.Low, mask.Info, mask.Length) +
-					fmt.Sprintf("%d", val) + "\n"
-
-			} else {
-				panic("need mask for len " + fmt.Sprintf("%d", mask.Length))
-			}
+			val := CalcBitmask(&mask, b)
+			res += fmt.Sprintf("%d: %s:%d = ", mask.Low, mask.Info, mask.Length) +
+				fmt.Sprintf("%d", val) + "\n"
 		}
 		return res
 	}
 
-	// decode data based on type and show
-
-	switch field.Type {
+	switch field.Type { // XXX use func map
 	case Int8:
-		var i int8
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoInt8(f, field)
 
 	case Uint8:
-		var i uint8
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoUint8(f, field)
 
 	case Int16le:
-		var i int16
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoInt16le(f, field)
 
 	case Uint16le:
-		var i uint16
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoUint16le(f, field)
 
 	case Int32le:
-		var i int32
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoInt32le(f, field)
 
 	case Uint32le:
-		var i uint32
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoUint32le(f, field)
 
 	case Uint64le:
-		var i uint64
-		if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoUint64le(f, field)
 
 	case Uint16be:
-		var i uint16
-		if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoUint16be(f, field)
 
 	case Uint32be:
-		var i uint32
-		if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += field.prettyDecimalAndHex(int64(i))
+		res += infoUint32be(f, field)
 
 	case MajorMinor16le:
-		var b [2]uint8
-		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += fmt.Sprintf("%d.%d", b[0], b[1])
+		res += infoMajorMinor16le(f, field)
 
 	case MajorMinor16be:
-		var b [2]uint8
-		if err := binary.Read(f, binary.BigEndian, &b); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += fmt.Sprintf("%d.%d", b[0], b[1])
+		res += infoMajorMinor16be(f, field)
 
 	case MinorMajor16le:
-		var b [2]uint8
-		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += fmt.Sprintf("%d.%d", b[1], b[0])
+		res += infoMinorMajor16le(f, field)
 
 	case MajorMinor32le:
-		var b [2]uint16
-		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += fmt.Sprintf("%d.%d", b[0], b[1])
+		res += infoMajorMinor32le(f, field)
 
 	case DOSDateTime:
-		var b uint32
-		if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
-		res += fmt.Sprintf("%v", t)
+		res += infoDOSDateTime(f, field)
 
 	case Bytes:
-		res += fmt.Sprintf("chunk of bytes")
+		res += infoBytes(f, field)
 
 	case ASCII, ASCIIZ:
-		buf := make([]byte, field.Length)
-		_, err := f.Read(buf)
-		if err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += string(buf)
+		res += infoASCIIZ(f, field)
 
 	case ASCIIC:
-		// len (byte) + ASCII
-		var len byte
-		if err := binary.Read(f, binary.LittleEndian, &len); err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-
-		buf := make([]byte, len)
-		_, err := f.Read(buf)
-		if err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += string(buf)
+		res += infoASCIIC(f, field)
 
 	case RGB:
-		buf := make([]byte, field.Length)
-		_, err := f.Read(buf)
-		if err != nil && err != io.EOF {
-			return fmt.Sprintf("%v", err)
-		}
-		res += fmt.Sprintf("%d, %d, %d", buf[0], buf[1], buf[2])
+		res += infoRGB(f, field)
 
 	default:
 		res += "unhandled type " + field.Type.String()
 	}
 
 	return res
+}
+
+// len (byte) + ASCII
+func infoASCIIC(f *os.File, field *Layout) string {
+
+	var len byte
+	if err := binary.Read(f, binary.LittleEndian, &len); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+
+	buf := make([]byte, len)
+	_, err := f.Read(buf)
+	if err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return string(buf)
+}
+
+func infoRGB(f *os.File, field *Layout) string {
+
+	buf := make([]byte, field.Length)
+	_, err := f.Read(buf)
+	if err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return fmt.Sprintf("%d, %d, %d", buf[0], buf[1], buf[2])
+}
+
+func infoASCIIZ(f *os.File, field *Layout) string {
+
+	buf := make([]byte, field.Length)
+	_, err := f.Read(buf)
+	if err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return string(buf)
+}
+
+func infoDOSDateTime(f *os.File, field *Layout) string {
+
+	var b uint32
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
+	return fmt.Sprintf("%v", t)
+}
+
+func infoMajorMinor32le(f *os.File, field *Layout) string {
+
+	var b [2]uint16
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return fmt.Sprintf("%d.%d", b[0], b[1])
+}
+
+func infoMinorMajor16le(f *os.File, field *Layout) string {
+
+	var b [2]uint8
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return fmt.Sprintf("%d.%d", b[1], b[0])
+}
+
+func infoMajorMinor16be(f *os.File, field *Layout) string {
+
+	var b [2]uint8
+	if err := binary.Read(f, binary.BigEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return fmt.Sprintf("%d.%d", b[0], b[1])
+}
+
+func infoMajorMinor16le(f *os.File, field *Layout) string {
+
+	var b [2]uint8
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return fmt.Sprintf("%d.%d", b[0], b[1])
+}
+
+func infoUint32be(f *os.File, field *Layout) string {
+
+	var i uint32
+	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint16be(f *os.File, field *Layout) string {
+
+	var i uint16
+	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint64le(f *os.File, field *Layout) string {
+
+	var i uint64
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint32le(f *os.File, field *Layout) string {
+
+	var i uint32
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoInt32le(f *os.File, field *Layout) string {
+
+	var i int32
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint16le(f *os.File, field *Layout) string {
+
+	var i uint16
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoInt16le(f *os.File, field *Layout) string {
+
+	var i int16
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint8(f *os.File, field *Layout) string {
+
+	var i uint8
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoInt8(f *os.File, field *Layout) string {
+
+	var i int8
+	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoBytes(f *os.File, field *Layout) string {
+
+	return "chunk of bytes"
 }

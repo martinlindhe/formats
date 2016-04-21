@@ -87,8 +87,10 @@ func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	pos += logicalDesc.Length
 
 	globalColorTableFlag := pl.DecodeBitfieldFromInfo(c.File, "global color table flag")
-	if globalColorTableFlag != 0 {
+
+	if globalColorTableFlag == 1 {
 		sizeOfGCT := pl.DecodeBitfieldFromInfo(c.File, "global color table size")
+
 		if gctByteLen, ok := gctToLengthMap[byte(sizeOfGCT)]; ok {
 			pl.Layout = append(pl.Layout, gifGlobalColorTable(c.File, gctByteLen))
 			pos += gctByteLen
@@ -96,7 +98,6 @@ func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	}
 
 	for {
-		fmt.Printf("move to %04x\n", pos)
 		_, err := c.File.Seek(pos, os.SEEK_SET)
 		if err != nil {
 			fmt.Println("seek err", err)
@@ -111,6 +112,7 @@ func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 			return nil, err
 		}
 
+		fmt.Printf("ext %02x at %04x\n", b, pos)
 		switch b {
 		case sExtension:
 			gfxExt, err := gifExtension(c.File, pos)

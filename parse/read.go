@@ -7,6 +7,25 @@ import (
 	"os"
 )
 
+func ReadBitmask(file *os.File, layout *Layout, mask *Mask) uint32 {
+
+	b := ReadUnsignedInt(file, layout)
+	return CalcBitmask(mask, b)
+}
+
+func CalcBitmask(mask *Mask, b uint32) uint32 {
+
+	if bitmask, ok := bitmaskMap[mask.Length]; ok {
+
+		tmp := bitmask << uint32(mask.Low)
+		val := (b & tmp) >> uint32(mask.Low)
+
+		return val
+	}
+
+	panic("add mask for length " + fmt.Sprintf("%d", mask.Length))
+}
+
 func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (string, error) {
 
 	switch dataType {

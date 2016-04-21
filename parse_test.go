@@ -13,9 +13,13 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples"
+	searchDir := "./samples/images/gif"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
+
+		if fi == nil {
+			t.Fatalf("invalid path " + searchDir)
+		}
 
 		if fi.IsDir() {
 			return nil
@@ -95,6 +99,28 @@ func TestParsedLayout(t *testing.T) {
 		return nil
 	})
 	assert.Equal(t, nil, err)
+}
+
+func TestParseGIFBitFields(t *testing.T) {
+
+	file, err := os.Open("samples/images/gif/gif_89a_004_fish.gif")
+	defer file.Close()
+	assert.Equal(t, nil, err)
+
+	pl, err := ParseLayout(file)
+	assert.Equal(t, nil, err)
+
+	l0 := pl.DecodeBitfieldFromInfo(file, "global color table size")
+	l3 := pl.DecodeBitfieldFromInfo(file, "sort flag")
+	l4 := pl.DecodeBitfieldFromInfo(file, "color resolution")
+	l7 := pl.DecodeBitfieldFromInfo(file, "global color table flag")
+
+	fmt.Println(l0, l3, l4, l7)
+
+	assert.Equal(t, l0, uint32(2))
+	assert.Equal(t, l3, uint32(0))
+	assert.Equal(t, l4, uint32(7))
+	assert.Equal(t, l7, uint32(1))
 }
 
 func TestParseGIF87a(t *testing.T) {

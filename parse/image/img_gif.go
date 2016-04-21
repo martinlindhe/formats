@@ -112,7 +112,7 @@ func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 			return nil, err
 		}
 
-		fmt.Printf("ext %02x at %04x\n", b, pos)
+		// fmt.Printf("section %02x at %04x\n", b, pos)
 		switch b {
 		case sExtension:
 			gfxExt, err := gifExtension(c.File, pos)
@@ -286,10 +286,10 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 	extType, _ := parse.ReadUint8(file, pos+1)
 	typeInfo, _ := parse.ReadToMap(file, parse.Uint8, pos+1, gifExtensions)
 	typeSpecific := []parse.Layout{}
-	size := int64(0)
+	size := int64(2)
 	res := parse.Layout{
 		Offset: pos,
-		Length: size + 1,
+		Length: size,
 		Info:   typeInfo + " extension",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
@@ -300,10 +300,11 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 
 	switch extType {
 	case eText:
-		size = 13
+		size = 12 // XXX
+		panic("text extension sample plz")
 
 	case eGraphicControl:
-		size = 7
+		size = 6
 		typeSpecific = []parse.Layout{
 			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
 			{Offset: pos + 1, Length: 1, Info: "packed #2", Type: parse.Uint8},
@@ -316,27 +317,14 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		// nothing to do but read the data.
 		lenByte, _ := parse.ReadUint8(file, pos)
 
-		size = 2 + int64(lenByte) + 1 // including terminating 0
+		size = 1 + int64(lenByte) + 1
 
 		typeSpecific = []parse.Layout{
 			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
-			{Offset: pos + 1, Length: size - 2, Info: "data", Type: parse.ASCIIZ},
+			{Offset: pos + 1, Length: int64(lenByte), Info: "data", Type: parse.ASCIIZ},
+			{Offset: pos + 1 + int64(lenByte), Length: 1, Info: "block terminator", Type: parse.Uint8},
 		}
 
-		/*
-
-		   			struct APPLICATIONEXTENTION {
-		                   UBYTE ExtensionIntroducer; // 0x21
-		                   UBYTE ApplicationLabel; // 0xFF
-
-		                   struct APPLICATIONSUBBLOCK {
-		                       UBYTE   BlockSize;
-		                       char    ApplicationIdentifier[8];
-		                       char    ApplicationAuthenticationCode[3];
-		                   } ApplicationSubBlock;
-		                   DATASUBBLOCKS ApplicationData;
-		               } ApplicationExtension;
-		*/
 	case eApplication:
 		size = 12
 		typeSpecific = []parse.Layout{
@@ -355,8 +343,16 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 			}
 			typeSpecific = append(typeSpecific, subBlocks...)
 			for _, b := range subBlocks {
+				// fmt.Println("sub block ", b.Info, " of len ", b.Length)
 				size += b.Length
 			}
+		} else {
+			typeSpecific = append(typeSpecific, parse.Layout{
+				Offset: pos + 12,
+				Length: 1,
+				Info:   "block terminator",
+				Type:   parse.Uint8})
+			size++
 		}
 
 	default:
@@ -415,15 +411,14 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 			}
 			return nil, err
 		}
+		// fmt.Printf("read follows byte %02x from %04x\n", follows, pos)
 
 		childs = append(childs, parse.Layout{
 			Offset: pos,
 			Length: 1,
-			Info:   "block length",
+			Info:   "lzw block size",
 			Type:   parse.Uint8})
 		pos += 1
-
-		// XXX special case 0xff ?
 
 		if follows == 0 {
 			break
@@ -432,7 +427,7 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 		childs = append(childs, parse.Layout{
 			Offset: pos,
 			Length: int64(follows),
-			Info:   "block",
+			Info:   "lzw block",
 			Type:   parse.Bytes})
 		pos += int64(follows)
 	}

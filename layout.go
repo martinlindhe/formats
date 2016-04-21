@@ -47,6 +47,8 @@ var (
 		"gpg":            bin.GPG,
 		"sqlite3":        bin.SQLITE3,
 		"pdb":            bin.PDB,
+		"rdb":            bin.RDB,
+		"terminfo":       bin.Terminfo,
 		"chm":            doc.CHM,
 		"hlp":            doc.HLP,
 		"pdf":            doc.PDF,

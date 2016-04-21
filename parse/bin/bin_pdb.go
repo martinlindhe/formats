@@ -36,7 +36,7 @@ func parsePDB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	pos := int64(0)
 	pl.FileKind = parse.Binary
 	pl.Layout = []parse.Layout{{
-		Offset: 0,
+		Offset: pos,
 		Length: 26, // XXX
 		Info:   "header",
 		Type:   parse.Group,

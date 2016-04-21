@@ -253,7 +253,9 @@ func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
 		}
 		for _, childLayout := range layout.Childs {
 			for _, mask := range childLayout.Masks {
-				return &mask
+				if mask.Info == info {
+					return &mask
+				}
 			}
 		}
 	}

@@ -133,7 +133,7 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		pl.Layout = append(pl.Layout, parseElfPhEntries(file, int64(phOffset), phEntrySize, phCount)...)
 	}
 
-	if shOffset > 0 {
+	if shOffset > 0 && shCount > 0 {
 		pl.Layout = append(pl.Layout, parseElfShEntries(file, int64(shOffset), shEntrySize, shCount)...)
 	}
 

@@ -63,6 +63,7 @@ func parseJPEG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 
 	pos := int64(0)
 	pl.FileKind = parse.Image
+	pl.MimeType = "image/jpeg"
 
 	for {
 		magic, _ := parse.ReadUint8(file, pos)

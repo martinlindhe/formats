@@ -129,6 +129,7 @@ type ParsedLayout struct {
 	FileName     string
 	FileSize     int64
 	FileKind     FileKind
+	MimeType     string
 	TextEncoding TextEncoding
 	Layout       []Layout
 }

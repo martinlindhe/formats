@@ -43,6 +43,7 @@ func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.Image
+	pl.MimeType = "image/png"
 
 	b, err := getPNGHeader(file)
 	if err != nil {

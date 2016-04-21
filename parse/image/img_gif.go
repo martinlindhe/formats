@@ -77,6 +77,7 @@ func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	pos := int64(0)
 	pl := c.ParsedLayout
 	pl.FileKind = parse.Image
+	pl.MimeType = "image/gif"
 
 	header := gifHeader(c.File)
 	pl.Layout = append(pl.Layout, header)

@@ -31,7 +31,12 @@ func isText(c *ParseChecker) bool {
 
 	seemsLike := US_ASCII
 
-	for pos := int64(0); pos < 10; pos++ {
+	checkLen := int64(30)
+	if c.ParsedLayout.FileSize < checkLen {
+		checkLen = c.ParsedLayout.FileSize
+	}
+
+	for pos := int64(0); pos < checkLen; pos++ {
 		if pos >= c.ParsedLayout.FileSize {
 			break
 		}

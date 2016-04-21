@@ -1,5 +1,7 @@
 package bin
 
+// GnuPG key public ring
+
 // STATUS: 1%
 
 import (
@@ -8,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GPG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func GnuPG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isGPG(&c.Header) {
 		return nil, nil
@@ -28,7 +30,7 @@ func isGPG(hdr *[0xffff]byte) bool {
 func parseGPG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	pl.FileKind = parse.Archive
+	pl.FileKind = parse.Binary
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 2, // XXX

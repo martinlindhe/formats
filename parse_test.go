@@ -13,7 +13,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/images/gif"
+	searchDir := "./samples"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -41,6 +41,13 @@ func TestParsedLayout(t *testing.T) {
 			// NOTE since not all samples is currently supported
 			fmt.Println("FAIL to parse layout from", path)
 			return nil
+		}
+
+		// make sure all parsed layouts got FileKind set
+		assert.Equal(t, false, layout.FileKind == 0)
+
+		if layout.MimeType == "" {
+			fmt.Println("warning: ", layout.FormatName, "has no mime")
 		}
 
 		for _, l := range layout.Layout {

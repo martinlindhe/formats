@@ -149,7 +149,9 @@ func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 			return &pl, nil
 
 		default:
-			fmt.Printf("warning: unknown gif section id %02x at %04x\n", b, pos)
+			undefData := gifUndefinedData(c.File, pos)
+			pl.Layout = append(pl.Layout, *undefData)
+			pos += undefData.Length
 		}
 	}
 }
@@ -206,7 +208,7 @@ func gifImageDescriptor(file *os.File, pos int64) *parse.Layout {
 			{Offset: pos + 5, Length: 2, Info: "image width", Type: parse.Uint16le},
 			{Offset: pos + 7, Length: 2, Info: "image height", Type: parse.Uint16le},
 			{Offset: pos + 9, Length: 1, Info: "packed #3", Type: parse.Uint8, Masks: []parse.Mask{
-				{Low: 0, Length: 2, Info: "local color table size"},
+				{Low: 0, Length: 3, Info: "local color table size"},
 				{Low: 3, Length: 2, Info: "reserved"},
 				{Low: 5, Length: 1, Info: "sort flag"},
 				{Low: 6, Length: 1, Info: "interlace flag"},
@@ -259,6 +261,24 @@ func gifLocalColorTable(file *os.File, pos int64, byteLen int64) parse.Layout {
 		Info:   "local color table",
 		Type:   parse.Group,
 		Childs: childs}
+}
+
+func gifUndefinedData(file *os.File, pos int64) *parse.Layout {
+
+	size, _ := parse.ReadUint8(file, pos+2)
+
+	return &parse.Layout{
+		Offset: pos,
+		Length: 3 + int64(size) + 1,
+		Info:   "undefined data",
+		Type:   parse.Group,
+		Childs: []parse.Layout{
+			{Offset: pos, Length: 1, Info: "block id (undefined)", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 1, Info: "label", Type: parse.Uint8},
+			{Offset: pos + 2, Length: 1, Info: "size", Type: parse.Uint8},
+			{Offset: pos + 3, Length: int64(size), Info: "data", Type: parse.Bytes},
+			{Offset: pos + 3 + int64(size), Length: 1, Info: "block terminator", Type: parse.Uint8},
+		}}
 }
 
 func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
@@ -318,18 +338,18 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		               } ApplicationExtension;
 		*/
 	case eApplication:
-		size = 14
+		size = 12
 		typeSpecific = []parse.Layout{
-			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
+			{Offset: pos, Length: 1, Info: "block size", Type: parse.Uint8},
 			{Offset: pos + 1, Length: 8, Info: "application id", Type: parse.ASCII},
 			{Offset: pos + 9, Length: 3, Info: "application authentication code", Type: parse.ASCII},
 		}
-		extData, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+3, 8)
-		authCode, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+11, 3)
+		extData, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+1, 8)
+		authCode, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+9, 3)
 
 		if extData == "NETSCAPE" && authCode == "2.0" {
 			// animated gif extension
-			subBlocks, err := gifSubBlocks(file, pos+3+11)
+			subBlocks, err := gifSubBlocks(file, pos+12)
 			if err != nil {
 				return nil, err
 			}
@@ -379,18 +399,18 @@ func gifImageData(file *os.File, pos int64) (*parse.Layout, error) {
 	return &res, nil
 }
 
+// maps up lzw data blocks
 func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 
-	length := int64(0)
 	childs := []parse.Layout{}
+	var follows byte // number of bytes follows
 
 	for {
 		file.Seek(pos, os.SEEK_SET)
 
-		var follows byte // number of bytes follows
 		if err := binary.Read(file, binary.LittleEndian, &follows); err != nil {
 			if err == io.EOF {
-				fmt.Println("XXX sub blocks unexpected EOF")
+				fmt.Println("error: sub blocks unexpected EOF")
 				break
 			}
 			return nil, err
@@ -401,7 +421,6 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 			Length: 1,
 			Info:   "block length",
 			Type:   parse.Uint8})
-		length += 1
 		pos += 1
 
 		// XXX special case 0xff ?
@@ -415,7 +434,6 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 			Length: int64(follows),
 			Info:   "block",
 			Type:   parse.Bytes})
-		length += int64(follows)
 		pos += int64(follows)
 	}
 	return childs, nil

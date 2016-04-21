@@ -115,8 +115,6 @@ func TestParseGIFBitFields(t *testing.T) {
 	l4 := pl.DecodeBitfieldFromInfo(file, "color resolution")
 	l7 := pl.DecodeBitfieldFromInfo(file, "global color table flag")
 
-	fmt.Println(l0, l3, l4, l7)
-
 	assert.Equal(t, l0, uint32(2))
 	assert.Equal(t, l3, uint32(0))
 	assert.Equal(t, l4, uint32(7))

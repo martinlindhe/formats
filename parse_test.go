@@ -1,8 +1,11 @@
 package formats
 
 import (
+	"bufio"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/martinlindhe/formats/parse"
@@ -12,7 +15,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/images/png"
+	searchDir := "./samples"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -24,7 +27,7 @@ func TestParsedLayout(t *testing.T) {
 			return nil
 		}
 
-		t.Log("OPEN", path)
+		// t.Log("OPEN", path)
 		f, err := os.Open(path)
 		defer f.Close()
 		if err != nil {
@@ -49,11 +52,23 @@ func TestParsedLayout(t *testing.T) {
 		assert.Equal(t, false, layout.FileKind == 0)
 
 		if layout.MimeType == "" {
-			t.Log("warning: ", layout.FormatName, "has no mime")
-		}
 
-		// XXX run "file --mime-type util.go"
-		// and show if mime differs. move that to separate test
+			// ask "file" about mime type
+			filemagicMime, _ := runCommandReturnStdout("file --mime-type " + path)
+			filemagicMime = strings.TrimSpace(filemagicMime)
+			res := strings.Split(filemagicMime, " ")
+			mime := ""
+			if len(res) > 1 {
+				mime = res[1]
+			} else {
+				mime = filemagicMime
+			}
+			if filemagicMime != "" {
+				t.Log("warning:", layout.FormatName, "has no mime. file suggests", mime)
+			} else {
+				t.Log("warning:", layout.FormatName, "has no mime")
+			}
+		}
 
 		for _, l := range layout.Layout {
 			if l.Type != parse.Group {
@@ -174,9 +189,9 @@ image descriptor (0019), group
   packed #3 (0022), uint8
 image data (0023), group
   lzw code size (0023), uint8
-  block length (0024), uint8
-  block (0025), bytes
-  block length (0028), uint8
+  lzw block size (0024), uint8
+  lzw block (0025), bytes
+  lzw block size (0028), uint8
 trailer (0029), group
   trailer (0029), uint8
 `, layout.PrettyPrint())
@@ -227,9 +242,9 @@ image descriptor (0021), group
   packed #3 (002a), uint8
 image data (002b), group
   lzw code size (002b), uint8
-  block length (002c), uint8
-  block (002d), bytes
-  block length (0043), uint8
+  lzw block size (002c), uint8
+  lzw block (002d), bytes
+  lzw block size (0043), uint8
 trailer (0044), group
   trailer (0044), uint8
 `, layout.PrettyPrint())
@@ -316,4 +331,30 @@ info header V3 (000e), group
 image data (0036), group
   image data (0036), bytes
 `, layout.PrettyPrint())
+}
+
+func runCommandReturnStdout(step string) (string, error) {
+
+	parts := strings.Split(step, " ")
+	cmd := exec.Command(parts[0], parts[1:]...)
+	res := ""
+
+	stdOutReader, err := cmd.StdoutPipe()
+	if err != nil {
+		return res, err
+	}
+	stdOutScanner := bufio.NewScanner(stdOutReader)
+	go func() {
+		for stdOutScanner.Scan() {
+			res += string(stdOutScanner.Bytes()) + "\n"
+		}
+	}()
+
+	if err := cmd.Start(); err != nil {
+		return res, err
+	}
+	if err := cmd.Wait(); err != nil {
+		return res, err
+	}
+	return res, nil
 }

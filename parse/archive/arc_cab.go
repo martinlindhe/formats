@@ -41,6 +41,7 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	cabFlagName, _ := parse.ReadToMap(file, parse.Uint16le, pos+30, cabFlags)
 
 	pl.FileKind = parse.Archive
+	pl.MimeType = "application/vnd.ms-cab-compressed"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 36, // XXX

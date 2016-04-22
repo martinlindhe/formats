@@ -28,6 +28,7 @@ func parsePDF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.Document
+	pl.MimeType = "application/pdf"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 4, // XXX

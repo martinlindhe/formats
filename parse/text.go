@@ -56,6 +56,7 @@ func isText(c *ParseChecker) bool {
 func parseText(c *ParseChecker) (*ParsedLayout, error) {
 
 	c.ParsedLayout.FormatName = "text"
+	c.ParsedLayout.MimeType = "text/plain"
 
 	pos := int64(0)
 
@@ -83,6 +84,7 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 	}
 
 	line := 1
+	maxLines := 100
 	for {
 		_, len, err := ReadBytesUntilNewline(c.File, pos)
 		if err != nil {
@@ -102,6 +104,10 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 		pos += len
 		line++
 		if pos >= c.ParsedLayout.FileSize {
+			break
+		}
+		if line >= maxLines {
+			fmt.Println("text: only mapping the first", maxLines, "lines")
 			break
 		}
 	}

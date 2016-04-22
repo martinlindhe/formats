@@ -27,6 +27,7 @@ func parseGZIP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 
 	pos := int64(0)
 	pl.FileKind = parse.Archive
+	pl.MimeType = "application/x-gzip"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 2,

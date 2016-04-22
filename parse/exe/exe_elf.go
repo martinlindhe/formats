@@ -126,6 +126,7 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	header := elfHeader(file, pos)
 	pl.FileKind = parse.Executable
+	pl.MimeType = "application/x-executable"
 	pl.Layout = []parse.Layout{header}
 
 	if phOffset > 0 && phCount > 0 {

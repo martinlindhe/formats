@@ -30,6 +30,7 @@ func parseGPG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.Binary
+	pl.MimeType = "application/x-gnupg-keyring"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 2, // XXX

@@ -35,6 +35,7 @@ func ARJ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	// XXX rest of arj
 
 	c.ParsedLayout.FileKind = parse.Archive
+	c.ParsedLayout.MimeType = "application/x-arj"
 	c.ParsedLayout.Layout = mainHeader
 
 	return &c.ParsedLayout, err

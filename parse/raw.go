@@ -17,6 +17,7 @@ func RAW(c *ParseChecker) (*ParsedLayout, error) {
 	pos := int64(0)
 	c.ParsedLayout.FormatName = format
 	c.ParsedLayout.FileKind = Binary
+	c.ParsedLayout.MimeType = "application/octet-stream"
 	c.ParsedLayout.Layout = []Layout{{
 		Offset: pos,
 		Length: 0,

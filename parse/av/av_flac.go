@@ -28,6 +28,7 @@ func parseFLAC(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 
 	pos := int64(0)
 	pl.FileKind = parse.AudioVideo
+	pl.MimeType = "audio/x-flac"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 4, // XXX

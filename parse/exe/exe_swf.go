@@ -30,6 +30,7 @@ func parseSWF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.Executable
+	pl.MimeType = "application/x-shockwave-flash"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 14, // XXX

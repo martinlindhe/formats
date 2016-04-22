@@ -47,6 +47,7 @@ func parseASF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.AudioVideo
+	pl.MimeType = "video/x-ms-asf" // XXX change to audio/x-ms-asf if audio-only file ?
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 16, // XXX

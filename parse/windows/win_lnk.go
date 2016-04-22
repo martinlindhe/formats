@@ -3,6 +3,7 @@ package windows
 // Windows shortcut (.lnk)
 // http://lifeinhex.com/analyzing-malicious-lnk-file/
 // https://github.com/libyal/liblnk/blob/master/documentation/Windows%20Shortcut%20File%20%28LNK%29%20format.asciidoc
+// https://en.wikipedia.org/wiki/File_shortcut#Microsoft_Windows
 
 // STATUS: 1%
 
@@ -32,6 +33,7 @@ func parseLNK(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.WindowsResource
+	pl.MimeType = "application/x-ms-shortcut"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 76, // XXX

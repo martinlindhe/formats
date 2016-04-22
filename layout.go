@@ -95,6 +95,7 @@ var (
 		"png":            image.PNG,
 		"tga":            image.TGA, // XXX has too loose detection. thinks samples/images/ico/icon_003_win2k_cross.cur is tga!
 		"tiff":           image.TIFF,
+		"webp":           image.WebP,
 		"xcursor":        image.XCursor,
 		"bom_store":      macos.BOMStore,
 		"bplist":         macos.BPLIST,

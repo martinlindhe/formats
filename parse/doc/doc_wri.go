@@ -24,7 +24,6 @@ func isWRI(b []byte) bool {
 	if b[0] != 0x31 || b[1] != 0xbe || b[2] != 0 || b[3] != 0 {
 		return false
 	}
-
 	return true
 }
 

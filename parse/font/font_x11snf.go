@@ -5,6 +5,7 @@ package font
 // STATUS: 1%
 
 import (
+	"encoding/binary"
 	"fmt"
 	"os"
 
@@ -13,15 +14,15 @@ import (
 
 func X11FontSNF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isX11FontSNF(c.File) {
+	if !isX11FontSNF(c.Header) {
 		return nil, nil
 	}
 	return parseX11FontSNF(c.File, c.ParsedLayout)
 }
 
-func isX11FontSNF(file *os.File) bool {
+func isX11FontSNF(b []byte) bool {
 
-	val, _ := parse.ReadUint32le(file, 0)
+	val := binary.LittleEndian.Uint32(b)
 	if val == 4 {
 		return true // le
 	}

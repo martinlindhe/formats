@@ -4,7 +4,6 @@ package exe
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
@@ -19,7 +18,7 @@ func MZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	if !isMZ(c.Header) {
 		return nil, nil
 	}
-	return parseMZ(c.File, c.ParsedLayout)
+	return parseMZ(c)
 }
 
 func isMZ(b []byte) bool {
@@ -30,9 +29,9 @@ func isMZ(b []byte) bool {
 	return true
 }
 
-func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	pl.FileKind = parse.Executable
+	c.ParsedLayout.FileKind = parse.Executable
 	pos := int64(0)
 	mz := parse.Layout{
 		Offset: pos,
@@ -56,24 +55,24 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 			{Offset: pos + 26, Length: 2, Info: "overlay", Type: parse.Uint16le},
 		}}
 
-	pl.Layout = append(pl.Layout, mz)
+	c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, mz)
 
-	custom := findCustomDOSHeaders(file)
+	custom := findCustomDOSHeaders(c.File, c.Header)
 	if custom != nil {
-		pl.Layout = append(pl.Layout, custom...)
+		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, custom...)
 	}
 
-	hdrSizeInParagraphs, _ := parse.ReadUint16le(file, pos+8)
-	ip, _ := parse.ReadUint16le(file, pos+20)
-	cs, _ := parse.ReadUint16le(file, pos+22)
-	relocOffset, _ := parse.ReadUint16le(file, pos+24)
+	hdrSizeInParagraphs, _ := parse.ReadUint16le(c.File, pos+8)
+	ip, _ := parse.ReadUint16le(c.File, pos+20)
+	cs, _ := parse.ReadUint16le(c.File, pos+22)
+	relocOffset, _ := parse.ReadUint16le(c.File, pos+24)
 
 	if relocOffset == 0x40 {
 		// 0x40 for new-(NE,LE,LX,W3,PE etc.) executable
 		pos += mzHeaderLen
 
-		newHeaderPos, _ := parse.ReadUint32le(file, pos+32)
-		pl.Layout = append(pl.Layout, parse.Layout{
+		newHeaderPos, _ := parse.ReadUint32le(c.File, pos+32)
+		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, parse.Layout{
 			Offset: pos,
 			Length: subHeaderLen,
 			Info:   "sub header", // XXX name
@@ -87,32 +86,32 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 			}})
 
 		pos = int64(newHeaderPos)
-		newHeaderId, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos, 2)
+		newHeaderId, _, _ := parse.ReadZeroTerminatedASCIIUntil(c.File, pos, 2)
 
 		switch newHeaderId {
 		case "LX":
 			// OS/2 (32-bit)
-			pl.FormatName = "mz-lx"
-			header, _ := parseMZ_LXHeader(file, pos)
-			pl.Layout = append(pl.Layout, header...)
+			c.ParsedLayout.FormatName = "mz-lx"
+			header, _ := parseMZ_LXHeader(c.File, pos)
+			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		case "LE":
 			// Win, OS/2 (mixed 16/32-bit)
-			pl.FormatName = "mz-le"
-			header, _ := parseMZ_LEHeader(file, pos)
-			pl.Layout = append(pl.Layout, header...)
+			c.ParsedLayout.FormatName = "mz-le"
+			header, _ := parseMZ_LEHeader(c.File, pos)
+			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		case "NE":
 			// Win16, OS/2
-			pl.FormatName = "mz-ne"
-			header, _ := parseMZ_NEHeader(file, pos)
-			pl.Layout = append(pl.Layout, header...)
+			c.ParsedLayout.FormatName = "mz-ne"
+			header, _ := parseMZ_NEHeader(c.File, pos)
+			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		case "PE":
 			// Win32, Win64
-			pl.FormatName = "mz-pe"
-			header, _ := parseMZ_PEHeader(file, pos)
-			pl.Layout = append(pl.Layout, header...)
+			c.ParsedLayout.FormatName = "mz-pe"
+			header, _ := parseMZ_PEHeader(c.File, pos)
+			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		default:
 			fmt.Println("mz-error: unknown newHeaderId: " + newHeaderId)
@@ -131,10 +130,10 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 				{Offset: pos, Length: dosStubLen, Info: "dos stub", Type: parse.Bytes},
 			}}
 
-		pl.Layout = append(pl.Layout, dosStub)
+		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, dosStub)
 
 	} else {
-		relocItems, _ := parse.ReadUint16le(file, pos+6)
+		relocItems, _ := parse.ReadUint16le(c.File, pos+6)
 		if relocItems > 0 {
 			pos = int64(relocOffset)
 			reloc := parse.Layout{
@@ -150,13 +149,13 @@ func parseMZ(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) 
 				}...)
 				pos += 4
 			}
-			pl.Layout = append(pl.Layout, reloc)
+			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, reloc)
 		}
 	}
 
-	pl.Sort()
+	c.ParsedLayout.Sort()
 
-	return &pl, nil
+	return &c.ParsedLayout, nil
 }
 
 /*

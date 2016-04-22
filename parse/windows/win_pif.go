@@ -6,34 +6,31 @@ package windows
 
 import (
 	"github.com/martinlindhe/formats/parse"
-	"os"
+)
+
+var (
+	pifHeaderPos = int64(0x171)
 )
 
 func PIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPIF(c.File) {
+	if !isPIF(c.Header) {
 		return nil, nil
 	}
-	return parsePIF(c.File, c.ParsedLayout)
+	return parsePIF(c)
 }
 
-func isPIF(file *os.File) bool {
+func isPIF(b []byte) bool {
 
-	s, _, err := parse.ReadZeroTerminatedASCIIUntil(file, 0x171, 15)
-	if err != nil {
-		return false
-	}
-	if s == "MICROSOFT PIFEX" {
-		return true
-	}
-	return false
+	s := string(b[pifHeaderPos : pifHeaderPos+15])
+	return s == "MICROSOFT PIFEX"
 }
 
-func parsePIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parsePIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	pos := int64(0x171)
-	pl.FileKind = parse.WindowsResource
-	pl.Layout = []parse.Layout{{
+	pos := int64(pifHeaderPos)
+	c.ParsedLayout.FileKind = parse.WindowsResource
+	c.ParsedLayout.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 15, // XXX
 		Info:   "header",
@@ -42,5 +39,5 @@ func parsePIF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			{Offset: pos, Length: 15, Info: "magic", Type: parse.Uint32le},
 		}}}
 
-	return &pl, nil
+	return &c.ParsedLayout, nil
 }

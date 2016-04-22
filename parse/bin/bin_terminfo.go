@@ -13,15 +13,14 @@ import (
 
 func Terminfo(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTerminfo(c) {
+	if !isTerminfo(c.Header) {
 		return nil, nil
 	}
 	return parseTerminfo(c.File, c.ParsedLayout)
 }
 
-func isTerminfo(c *parse.ParseChecker) bool {
+func isTerminfo(b []byte) bool {
 
-	b := c.Header
 	if b[0] != 0x1a || b[1] != 1 {
 		return false
 	}

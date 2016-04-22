@@ -19,21 +19,16 @@ var (
 
 func SQLITE3(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isSQLITE3(c.File) {
+	if !isSQLITE3(c.Header) {
 		return nil, nil
 	}
 	return parseSQLITE3(c.File, c.ParsedLayout)
 }
 
-func isSQLITE3(file *os.File) bool {
+func isSQLITE3(b []byte) bool {
 
-	s, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, 0, 16)
-
-	if s != "SQLite format 3" {
-		return false
-	}
-
-	return true
+	s := string(b[0:16])
+	return s == "SQLite format 3"
 }
 
 func parseSQLITE3(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

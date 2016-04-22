@@ -13,21 +13,18 @@ import (
 
 func PDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPDB(c.File) {
+	if !isPDB(c.Header) {
 		return nil, nil
 	}
 	return parsePDB(c.File, c.ParsedLayout)
 }
 
-func isPDB(file *os.File) bool {
+func isPDB(b []byte) bool {
 
-	s, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, 0, 26)
-
-	// XXX just guessing
+	s := string(b[0:26])
 	if s != "Microsoft C/C++ MSF 7.00"+"\r\n" {
 		return false
 	}
-
 	return true
 }
 

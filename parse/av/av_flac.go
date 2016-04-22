@@ -1,5 +1,8 @@
 package av
 
+// Free Lossless Audio Codec
+// https://en.wikipedia.org/wiki/FLAC
+
 // STATUS: 1%
 
 import (

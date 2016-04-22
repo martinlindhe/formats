@@ -11,36 +11,32 @@ package image
 import (
 	"encoding/binary"
 	"fmt"
-	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
 
 func ICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isICO(c.File) {
+	if !isICO(c.Header) {
 		return nil, nil
 	}
-	return parseICO(c.File, c.ParsedLayout)
+	return parseICO(c)
 }
 
-func isICO(file *os.File) bool {
+func isICO(b []byte) bool {
 
-	b, _ := readIconHeader(file)
-	if b[0] != 0 {
+	h := readIconHeader(b)
+	if h[0] != 0 {
 		return false
 	}
-
-	// 1 = icon, 2 = cursor
-	if b[1] != 1 && b[1] != 2 {
+	if h[1] != 1 && h[1] != 2 {
+		// 1 = icon, 2 = cursor
 		return false
 	}
-
-	// NOTE: an arbitrary check to get less false matches
-	if b[2] > 500 {
+	if h[2] > 500 {
+		// NOTE: an arbitrary check to get less false matches
 		return false
 	}
-
 	return true
 }
 
@@ -51,13 +47,13 @@ var (
 	}
 )
 
-func parseICO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parseICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	pl.FileKind = parse.Image
+	c.ParsedLayout.FileKind = parse.Image
 	pos := int64(0)
 	typeName := ""
 
-	hdr, _ := readIconHeader(file)
+	hdr := readIconHeader(c.Header)
 	switch hdr[1] {
 	case 1:
 		typeName = "icon"
@@ -83,12 +79,12 @@ func parseICO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	numIcons := hdr[2]
 	resourceEntryLength := int64(16)
 
-	pl.Layout = append(pl.Layout, fileHeader)
+	c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, fileHeader)
 
 	for i := 0; i < int(numIcons); i++ {
 		id := fmt.Sprintf("%d", i+1)
 
-		pl.Layout = append(pl.Layout, parse.Layout{
+		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, parse.Layout{
 			Offset: pos,
 			Length: resourceEntryLength,
 			Info:   "resource " + id + " header",
@@ -110,16 +106,16 @@ func parseICO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	for i := 0; i < int(numIcons); i++ {
 		id := fmt.Sprintf("%d", i+1)
 
-		dataOffset, err := pl.ReadUint32leFromInfo(file, "offset to resource "+id)
+		dataOffset, err := c.ParsedLayout.ReadUint32leFromInfo(c.File, "offset to resource "+id)
 		if err != nil {
 			return nil, err
 		}
-		dataSize, err := pl.ReadUint32leFromInfo(file, "data size of resource "+id)
+		dataSize, err := c.ParsedLayout.ReadUint32leFromInfo(c.File, "data size of resource "+id)
 		if err != nil {
 			return nil, err
 		}
 
-		pl.Layout = append(pl.Layout, parse.Layout{
+		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, parse.Layout{
 			Offset: int64(dataOffset),
 			Length: int64(dataSize),
 			Info:   "resource " + id + " data",
@@ -129,15 +125,14 @@ func parseICO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			}})
 	}
 
-	return &pl, nil
+	return &c.ParsedLayout, nil
 }
 
-func readIconHeader(file *os.File) ([3]uint16, error) {
+func readIconHeader(b []byte) [3]uint16 {
 
-	file.Seek(0, os.SEEK_SET)
-	var b [3]uint16
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return b, err
-	}
-	return b, nil
+	var h [3]uint16
+	h[0] = binary.LittleEndian.Uint16(b)
+	h[1] = binary.LittleEndian.Uint16(b[2:])
+	h[2] = binary.LittleEndian.Uint16(b[4:])
+	return h
 }

@@ -12,19 +12,16 @@ import (
 
 func DEB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isDEB(c) {
+	if !isDEB(c.Header) {
 		return nil, nil
 	}
 	return parseDEB(c.File, c.ParsedLayout)
 }
 
-func isDEB(c *parse.ParseChecker) bool {
+func isDEB(b []byte) bool {
 
-	s, _, _ := parse.ReadZeroTerminatedASCIIUntil(c.File, 0, 21)
-	if s != "!<arch>\n"+"debian-binary" {
-		return false
-	}
-	return true
+	s := string(b[0:21])
+	return s == "!<arch>\n"+"debian-binary"
 }
 
 func parseDEB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

@@ -6,8 +6,8 @@ package exe
 
 import (
 	"encoding/binary"
+
 	"github.com/martinlindhe/formats/parse"
-	"os"
 )
 
 var (
@@ -36,40 +36,44 @@ var (
 
 func PythonBytecode(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPythonBytecode(c.File) {
+	if !isPythonBytecode(c.Header) {
 		return nil, nil
 	}
-	return parsePythonBytecode(c.File, c.ParsedLayout)
+	return parsePythonBytecode(c)
 }
 
-func isPythonBytecode(file *os.File) bool {
+func isPythonBytecode(b []byte) bool {
 
-	// TODO: in order to work with hdr []byte, we need to read uint32le from it ...
-	file.Seek(0, os.SEEK_SET)
-	var b uint32
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	if _, ok := pythonVersionMagic[b]; ok {
-		return true
-	}
-	return false
+	ver := getPythonBytecodeVersion(b)
+	return ver != ""
 }
 
-func parsePythonBytecode(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parsePythonBytecode(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+
+	version := getPythonBytecodeVersion(c.Header)
 
 	pos := int64(0)
-	pl.FileKind = parse.Executable
-	pl.Layout = []parse.Layout{{
+	c.ParsedLayout.FileKind = parse.Executable
+	c.ParsedLayout.FormatName = "python " + version
+	c.ParsedLayout.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 4, // XXX
 		Info:   "header",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le}, // XXX decode to python version
+			{Offset: pos, Length: 4, Info: "version = " + version, Type: parse.Uint32le},
 		}}}
 
-	return &pl, nil
+	return &c.ParsedLayout, nil
+}
+
+func getPythonBytecodeVersion(b []byte) string {
+
+	val := binary.LittleEndian.Uint32(b)
+	if res, ok := pythonVersionMagic[val]; ok {
+		return res
+	}
+	return ""
 }
 
 /*

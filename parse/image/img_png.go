@@ -6,53 +6,59 @@ package image
 // STATUS: 20% MNG (XXX parsing gives up after first IEND, should continue...)
 
 import (
-	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"io"
-	"os"
+	"strings"
+
+	"github.com/martinlindhe/formats/parse"
+)
+
+type pngType int
+
+const (
+	pngNone pngType = iota
+	pngPNG
+	pngMNG
 )
 
 func PNG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPNG(c.File) {
+	if !isPNG(c.Header) {
 		return nil, nil
 	}
-	return parsePNG(c.File, c.ParsedLayout)
+	return parsePNG(c)
 }
 
-func isPNG(file *os.File) bool {
+func getPNGType(b []byte) pngType {
 
-	b, err := getPNGHeader(file)
-	if err != nil {
-		return false
+	if b[0] == 0x89 && b[1] == 'P' && b[2] == 'N' && b[3] == 'G' &&
+		b[4] == 0xd && b[5] == 0xa && b[6] == 0x1a && b[7] == 0xa {
+		return pngPNG
 	}
-
-	if (b[0] == 0x89 && b[1] == 'P') || // png
-		(b[0] == 0x8a && b[1] == 'M') { // mng
-		if b[2] == 'N' && b[3] == 'G' && b[4] == 0xd &&
-			b[5] == 0xa && b[6] == 0x1a && b[7] == 0xa {
-			return true
-		}
+	if b[0] == 0x8a && b[1] == 'M' && b[2] == 'N' && b[3] == 'G' &&
+		b[4] == 0xd && b[5] == 0xa && b[6] == 0x1a && b[7] == 0xa {
+		return pngMNG
 	}
-
-	return false
+	return pngNone
 }
 
-func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func isPNG(b []byte) bool {
+
+	t := getPNGType(b)
+	return t != pngNone
+}
+
+func parsePNG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
-	pl.FileKind = parse.Image
-	pl.MimeType = "image/png"
+	c.ParsedLayout.FileKind = parse.Image
+	c.ParsedLayout.MimeType = "image/png"
 
-	b, err := getPNGHeader(file)
-	if err != nil {
-		return nil, err
-	}
 	fileType := "PNG"
-	if b[1] == 'M' {
+	if c.Header[1] == 'M' {
 		fileType = "MNG"
 	}
+	c.ParsedLayout.FormatName = strings.ToLower(fileType)
 
 	fileHeader := parse.Layout{
 		Offset: pos,
@@ -63,8 +69,7 @@ func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			{Offset: 0, Length: 8, Info: "magic = " + fileType, Type: parse.Bytes},
 		}}
 
-	pl.Layout = append(pl.Layout, fileHeader)
-
+	c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, fileHeader)
 	pos = 8
 
 	chunks := []parse.Layout{}
@@ -78,7 +83,7 @@ func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 				{Offset: pos + 4, Length: 4, Info: "type", Type: parse.ASCII},
 			},
 		}
-		chunkLength, err := parse.ReadUint32be(file, pos)
+		chunkLength, err := parse.ReadUint32be(c.File, pos)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -86,7 +91,7 @@ func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 			return nil, err
 		}
 
-		typeCode, _, err := parse.ReadZeroTerminatedASCIIUntil(file, pos+4, 4)
+		typeCode, _, err := parse.ReadZeroTerminatedASCIIUntil(c.File, pos+4, 4)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -134,17 +139,6 @@ func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		}
 	}
 
-	pl.Layout = append(pl.Layout, chunks...)
-
-	return &pl, nil
-}
-
-func getPNGHeader(file *os.File) ([8]byte, error) {
-	file.Seek(0, os.SEEK_SET)
-
-	var b [8]uint8
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return b, err
-	}
-	return b, nil
+	c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, chunks...)
+	return &c.ParsedLayout, nil
 }

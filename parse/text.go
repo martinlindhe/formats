@@ -23,14 +23,11 @@ func Text(c *ParseChecker) (*ParsedLayout, error) {
 
 func isText(c *ParseChecker) bool {
 
-	b := c.Header
-
-	if hasRecognizedBOM(c) {
+	if hasRecognizedBOM(c.Header) {
 		return true
 	}
 
 	seemsLike := US_ASCII
-
 	checkLen := int64(30)
 	if c.ParsedLayout.FileSize < checkLen {
 		checkLen = c.ParsedLayout.FileSize
@@ -42,7 +39,7 @@ func isText(c *ParseChecker) bool {
 		}
 
 		if seemsLike == US_ASCII {
-			c := b[pos]
+			c := c.Header[pos]
 			if c < 32 {
 				if c != '\n' && c != '\r' && c != '\t' {
 					return false
@@ -65,7 +62,7 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 		Info:   "text",
 		Type:   Group}
 
-	bom, bomLen := parseBOMMark(c, pos)
+	bom, bomLen := parseBOMMark(c.Header)
 	if bomLen > 0 {
 		c.ParsedLayout.TextEncoding = bom
 		layout.Childs = append(layout.Childs, Layout{
@@ -118,9 +115,8 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 	return &c.ParsedLayout, nil
 }
 
-func parseBOMMark(c *ParseChecker, pos int64) (TextEncoding, int64) {
+func parseBOMMark(b []byte) (TextEncoding, int64) {
 
-	b := c.Header
 	if b[0] == 0xff && b[1] == 0xfe && b[2] == 0 && b[3] == 0 {
 		return UTF32le, 2
 	}
@@ -139,11 +135,8 @@ func parseBOMMark(c *ParseChecker, pos int64) (TextEncoding, int64) {
 	return None, 0
 }
 
-func hasRecognizedBOM(c *ParseChecker) bool {
+func hasRecognizedBOM(b []byte) bool {
 
-	_, len := parseBOMMark(c, 0)
-	if len > 0 {
-		return true
-	}
-	return false
+	_, len := parseBOMMark(b)
+	return len > 0
 }

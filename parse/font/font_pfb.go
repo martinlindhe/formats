@@ -1,6 +1,7 @@
 package font
 
 // Adobe Printer Font Binary (used in the '90s)
+
 // STATUS: 1%
 
 import (
@@ -10,22 +11,17 @@ import (
 
 func PFB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPFB(c.File) {
+	if !isPFB(c.Header) {
 		return nil, nil
 	}
 	return parsePFB(c.File, c.ParsedLayout)
 }
 
-func isPFB(file *os.File) bool {
-
-	// XXX need ways to work on hdr []byte
+func isPFB(b []byte) bool {
 
 	// XXX just guessing ...
-	s, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, 6, 10)
-	if s != "%!FontType" {
-		return false
-	}
-	return true
+	s := string(b[6:16])
+	return s == "%!FontType"
 }
 
 func parsePFB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

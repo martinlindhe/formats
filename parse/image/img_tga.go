@@ -6,6 +6,7 @@ package image
 // STATUS: 1%
 
 import (
+	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -13,13 +14,13 @@ import (
 
 func TGA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTGA(c.File) {
+	if !isTGA(c.Header) {
 		return nil, nil
 	}
 	return parseTGA(c.File, c.ParsedLayout)
 }
 
-func isTGA(file *os.File) bool {
+func isTGA(b []byte) bool {
 
 	/* XXX
 	   # at 2, byte ImgType must be 1, 2, 3, 9, 10 or 11
@@ -27,7 +28,7 @@ func isTGA(file *os.File) bool {
 	   # at 3, leshort Index is 0 for povray, ppmtotga and xv outputs
 	*/
 
-	val, _ := parse.ReadUint32le(file, 0)
+	val := binary.LittleEndian.Uint32(b)
 	chk := val & 0xfff7ffff
 
 	if chk == 0x01010000 {

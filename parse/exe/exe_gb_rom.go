@@ -6,14 +6,13 @@ package exe
 // STATUS: 1%
 
 import (
-	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
 
 var (
-	gbLogo = [...]byte{
+	gbLogo = []byte{
 		0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B,
 		0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
 		0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E,
@@ -85,15 +84,15 @@ var (
 
 func GameboyROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGameboyROM(c.File) {
+	if !isGameboyROM(c.Header) {
 		return nil, nil
 	}
 	return parseGameboyROM(c.File, c.ParsedLayout)
 }
 
-func isGameboyROM(file *os.File) bool {
+func isGameboyROM(b []byte) bool {
 
-	if !hasGBLogo(file) {
+	if !parse.HasSignatureInHeader(b, 0x104, gbLogo) {
 		return false
 	}
 	return true
@@ -131,20 +130,4 @@ func parseGameboyROM(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout,
 		}}}
 
 	return &pl, nil
-}
-
-func hasGBLogo(file *os.File) bool {
-
-	file.Seek(0x104, os.SEEK_SET)
-
-	b := make([]byte, len(gbLogo))
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	for i := 0; i < len(gbLogo); i++ {
-		if gbLogo[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }

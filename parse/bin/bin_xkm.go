@@ -25,11 +25,9 @@ func isXKM(b []byte) bool {
 	if b[1] == 'm' && b[2] == 'k' && b[3] == 'x' {
 		return true // le
 	}
-
 	if b[0] == 'x' && b[1] == 'k' && b[2] == 'k' {
 		return true // be
 	}
-
 	return false
 }
 

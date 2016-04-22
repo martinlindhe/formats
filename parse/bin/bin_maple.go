@@ -6,6 +6,7 @@ package bin
 // STATUS: 1%
 
 import (
+	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -13,16 +14,16 @@ import (
 
 func MapleDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMapleDB(c.File) {
+	if !isMapleDB(c.Header) {
 		return nil, nil
 	}
 	return parseMapleDB(c.File, c.ParsedLayout)
 }
 
-func isMapleDB(file *os.File) bool {
+func isMapleDB(b []byte) bool {
 
-	val, _ := parse.ReadUint32le(file, 0)
-	if val == 0x00040000 {
+	val := binary.LittleEndian.Uint32(b)
+	if val == 0x00000400 {
 		return true
 	}
 	return false
@@ -38,7 +39,7 @@ func parseMapleDB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, er
 		Info:   "header",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: pos, Length: 4, Info: "magic", Type: parse.Bytes},
+			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
 		}}}
 
 	return &pl, nil

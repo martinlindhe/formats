@@ -5,14 +5,13 @@ package exe
 // STATUS: 1%
 
 import (
-	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
 
 var (
-	gbaLogo = [...]byte{
+	gbaLogo = []byte{
 		0x24, 0xFF, 0xAE, 0x51, 0x69, 0x9A, 0xA2, 0x21, 0x3D, 0x84, 0x82, 0x0A,
 		0x84, 0xE4, 0x09, 0xAD, 0x11, 0x24, 0x8B, 0x98, 0xC0, 0x81, 0x7F, 0x21,
 		0xA3, 0x52, 0xBE, 0x19, 0x93, 0x09, 0xCE, 0x20, 0x10, 0x46, 0x4A, 0x4A,
@@ -30,15 +29,15 @@ var (
 
 func GBAROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGBAROM(c.File) {
+	if !isGBAROM(c.Header) {
 		return nil, nil
 	}
 	return parseGBAROM(c.File, c.ParsedLayout)
 }
 
-func isGBAROM(file *os.File) bool {
+func isGBAROM(b []byte) bool {
 
-	if !hasGBALogo(file) {
+	if !parse.HasSignatureInHeader(b, 4, gbaLogo) {
 		return false
 	}
 	return true
@@ -70,20 +69,4 @@ func parseGBAROM(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, err
 		}}}
 
 	return &pl, nil
-}
-
-func hasGBALogo(file *os.File) bool {
-
-	file.Seek(4, os.SEEK_SET)
-
-	b := make([]byte, len(gbaLogo))
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-	for i := 0; i < len(gbaLogo); i++ {
-		if gbaLogo[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }

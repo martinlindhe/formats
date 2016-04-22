@@ -10,19 +10,16 @@ import (
 
 func VDI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isVDI(c.File) {
+	if !isVDI(c.Header) {
 		return nil, nil
 	}
 	return parseVDI(c.File, c.ParsedLayout)
 }
 
-func isVDI(file *os.File) bool {
+func isVDI(b []byte) bool {
 
-	s, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, 0, 40)
-	if s != "<<< Oracle VM VirtualBox Disk Image >>>"+"\n" {
-		return false
-	}
-	return true
+	s := string(b[0:40])
+	return s == "<<< Oracle VM VirtualBox Disk Image >>>"+"\n"
 }
 
 func parseVDI(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

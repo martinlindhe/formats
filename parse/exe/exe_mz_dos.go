@@ -1,17 +1,18 @@
 package exe
 
 import (
+	"encoding/binary"
 	"fmt"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
 
-func findCustomDOSHeaders(file *os.File) []parse.Layout {
+func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 
 	pos := int64(0x1c)
 
-	tok, _, _ := parse.ReadZeroTerminatedASCIIUntil(file, pos+2, 9)
+	tok := string(b[pos+2 : pos+9])
 	if tok == "PKLITE Co" {
 
 		return []parse.Layout{{
@@ -31,7 +32,7 @@ func findCustomDOSHeaders(file *os.File) []parse.Layout {
 			}}}
 	}
 
-	tok, _, _ = parse.ReadZeroTerminatedASCIIUntil(file, pos, 4)
+	tok = string(b[pos : pos+4])
 	if tok == "LZ09" || tok == "LZ91" {
 
 		return []parse.Layout{{
@@ -50,7 +51,7 @@ func findCustomDOSHeaders(file *os.File) []parse.Layout {
 		// "91" = v 0.91
 	}
 
-	u32tok, _ := parse.ReadUint32le(file, pos)
+	u32tok := binary.LittleEndian.Uint32(b[pos:])
 	if u32tok == 0x018a0001 {
 
 		fmt.Println("info: TOPSPEED sample plz!")
@@ -76,8 +77,8 @@ func findCustomDOSHeaders(file *os.File) []parse.Layout {
 		*/
 	}
 
-	tlink1, _ := parse.ReadUint16le(file, pos)
-	tlinkId, _ := parse.ReadUint8(file, pos+2)
+	tlink1 := binary.LittleEndian.Uint16(b[pos:])
+	tlinkId := b[pos+2]
 	if tlink1 == 0x1 && tlinkId == 0xfb {
 		return []parse.Layout{{
 			Offset: pos,
@@ -93,9 +94,9 @@ func findCustomDOSHeaders(file *os.File) []parse.Layout {
 
 	// EXEPACK
 	// http://www.shikadi.net/moddingwiki/Microsoft_EXEPACK
-	headerSizeInParagraphs, _ := parse.ReadUint16le(file, 8)
-	cs, _ := parse.ReadUint16le(file, 22)
-	ip, _ := parse.ReadUint16le(file, 20)
+	headerSizeInParagraphs := binary.LittleEndian.Uint16(b[pos+8:])
+	cs := binary.LittleEndian.Uint16(b[pos+22:])
+	ip := binary.LittleEndian.Uint16(b[pos+20:])
 	exePackOffset := (int64(headerSizeInParagraphs) * 16) // XXX hack
 	exePackSize := int64(cs)*16 + int64(ip)
 

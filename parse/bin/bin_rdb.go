@@ -12,15 +12,14 @@ import (
 
 func RDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRDB(c) {
+	if !isRDB(c.Header) {
 		return nil, nil
 	}
 	return parseRDB(c.File, c.ParsedLayout)
 }
 
-func isRDB(c *parse.ParseChecker) bool {
+func isRDB(b []byte) bool {
 
-	b := c.Header
 	if b[0] != 'U' || b[1] != 'N' || b[2] != 'O' || b[3] != 'I' {
 		return false
 	}

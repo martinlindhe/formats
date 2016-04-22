@@ -3,6 +3,7 @@ package parse
 // for unrecognized files
 
 import (
+	"encoding/binary"
 	"fmt"
 )
 
@@ -27,8 +28,8 @@ func RAW(c *ParseChecker) (*ParsedLayout, error) {
 			{Offset: pos, Length: 0, Info: "data", Type: Bytes},
 		}}}
 
-	val, _ := ReadUint32le(c.File, 0)
-	sig, _, _ := ReadZeroTerminatedASCIIUntil(c.File, 0, 4)
+	val := binary.LittleEndian.Uint32(c.Header)
+	sig := string(c.Header[0:4])
 	c.ParsedLayout.FormatName += fmt.Sprintf(" [%08x, %s]", val, sig)
 
 	return &c.ParsedLayout, nil

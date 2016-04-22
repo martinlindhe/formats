@@ -6,9 +6,9 @@ package av
 // STATUS: 1%
 
 import (
-	"encoding/binary"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -28,15 +28,15 @@ var (
 
 func ASF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isASF(c.File) {
+	if !isASF(c.Header) {
 		return nil, nil
 	}
 	return parseASF(c.File, c.ParsedLayout)
 }
 
-func isASF(file *os.File) bool {
+func isASF(b []byte) bool {
 
-	if !hasASFSignature(file, 0, asfObjectSignature) {
+	if !parse.HasSignatureInHeader(b, 0, asfObjectSignature) {
 		return false
 	}
 
@@ -57,23 +57,6 @@ func parseASF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		}}}
 
 	return &pl, nil
-}
-
-func hasASFSignature(file *os.File, offset int64, sig []byte) bool {
-
-	file.Seek(offset, os.SEEK_SET)
-	var b [16]byte
-	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		return false
-	}
-
-	for i := 0; i < len(sig); i++ {
-		if b[i] != sig[i] {
-			return false
-		}
-	}
-
-	return true
 }
 
 /*

@@ -7,6 +7,7 @@ package windows
 // STATUS: 1%
 
 import (
+	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -14,19 +15,16 @@ import (
 
 func RSRC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRSRC(c.File) {
+	if !isRSRC(c.Header) {
 		return nil, nil
 	}
 	return parseRSRC(c.File, c.ParsedLayout)
 }
 
-func isRSRC(file *os.File) bool {
+func isRSRC(b []byte) bool {
 
-	val, _ := parse.ReadUint32le(file, 0)
-	if val == 0xbeefcace {
-		return true
-	}
-	return false
+	val := binary.LittleEndian.Uint32(b)
+	return val == 0xbeefcace
 }
 
 func parseRSRC(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

@@ -1,7 +1,6 @@
 package formats
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,7 +12,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples"
+	searchDir := "./samples/images/png"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -25,7 +24,7 @@ func TestParsedLayout(t *testing.T) {
 			return nil
 		}
 
-		fmt.Println("OPEN", path)
+		t.Log("OPEN", path)
 		f, err := os.Open(path)
 		defer f.Close()
 		if err != nil {
@@ -42,7 +41,7 @@ func TestParsedLayout(t *testing.T) {
 
 		if layout == nil {
 			// NOTE since not all samples is currently supported
-			fmt.Println("FAIL to parse layout from", path)
+			t.Log("warning: failed to parse layout from", path)
 			return nil
 		}
 
@@ -50,7 +49,7 @@ func TestParsedLayout(t *testing.T) {
 		assert.Equal(t, false, layout.FileKind == 0)
 
 		if layout.MimeType == "" {
-			fmt.Println("warning: ", layout.FormatName, "has no mime")
+			t.Log("warning: ", layout.FormatName, "has no mime")
 		}
 
 		// XXX run "file --mime-type util.go"

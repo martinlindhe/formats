@@ -1,8 +1,12 @@
 package formats
 
 import (
+	"bufio"
 	"encoding/binary"
+	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/martinlindhe/formats/parse"
 	"github.com/martinlindhe/formats/parse/archive"
@@ -16,8 +20,10 @@ import (
 	"github.com/martinlindhe/formats/parse/windows"
 )
 
+type Parser func(*parse.ParseChecker) (*parse.ParsedLayout, error)
+
 var (
-	parsers = map[string]func(*parse.ParseChecker) (*parse.ParsedLayout, error){
+	parsers = map[string]Parser{
 		"7z":             archive.SevenZIP,
 		"arj":            archive.ARJ,
 		"bzip2":          archive.BZIP2,
@@ -87,6 +93,7 @@ var (
 		"jpeg":           image.JPEG,
 		"pcx":            image.PCX,
 		"png":            image.PNG,
+		"tga":            image.TGA, // XXX has too loose detection
 		"tiff":           image.TIFF,
 		"xcursor":        image.XCursor,
 		"bom_store":      macos.BOMStore,
@@ -107,33 +114,128 @@ var (
 		"rsrc":           windows.RSRC,
 		"uce":            windows.UCE,
 		"xbf":            windows.XBF,
-		"tga":            image.TGA, // XXX has loose detection, so put it last for now
 	}
 )
 
+type MatchingParsers map[string]Parser
+
+func (mp *MatchingParsers) First() Parser {
+
+	for _, parser := range *mp {
+		return parser
+	}
+	return nil
+}
+
+func (mp *MatchingParsers) ChoseOne() (Parser, error) {
+
+	i := 1
+	fmt.Println("multiple parsers matched input file, please choose one:\n")
+	for name, _ := range parsers {
+		fmt.Printf("%d: %s\n", i, name)
+		i++
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+	text = strings.TrimSpace(text)
+
+	u, err := strconv.ParseUint(text, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid input")
+	}
+
+	i = 1
+	for _, parser := range parsers {
+		if i == int(u) {
+			return parser, nil
+		}
+		i++
+	}
+
+	return nil, fmt.Errorf("selection not in list")
+}
+
+// returns all matching parsers
+func MatchAll(file *os.File) (MatchingParsers, error) {
+
+	fileSize, _ := fileSize(file)
+	layout := parse.ParsedLayout{
+		FileName: fileGetName(file),
+		FileSize: fileSize}
+	checker := parse.ParseChecker{
+		File:         file,
+		ParsedLayout: layout}
+	m := map[string]Parser{}
+
+	var err error
+	checker.Header, err = readHeaderChunk(file)
+	if err != nil {
+		fmt.Println("warning: MatchAll failed reading header chunk")
+		return nil, err
+	}
+
+	for name, parser := range parsers {
+
+		pl, err2 := parser(&checker)
+		if err2 != nil {
+			fmt.Println("XXX parser", name, "failed")
+			return nil, err2
+		}
+		if pl == nil {
+			continue
+		}
+		if pl.FormatName == "" {
+			pl.FormatName = name
+		}
+		m[name] = parser
+	}
+	return m, nil
+}
+
 // ParseLayout returns a ParsedLayout for the file
-func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
+func ParseLayout(file *os.File) (*parse.ParsedLayout, error) { // XXX deprecate ParseLayout
 
 	return matchParser(file)
 }
 
-func matchParser(file *os.File) (*parse.ParsedLayout, error) {
+// slice to expand, new length in bytes
+func expandByteSlice(b []byte, newLen int64) []byte {
 
-	fileSize, err := fileSize(file)
-	if err != nil {
-		return nil, err
-	}
-	maxLen := int64(0xffff)
+	i := int64(len(b))
+	newLen = newLen - i
+	return append(b[:i], append(make([]byte, newLen), b[i:]...)...)
+}
+
+func readHeaderChunk(file *os.File) ([]byte, error) {
+
+	fileSize, _ := fileSize(file)
+	maxHeaderLen := int64(0xffff)
 	len := fileSize
-	if len > maxLen {
-		len = maxLen
+	if len > maxHeaderLen {
+		len = maxHeaderLen
 	}
 
 	b := make([]byte, len)
 
 	file.Seek(0, os.SEEK_SET)
 	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
+		fmt.Println("error: failed to read header!", err)
 		return nil, err
+	}
+
+	// resize to maxHeaderLen
+	return expandByteSlice(b, maxHeaderLen), nil
+}
+
+func matchParser(file *os.File) (*parse.ParsedLayout, error) { // XXX deprecate! for MatchAll ...
+
+	fileSize, err := fileSize(file)
+	if err != nil {
+		return nil, err
+	}
+	if fileSize == 0 {
+		return nil, fmt.Errorf("empty file")
 	}
 
 	layout := parse.ParsedLayout{
@@ -144,7 +246,11 @@ func matchParser(file *os.File) (*parse.ParsedLayout, error) {
 		File:         file,
 		ParsedLayout: layout}
 
-	copy(checker.Header[:], b[:len])
+	checker.Header, err = readHeaderChunk(file)
+	if err != nil {
+		fmt.Println("warning: matchParser failed reading header chunk")
+		return nil, err
+	}
 
 	for name, parser := range parsers {
 

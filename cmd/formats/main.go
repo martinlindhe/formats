@@ -26,6 +26,9 @@ var (
 	}
 )
 
+// XXX rework so we get a list of matching parsers, and choose one if it is > 1.
+// XXX do this by adding new api:s first, and then dropping old ones when they are unused
+
 func main() {
 
 	// support -h for --help
@@ -39,12 +42,36 @@ func main() {
 	}
 	defer file.Close()
 
-	layout, err := formats.ParseLayout(file)
+	parsers, err := formats.MatchAll(file)
+	//layout, err := formats.ParseLayout(file)
 	if err != nil {
 		fmt.Println("error:", err)
 		os.Exit(1)
 	}
 
+	if len(parsers) == 0 {
+		panic("no parsers returned, should not happen")
+	}
+
+	var chosenParser formats.Parser
+
+	if len(parsers) == 1 {
+
+		chosenParser = parsers.First()
+
+	} else if len(parsers) > 1 {
+
+		chosenParser, err = parsers.ChoseOne()
+		if err != nil {
+			fmt.Println("error:", err)
+			os.Exit(1)
+		}
+	}
+
+	checker := parse.ParseChecker{
+		File: file}
+
+	layout, err := chosenParser(&checker)
 	if layout == nil {
 		fmt.Println("ERR: layout is nil")
 		os.Exit(1)
@@ -297,13 +324,13 @@ func prettyStatString() string {
 		field := group.Childs[hexView.CurrentField]
 
 		if field.Offset+field.Length > fileLayout.FileSize {
-			warn = " [PAST EOF](fg-red)"
+			warn = " [PAST EOF-f](fg-red)"
 		}
 		return fmt.Sprintf("selected %d bytes (%x) from %04x", field.Length, field.Length, field.Offset) + warn
 	}
 
 	if group.Offset+group.Length > fileLayout.FileSize {
-		warn = " [PAST EOF](fg-red)"
+		warn = " [PAST EOF-g](fg-red)"
 	}
 	return fmt.Sprintf("selected %d bytes (%x) from %04x", group.Length, group.Length, group.Offset) + warn
 }

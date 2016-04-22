@@ -117,17 +117,17 @@ var (
 	}
 )
 
-type MatchingParsers map[string]Parser
+type MatchingParsers []parse.ParsedLayout
 
-func (mp *MatchingParsers) First() Parser {
+func (mp *MatchingParsers) First() *parse.ParsedLayout {
 
 	for _, parser := range *mp {
-		return parser
+		return &parser
 	}
 	return nil
 }
 
-func (mp *MatchingParsers) ChoseOne() (Parser, error) {
+func (mp *MatchingParsers) ChoseOne(file *os.File) (*parse.ParsedLayout, error) {
 
 	i := 1
 	fmt.Println("multiple parsers matched input file, please choose one:\n")
@@ -145,10 +145,24 @@ func (mp *MatchingParsers) ChoseOne() (Parser, error) {
 		return nil, fmt.Errorf("invalid input")
 	}
 
+	fileSize, _ := fileSize(file)
+	layout := parse.ParsedLayout{
+		FileName: fileGetName(file),
+		FileSize: fileSize}
+	checker := parse.ParseChecker{
+		File:         file,
+		ParsedLayout: layout}
+
 	i = 1
-	for _, parser := range parsers {
+	for name, parser := range parsers {
 		if i == int(u) {
-			return parser, nil
+
+			pl, err2 := parser(&checker)
+			if err2 != nil {
+				fmt.Println("XXX parser", name, "failed")
+				return nil, err2
+			}
+			return pl, nil
 		}
 		i++
 	}
@@ -166,7 +180,7 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 	checker := parse.ParseChecker{
 		File:         file,
 		ParsedLayout: layout}
-	m := map[string]Parser{}
+	var m MatchingParsers
 
 	var err error
 	checker.Header, err = readHeaderChunk(file)
@@ -179,8 +193,8 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 
 		pl, err2 := parser(&checker)
 		if err2 != nil {
-			fmt.Println("XXX parser", name, "failed")
-			return nil, err2
+			fmt.Println("warning: parser", name, "failed with", err2)
+			continue
 		}
 		if pl == nil {
 			continue
@@ -188,15 +202,29 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 		if pl.FormatName == "" {
 			pl.FormatName = name
 		}
-		m[name] = parser
+		m = append(m, *pl)
 	}
+
+	if len(m) == 0 {
+		// try text detector
+		text, err := parse.Text(&checker)
+		if err == nil {
+			m = append(m, *text)
+		} else {
+			// fall back to raw
+			raw, _ := parse.RAW(&checker)
+			m = append(m, *raw)
+		}
+	}
+
 	return m, nil
 }
 
 // ParseLayout returns a ParsedLayout for the file
-func ParseLayout(file *os.File) (*parse.ParsedLayout, error) { // XXX deprecate ParseLayout
+func ParseLayout(file *os.File) (*parse.ParsedLayout, error) {
 
-	return matchParser(file)
+	all, err := MatchAll(file)
+	return all.First(), err
 }
 
 // slice to expand, new length in bytes
@@ -226,52 +254,6 @@ func readHeaderChunk(file *os.File) ([]byte, error) {
 
 	// resize to maxHeaderLen
 	return expandByteSlice(b, maxHeaderLen), nil
-}
-
-func matchParser(file *os.File) (*parse.ParsedLayout, error) { // XXX deprecate! for MatchAll ...
-
-	fileSize, err := fileSize(file)
-	if err != nil {
-		return nil, err
-	}
-	if fileSize == 0 {
-		return nil, fmt.Errorf("empty file")
-	}
-
-	layout := parse.ParsedLayout{
-		FileName: fileGetName(file),
-		FileSize: fileSize}
-
-	checker := parse.ParseChecker{
-		File:         file,
-		ParsedLayout: layout}
-
-	checker.Header, err = readHeaderChunk(file)
-	if err != nil {
-		fmt.Println("warning: matchParser failed reading header chunk")
-		return nil, err
-	}
-
-	for name, parser := range parsers {
-
-		pl, err2 := parser(&checker)
-		if pl != nil {
-			if pl.FormatName == "" {
-				pl.FormatName = name
-			}
-			return pl, err2
-		}
-	}
-
-	// try text detector
-	text, err := parse.Text(&checker)
-	if err == nil {
-		return text, nil
-	}
-
-	// fall back to raw
-	raw, _ := parse.RAW(&checker)
-	return raw, nil
 }
 
 func fileGetName(file *os.File) string {

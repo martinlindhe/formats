@@ -26,9 +26,6 @@ var (
 	}
 )
 
-// XXX rework so we get a list of matching parsers, and choose one if it is > 1.
-// XXX do this by adding new api:s first, and then dropping old ones when they are unused
-
 func main() {
 
 	// support -h for --help
@@ -43,7 +40,6 @@ func main() {
 	defer file.Close()
 
 	parsers, err := formats.MatchAll(file)
-	//layout, err := formats.ParseLayout(file)
 	if err != nil {
 		fmt.Println("error:", err)
 		os.Exit(1)
@@ -53,7 +49,7 @@ func main() {
 		panic("no parsers returned, should not happen")
 	}
 
-	var chosenParser formats.Parser
+	var chosenParser *parse.ParsedLayout
 
 	if len(parsers) == 1 {
 
@@ -61,30 +57,17 @@ func main() {
 
 	} else if len(parsers) > 1 {
 
-		chosenParser, err = parsers.ChoseOne()
+		chosenParser, err = parsers.ChoseOne(file)
 		if err != nil {
 			fmt.Println("error:", err)
 			os.Exit(1)
 		}
 	}
 
-	checker := parse.ParseChecker{
-		File: file}
-
-	layout, err := chosenParser(&checker)
-	if layout == nil {
-		fmt.Println("ERR: layout is nil")
-		os.Exit(1)
-	}
-
-	fileLayout = *layout
+	fileLayout = *chosenParser
 	mappedPct = fileLayout.PercentMapped(fileLayout.FileSize)
 
 	uiLoop(file)
-}
-
-func calcVisibleRows() {
-	hexView.VisibleRows = termui.TermHeight() - 2
 }
 
 func uiLoop(file *os.File) {
@@ -99,47 +82,7 @@ func uiLoop(file *os.File) {
 	}
 
 	calcVisibleRows()
-
-	offsetsPar = termui.NewPar("")
-	offsetsPar.BorderLeft = false
-	offsetsPar.Width = 10
-	offsetsPar.BorderLabel = "offset"
-
-	hexPar = termui.NewPar("")
-	hexPar.Width = 49
-	hexPar.X = 8
-	hexPar.Y = 0
-	hexPar.BorderLabel = "hex"
-	hexPar.BorderFg = termui.ColorCyan
-
-	asciiPar = termui.NewPar("")
-	asciiPar.Width = 18
-	asciiPar.X = 56
-	asciiPar.Y = 0
-	asciiPar.BorderRight = false
-	asciiPar.TextFgColor = termui.ColorWhite
-	asciiPar.BorderLabel = "ascii"
-	asciiPar.BorderFg = termui.ColorCyan
-
-	boxPar = termui.NewPar("")
-	boxPar.Height = 14
-	boxPar.Width = 34
-	boxPar.X = 73
-	boxPar.TextFgColor = termui.ColorWhite
-	boxPar.BorderLabel = fileLayout.TypeSummary()
-	boxPar.BorderFg = termui.ColorCyan
-
-	boxFooter = termui.NewPar("")
-	boxFooter.Border = false
-	boxFooter.Height = 1
-	boxFooter.X = 75
-	boxFooter.Y = boxPar.Height - 1
-
-	statsPar = termui.NewPar("")
-	statsPar.Border = false
-	statsPar.Height = 1
-	statsPar.X = 10
-
+	createUIComponents()
 	updateUIPositions()
 	focusAtCurrentField()
 
@@ -238,6 +181,52 @@ func uiLoop(file *os.File) {
 
 	refreshUI(file)
 	termui.Loop() // block until StopLoop is called
+}
+
+func calcVisibleRows() {
+	hexView.VisibleRows = termui.TermHeight() - 2
+}
+
+func createUIComponents() {
+	offsetsPar = termui.NewPar("")
+	offsetsPar.BorderLeft = false
+	offsetsPar.Width = 10
+	offsetsPar.BorderLabel = "offset"
+
+	hexPar = termui.NewPar("")
+	hexPar.Width = 49
+	hexPar.X = 8
+	hexPar.Y = 0
+	hexPar.BorderLabel = "hex"
+	hexPar.BorderFg = termui.ColorCyan
+
+	asciiPar = termui.NewPar("")
+	asciiPar.Width = 18
+	asciiPar.X = 56
+	asciiPar.Y = 0
+	asciiPar.BorderRight = false
+	asciiPar.TextFgColor = termui.ColorWhite
+	asciiPar.BorderLabel = "ascii"
+	asciiPar.BorderFg = termui.ColorCyan
+
+	boxPar = termui.NewPar("")
+	boxPar.Height = 14
+	boxPar.Width = 34
+	boxPar.X = 73
+	boxPar.TextFgColor = termui.ColorWhite
+	boxPar.BorderLabel = fileLayout.TypeSummary()
+	boxPar.BorderFg = termui.ColorCyan
+
+	boxFooter = termui.NewPar("")
+	boxFooter.Border = false
+	boxFooter.Height = 1
+	boxFooter.X = 75
+	boxFooter.Y = boxPar.Height - 1
+
+	statsPar = termui.NewPar("")
+	statsPar.Border = false
+	statsPar.Height = 1
+	statsPar.X = 10
 }
 
 func focusAtCurrentField() {

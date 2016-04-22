@@ -111,9 +111,11 @@ func parsePNG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 				{Offset: pos + 12, Length: 1, Info: "interlace method", Type: parse.Uint8},
 			}...)
 		} else {
-			l.Childs = append(l.Childs, []parse.Layout{
-				{Offset: pos, Length: int64(chunkLength), Info: typeCode + " data", Type: parse.Bytes},
-			}...)
+			if chunkLength > 0 {
+				l.Childs = append(l.Childs, []parse.Layout{
+					{Offset: pos, Length: int64(chunkLength), Info: typeCode + " data", Type: parse.Bytes},
+				}...)
+			}
 		}
 
 		pos += int64(chunkLength)

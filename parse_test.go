@@ -33,8 +33,11 @@ func TestParsedLayout(t *testing.T) {
 		}
 
 		layout, err := ParseLayout(f)
-		assert.Equal(t, nil, err)
+		if err != nil {
+			t.Fatalf("got error %v", err)
+		}
 
+		assert.Equal(t, true, layout != nil)
 		assert.Equal(t, true, layout.FileKind != 0)
 
 		if layout == nil {
@@ -115,10 +118,14 @@ func TestParseGIFBitFields(t *testing.T) {
 
 	file, err := os.Open("samples/images/gif/gif_89a_004_fish.gif")
 	defer file.Close()
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 
 	pl, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 
 	l0 := pl.DecodeBitfieldFromInfo(file, "global color table size")
 	l3 := pl.DecodeBitfieldFromInfo(file, "sort flag")
@@ -135,10 +142,14 @@ func TestParseGIF87a(t *testing.T) {
 
 	file, err := os.Open("samples/images/gif/gif_87a_001.gif")
 	defer file.Close()
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 
 	layout, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 	assert.Equal(t, `Format: gif (gif_87a_001.gif, 42 bytes)
 
 header (0000), group
@@ -176,10 +187,14 @@ func TestParseGIF89a(t *testing.T) {
 
 	file, err := os.Open("samples/images/gif/gif_89a_001.gif")
 	defer file.Close()
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 
 	layout, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 	assert.Equal(t, `Format: gif (gif_89a_001.gif, 69 bytes)
 
 header (0000), group
@@ -230,10 +245,15 @@ func TestParseARJ(t *testing.T) {
 
 	file, err := os.Open("samples/archives/arj/arj_001_tiny.arj")
 	defer file.Close()
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
+
 
 	layout, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 	assert.Equal(t, `Format: arj (arj_001_tiny.arj, 121 bytes)
 
 main header (0024), group
@@ -266,10 +286,14 @@ func TestParseBMP(t *testing.T) {
 
 	file, err := os.Open("samples/images/bmp/bmp_v3-001.bmp")
 	defer file.Close()
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 
 	layout, err := ParseLayout(file)
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("got error %v", err)
+	}
 
 	assert.Equal(t, `Format: bmp (bmp_v3-001.bmp, 70 bytes)
 

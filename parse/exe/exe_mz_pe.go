@@ -1,9 +1,10 @@
 package exe
 
-// PE exe (Win32, Win64)
-// STATUS: 50%
-
+// PE/COFF exe (Win32, Win64)
+// https://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
 // http://wiki.osdev.org/PE
+
+// STATUS: 50%
 
 import (
 	"fmt"
@@ -71,11 +72,20 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 		pos += optHeader.Length
 	}
 
+	res = append(res, parsePESections(file, pos, numberOfSections)...)
+
+	return res, nil
+}
+
+func parsePESections(file *os.File, pos int64, numberOfSections uint16) []parse.Layout {
+
 	sectionHeader := parse.Layout{
 		Offset: pos,
 		Length: int64(numberOfSections) * peSectionHeaderLen,
 		Info:   "section header",
 		Type:   parse.Group}
+
+	res := []parse.Layout{sectionHeader}
 
 	for i := 0; i < int(numberOfSections); i++ {
 
@@ -103,25 +113,35 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 			{Offset: pos + 32, Length: 2, Info: "reallocations count", Type: parse.Uint16le},
 			{Offset: pos + 34, Length: 2, Info: "linenumbers count", Type: parse.Uint16le},
 			{Offset: pos + 36, Length: 4, Info: "flags", Type: parse.Uint32le, Masks: []parse.Mask{
-				// XXX fix bit map
-				{Low: 0, Length: 1, Info: "0x00000020 = Code"},
-				{Low: 0, Length: 1, Info: "0x00000040 = Initialized data"},
-				{Low: 0, Length: 1, Info: "0x00000080 = Uninitialized data"},
-				{Low: 0, Length: 1, Info: "0x00000200 = Info"},
-				{Low: 0, Length: 1, Info: "0x02000000 = Discardable"},
-				{Low: 0, Length: 1, Info: "0x10000000 = Shared"},
-				{Low: 0, Length: 1, Info: "0x20000000 = Executable"},
-				{Low: 0, Length: 1, Info: "0x40000000 = Readable"},
-				{Low: 0, Length: 1, Info: "0x80000000 = Writeable"},
+				{Low: 0, Length: 3, Info: "reserved"},
+				{Low: 3, Length: 1, Info: "no padding", Spec: "IMAGE_SCN_TYPE_NO_PAD"},
+				{Low: 4, Length: 1, Info: "reserved"},
+				{Low: 5, Length: 1, Info: "code", Spec: "IMAGE_SCN_CNT_CODE"},
+				{Low: 6, Length: 1, Info: "initialized data", Spec: "IMAGE_SCN_CNT_INITIALIZED_DATA"},
+				{Low: 7, Length: 1, Info: "uninitialized data", Spec: "IMAGE_SCN_CNT_UNINITIALIZED_DATA"},
+				{Low: 8, Length: 1, Info: "reserved", Spec: "IMAGE_SCN_LNK_OTHER"},
+				{Low: 9, Length: 1, Info: "info", Spec: "IMAGE_SCN_LNK_INFO"},
+				{Low: 10, Length: 1, Info: "reserved", Spec: ""},
+				{Low: 11, Length: 1, Info: "remove", Spec: "IMAGE_SCN_LNK_REMOVE"},
+				{Low: 12, Length: 1, Info: "COMDAT data", Spec: "IMAGE_SCN_LNK_COMDAT"},
+				{Low: 13, Length: 4, Info: "reserved"},
+				{Low: 17, Length: 1, Info: "data referenced through the global pointer", Spec: "IMAGE_SCN_GPREL"},
+				{Low: 18, Length: 4, Info: "reserved"},
+				{Low: 20, Length: 4, Info: "align x-bytes", Spec: "IMAGE_SCN_ALIGN_xBYTES"},
+				{Low: 24, Length: 1, Info: "extended relocations", Spec: "IMAGE_SCN_LNK_NRELOC_OVFL"},
+				{Low: 25, Length: 1, Info: "discardable", Spec: "IMAGE_SCN_MEM_DISCARDABLE"},
+				{Low: 26, Length: 1, Info: "cacheable", Spec: "IMAGE_SCN_MEM_NOT_CACHED"},
+				{Low: 27, Length: 1, Info: "pageable", Spec: "IMAGE_SCN_MEM_NOT_PAGED"},
+				{Low: 28, Length: 1, Info: "shared", Spec: "IMAGE_SCN_MEM_SHARED"},
+				{Low: 29, Length: 1, Info: "executable", Spec: "IMAGE_SCN_MEM_EXECUTE"},
+				{Low: 30, Length: 1, Info: "readable", Spec: "IMAGE_SCN_MEM_READ"},
+				{Low: 31, Length: 1, Info: "writeable", Spec: "IMAGE_SCN_MEM_WRITE"},
 			}}}
 
 		sectionHeader.Childs = append(sectionHeader.Childs, chunk...)
 		pos += peSectionHeaderLen
 	}
-
-	res = append(res, sectionHeader)
-
-	return res, nil
+	return res
 }
 
 func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {

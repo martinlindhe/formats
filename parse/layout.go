@@ -141,7 +141,8 @@ type Layout struct {
 	Offset int64
 	Length int64
 	Type   DataType
-	Info   string
+	Info   string // user friendly field name
+	Spec   string // field name according to specs
 	Childs []Layout
 	Masks  []Mask
 }
@@ -150,7 +151,8 @@ type Layout struct {
 type Mask struct {
 	Low    int
 	Length int
-	Info   string
+	Info   string // user friendly field name
+	Spec   string // field name according to specs
 }
 
 func (e TextEncoding) String() string {

@@ -12,15 +12,14 @@ import (
 
 func TTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTTF(&c.Header) {
+	if !isTTF(c.Header) {
 		return nil, nil
 	}
 	return parseTTF(c.File, c.ParsedLayout)
 }
 
-func isTTF(hdr *[0xffff]byte) bool {
+func isTTF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0 || b[1] != 1 || b[2] != 0 || b[3] != 0 {
 		return false
 	}

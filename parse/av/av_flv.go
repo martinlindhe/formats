@@ -10,15 +10,14 @@ import (
 
 func FLV(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isFLV(&c.Header) {
+	if !isFLV(c.Header) {
 		return nil, nil
 	}
 	return parseFLV(c.File, c.ParsedLayout)
 }
 
-func isFLV(hdr *[0xffff]byte) bool {
+func isFLV(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'F' || b[1] != 'L' || b[2] != 'V' {
 		return false
 	}

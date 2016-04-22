@@ -12,15 +12,14 @@ import (
 
 func XCursor(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isXCursor(&c.Header) {
+	if !isXCursor(c.Header) {
 		return nil, nil
 	}
 	return parseXCursor(c.File, c.ParsedLayout)
 }
 
-func isXCursor(hdr *[0xffff]byte) bool {
+func isXCursor(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 'X' && b[1] == 'c' && b[2] == 'u' && b[3] == 'r' {
 		return true
 	}

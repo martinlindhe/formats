@@ -13,15 +13,14 @@ import (
 
 func TIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTIFF(&c.Header) {
+	if !isTIFF(c.Header) {
 		return nil, nil
 	}
 	return parseTIFF(c.File, c.ParsedLayout)
 }
 
-func isTIFF(hdr *[0xffff]byte) bool {
+func isTIFF(b []byte) bool {
 
-	b := *hdr
 	// XXX dont know magic numbers just guessing
 	if b[0] == 'I' && b[1] == 'I' && b[2] == '*' && b[3] == 0 {
 		return true

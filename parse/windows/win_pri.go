@@ -13,15 +13,14 @@ import (
 
 func PRI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPRI(&c.Header) {
+	if !isPRI(c.Header) {
 		return nil, nil
 	}
 	return parsePRI(c.File, c.ParsedLayout)
 }
 
-func isPRI(hdr *[0xffff]byte) bool {
+func isPRI(b []byte) bool {
 
-	b := *hdr
 	// XXX just guessing
 	if b[0] != 'm' || b[1] != 'r' || b[2] != 'm' || b[3] != '_' ||
 		b[4] != 'p' || b[5] != 'r' || b[6] != 'i' || b[7] != '2' {

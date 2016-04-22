@@ -13,15 +13,14 @@ import (
 
 func Timezone(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTimezone(&c.Header) {
+	if !isTimezone(c.Header) {
 		return nil, nil
 	}
 	return parseTimezone(c.File, c.ParsedLayout)
 }
 
-func isTimezone(hdr *[0xffff]byte) bool {
+func isTimezone(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 'T' && b[1] == 'Z' && b[2] == 'i' && b[3] == 'f' {
 		return true
 	}

@@ -10,15 +10,14 @@ import (
 
 func WOFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isWOFF(&c.Header) {
+	if !isWOFF(c.Header) {
 		return nil, nil
 	}
 	return parseWOFF(c.File, c.ParsedLayout)
 }
 
-func isWOFF(hdr *[0xffff]byte) bool {
+func isWOFF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'w' || b[1] != 'O' || b[2] != 'F' || b[3] != 'F' {
 		return false
 	}

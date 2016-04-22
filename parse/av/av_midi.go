@@ -10,15 +10,14 @@ import (
 
 func MIDI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMIDI(&c.Header) {
+	if !isMIDI(c.Header) {
 		return nil, nil
 	}
 	return parseMIDI(c.File, c.ParsedLayout)
 }
 
-func isMIDI(hdr *[0xffff]byte) bool {
+func isMIDI(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'M' || b[1] != 'T' || b[2] != 'h' || b[3] != 'd' {
 		return false
 	}

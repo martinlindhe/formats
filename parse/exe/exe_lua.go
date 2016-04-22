@@ -11,20 +11,18 @@ import (
 
 func LUA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isLUA(&c.Header) {
+	if !isLUA(c.Header) {
 		return nil, nil
 	}
 	return parseLUA(c.File, c.ParsedLayout)
 }
 
-func isLUA(hdr *[0xffff]byte) bool {
+func isLUA(b []byte) bool {
 
-	b := *hdr
 	if b[3] == 0x61 && b[2] == 0x75 && b[1] == 0x4c && b[0] == 0x1b {
 		// Lua 5.1 and 5.2 identifer
 		return true
 	}
-
 	return false
 }
 

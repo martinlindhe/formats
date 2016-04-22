@@ -13,15 +13,14 @@ import (
 
 func HWRS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isHWRS(&c.Header) {
+	if !isHWRS(c.Header) {
 		return nil, nil
 	}
 	return parseHWRS(c.File, c.ParsedLayout)
 }
 
-func isHWRS(hdr *[0xffff]byte) bool {
+func isHWRS(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'H' || b[1] != 'W' || b[2] != 'R' || b[3] != 'S' {
 		return false
 	}

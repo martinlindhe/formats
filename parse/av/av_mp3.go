@@ -10,17 +10,16 @@ import (
 
 func MP3(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMP3(&c.Header) {
+	if !isMP3(c.Header) {
 		return nil, nil
 	}
 	return parseMP3(c.File, c.ParsedLayout)
 }
 
-func isMP3(hdr *[0xffff]byte) bool {
+func isMP3(b []byte) bool {
 
 	// TODO find mp3 stream start, ignore id3 tags
 
-	b := *hdr
 	if b[0] != 'I' || b[1] != 'D' || b[2] != '3' {
 		return false
 	}

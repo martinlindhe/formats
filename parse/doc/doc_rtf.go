@@ -12,15 +12,14 @@ import (
 
 func RTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRTF(&c.Header) {
+	if !isRTF(c.Header) {
 		return nil, nil
 	}
 	return parseRTF(c.File, c.ParsedLayout)
 }
 
-func isRTF(hdr *[0xffff]byte) bool {
+func isRTF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != '{' || b[1] != '\\' || b[2] != 'r' || b[3] != 't' || b[4] != 'f' {
 		return false
 	}

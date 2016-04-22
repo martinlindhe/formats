@@ -10,15 +10,14 @@ import (
 
 func WINIMG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isWINIMG(&c.Header) {
+	if !isWINIMG(c.Header) {
 		return nil, nil
 	}
 	return parseWINIMG(c.File, c.ParsedLayout)
 }
 
-func isWINIMG(hdr *[0xffff]byte) bool {
+func isWINIMG(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0xeb || b[1] != 'X' || b[2] != 0x90 {
 		return false
 	}

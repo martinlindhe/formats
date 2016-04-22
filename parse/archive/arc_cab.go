@@ -20,15 +20,14 @@ var (
 
 func CAB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isCAB(&c.Header) {
+	if !isCAB(c.Header) {
 		return nil, nil
 	}
 	return parseCAB(c.File, c.ParsedLayout)
 }
 
-func isCAB(hdr *[0xffff]byte) bool {
+func isCAB(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'M' || b[1] != 'S' || b[2] != 'C' || b[3] != 'F' {
 		return false
 	}

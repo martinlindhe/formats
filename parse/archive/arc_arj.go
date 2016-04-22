@@ -26,7 +26,7 @@ const (
 
 func ARJ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isARJ(&c.Header) {
+	if !isARJ(c.Header) {
 		return nil, nil
 	}
 
@@ -40,9 +40,8 @@ func ARJ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	return &c.ParsedLayout, err
 }
 
-func isARJ(hdr *[0xffff]byte) bool {
+func isARJ(b []byte) bool {
 
-	b := *hdr
 	return b[0] == 0x60 && b[1] == 0xea
 }
 

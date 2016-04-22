@@ -13,15 +13,14 @@ import (
 
 func CAF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isCAF(&c.Header) {
+	if !isCAF(c.Header) {
 		return nil, nil
 	}
 	return parseCAF(c.File, c.ParsedLayout)
 }
 
-func isCAF(hdr *[0xffff]byte) bool {
+func isCAF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'c' || b[1] != 'a' || b[2] != 'f' || b[3] != 'f' {
 		return false
 	}

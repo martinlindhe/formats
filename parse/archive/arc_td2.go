@@ -10,15 +10,14 @@ import (
 
 func TD2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTD2(&c.Header) {
+	if !isTD2(c.Header) {
 		return nil, nil
 	}
 	return parseTD2(c.File, c.ParsedLayout)
 }
 
-func isTD2(hdr *[0xffff]byte) bool {
+func isTD2(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 't' || b[1] != 'd' || b[2] != 0 {
 		return false
 	}

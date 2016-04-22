@@ -97,15 +97,14 @@ var (
 
 func ELF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isELF(&c.Header) {
+	if !isELF(c.Header) {
 		return nil, nil
 	}
 	return parseELF(c.File, c.ParsedLayout)
 }
 
-func isELF(h *[0xffff]byte) bool {
+func isELF(b []byte) bool {
 
-	b := *h
 	if b[0] == 0x7f && b[1] == 'E' && b[2] == 'L' && b[3] == 'F' {
 		// XXX 16 first bytes are id
 		return true

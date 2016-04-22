@@ -5,7 +5,7 @@ import (
 )
 
 type ParseChecker struct {
-	Header       [0xffff]byte
+	Header       []byte
 	File         *os.File
 	ParsedLayout ParsedLayout
 }

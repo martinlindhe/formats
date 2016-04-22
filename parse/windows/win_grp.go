@@ -12,15 +12,14 @@ import (
 
 func GRP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGRP(&c.Header) {
+	if !isGRP(c.Header) {
 		return nil, nil
 	}
 	return parseGRP(c.File, c.ParsedLayout)
 }
 
-func isGRP(hdr *[0xffff]byte) bool {
+func isGRP(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'P' || b[1] != 'M' || b[2] != 'C' || b[3] != 'C' {
 		return false
 	}

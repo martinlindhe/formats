@@ -16,15 +16,14 @@ import (
 
 func VBE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isVBE(&c.Header) {
+	if !isVBE(c.Header) {
 		return nil, nil
 	}
 	return parseVBE(c.File, c.ParsedLayout)
 }
 
-func isVBE(hdr *[0xffff]byte) bool {
+func isVBE(b []byte) bool {
 
-	b := *hdr
 	// XXX just guessing
 	if b[0] != 0xff || b[1] != 0xfe || b[2] != 0x23 || b[3] != 0 {
 		return false

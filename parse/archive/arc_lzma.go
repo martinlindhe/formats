@@ -8,15 +8,14 @@ import (
 
 func LZMA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isLZMA(&c.Header) {
+	if !isLZMA(c.Header) {
 		return nil, nil
 	}
 	return parseLZMA(c.File, c.ParsedLayout)
 }
 
-func isLZMA(hdr *[0xffff]byte) bool {
+func isLZMA(b []byte) bool {
 
-	b := *hdr
 	// XXX not proper magic , need other check
 	if b[0] != 0x5d || b[1] != 0x00 {
 		return false

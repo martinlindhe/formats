@@ -10,15 +10,14 @@ import (
 
 func OGG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isOGG(&c.Header) {
+	if !isOGG(c.Header) {
 		return nil, nil
 	}
 	return parseOGG(c.File, c.ParsedLayout)
 }
 
-func isOGG(hdr *[0xffff]byte) bool {
+func isOGG(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'O' || b[1] != 'g' || b[2] != 'g' {
 		return false
 	}

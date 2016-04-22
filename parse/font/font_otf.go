@@ -10,15 +10,14 @@ import (
 
 func OTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isOTF(&c.Header) {
+	if !isOTF(c.Header) {
 		return nil, nil
 	}
 	return parseOTF(c.File, c.ParsedLayout)
 }
 
-func isOTF(hdr *[0xffff]byte) bool {
+func isOTF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'O' || b[1] != 'T' || b[2] != 'T' || b[3] != 'O' {
 		return false
 	}

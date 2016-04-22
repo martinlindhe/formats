@@ -16,15 +16,14 @@ var (
 
 func MZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMZ(&c.Header) {
+	if !isMZ(c.Header) {
 		return nil, nil
 	}
 	return parseMZ(c.File, c.ParsedLayout)
 }
 
-func isMZ(hdr *[0xffff]byte) bool {
+func isMZ(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'M' || b[1] != 'Z' {
 		return false
 	}

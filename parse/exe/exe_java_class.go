@@ -12,15 +12,14 @@ import (
 
 func JavaClass(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isJavaClass(&c.Header) {
+	if !isJavaClass(c.Header) {
 		return nil, nil
 	}
 	return parseJavaClass(c.File, c.ParsedLayout)
 }
 
-func isJavaClass(hdr *[0xffff]byte) bool {
+func isJavaClass(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 0xca && b[1] == 0xfe && b[2] == 0xba && b[3] == 0xbe {
 		return true
 	}

@@ -12,15 +12,14 @@ import (
 
 func WIM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isWIM(&c.Header) {
+	if !isWIM(c.Header) {
 		return nil, nil
 	}
 	return parseWIM(c.File, c.ParsedLayout)
 }
 
-func isWIM(hdr *[0xffff]byte) bool {
+func isWIM(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'M' || b[1] != 'S' || b[2] != 'W' || b[3] != 'I' ||
 		b[4] != 'M' {
 		return false

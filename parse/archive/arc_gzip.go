@@ -9,15 +9,14 @@ import (
 
 func GZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGZIP(&c.Header) {
+	if !isGZIP(c.Header) {
 		return nil, nil
 	}
 	return parseGZIP(c.File, c.ParsedLayout)
 }
 
-func isGZIP(hdr *[0xffff]byte) bool {
+func isGZIP(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0x1f || b[1] != 0x8b {
 		return false
 	}

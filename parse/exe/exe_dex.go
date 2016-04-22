@@ -10,15 +10,14 @@ import (
 
 func DEX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isDEX(&c.Header) {
+	if !isDEX(c.Header) {
 		return nil, nil
 	}
 	return parseDEX(c.File, c.ParsedLayout)
 }
 
-func isDEX(h *[0xffff]byte) bool {
+func isDEX(b []byte) bool {
 
-	b := *h
 	if b[0] == 'd' && b[1] == 'e' && b[2] == 'x' && b[3] == '\n' &&
 		b[4] == '0' && b[5] == '3' && b[6] == '5' && b[7] == 0 {
 		return true

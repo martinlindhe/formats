@@ -12,15 +12,14 @@ import (
 
 func BZIP2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isBZIP2(&c.Header) {
+	if !isBZIP2(c.Header) {
 		return nil, nil
 	}
 	return parseBZIP2(c.File, c.ParsedLayout)
 }
 
-func isBZIP2(hdr *[0xffff]byte) bool {
+func isBZIP2(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'B' || b[1] != 'Z' {
 		return false
 	}

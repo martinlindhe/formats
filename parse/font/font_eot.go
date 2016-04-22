@@ -13,15 +13,14 @@ import (
 
 func EOT(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isEOT(&c.Header) {
+	if !isEOT(c.Header) {
 		return nil, nil
 	}
 	return parseEOT(c.File, c.ParsedLayout)
 }
 
-func isEOT(hdr *[0xffff]byte) bool {
+func isEOT(b []byte) bool {
 
-	b := *hdr
 	if b[34] != 0x4c || b[35] != 0x50 {
 		return false
 	}

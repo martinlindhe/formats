@@ -12,15 +12,14 @@ import (
 
 func Keychain(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isKeychain(&c.Header) {
+	if !isKeychain(c.Header) {
 		return nil, nil
 	}
 	return parseKeychain(c.File, c.ParsedLayout)
 }
 
-func isKeychain(hdr *[0xffff]byte) bool {
+func isKeychain(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'k' || b[1] != 'y' || b[2] != 'c' || b[3] != 'h' {
 		return false
 	}

@@ -14,15 +14,14 @@ import (
 
 func LNK(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isLNK(&c.Header) {
+	if !isLNK(c.Header) {
 		return nil, nil
 	}
 	return parseLNK(c.File, c.ParsedLayout)
 }
 
-func isLNK(hdr *[0xffff]byte) bool {
+func isLNK(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0x4c || b[1] != 0 || b[2] != 0 || b[3] != 0 {
 		return false
 	}

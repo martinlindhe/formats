@@ -13,15 +13,14 @@ import (
 
 func MP4(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMP4(&c.Header) {
+	if !isMP4(c.Header) {
 		return nil, nil
 	}
 	return parseMP4(c.File, c.ParsedLayout)
 }
 
-func isMP4(hdr *[0xffff]byte) bool {
+func isMP4(b []byte) bool {
 
-	b := *hdr
 	// TODO what is right magic bytes? just guessing
 	if b[0] != 0 || b[1] != 0 || b[2] != 0 {
 		if b[3] != 0x18 && b[3] != 0x20 {

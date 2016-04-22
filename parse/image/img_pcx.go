@@ -23,15 +23,14 @@ var (
 
 func PCX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPCX(&c.Header) {
+	if !isPCX(c.Header) {
 		return nil, nil
 	}
 	return parsePCX(c.File, c.ParsedLayout)
 }
 
-func isPCX(hdr *[0xffff]byte) bool {
+func isPCX(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0xa {
 		return false
 	}

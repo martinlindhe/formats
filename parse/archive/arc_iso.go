@@ -10,16 +10,15 @@ import (
 
 func ISO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isISO(&c.Header) {
+	if !isISO(c.Header) {
 		return nil, nil
 	}
 	return parseISO(c.File, c.ParsedLayout)
 }
 
-func isISO(hdr *[0xffff]byte) bool {
+func isISO(b []byte) bool {
 
 	pos := 0x8000
-	b := *hdr
 	if b[pos] != 1 || b[pos+1] != 'C' || b[pos+2] != 'D' {
 		return false
 	}

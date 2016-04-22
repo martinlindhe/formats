@@ -10,15 +10,14 @@ import (
 
 func PDF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isPDF(&c.Header) {
+	if !isPDF(c.Header) {
 		return nil, nil
 	}
 	return parsePDF(c.File, c.ParsedLayout)
 }
 
-func isPDF(hdr *[0xffff]byte) bool {
+func isPDF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != '%' || b[1] != 'P' || b[2] != 'D' || b[3] != 'F' {
 		return false
 	}

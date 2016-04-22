@@ -67,15 +67,14 @@ var (
 
 func MachO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMachO(&c.Header) {
+	if !isMachO(c.Header) {
 		return nil, nil
 	}
 	return parseMachO(c.File, c.ParsedLayout)
 }
 
-func isMachO(hdr *[0xffff]byte) bool {
+func isMachO(b []byte) bool {
 
-	b := *hdr
 	val := binary.LittleEndian.Uint32(b[:])
 	if val == MH_MAGIC || val == MH_MAGIC_64 || val == MH_CIGAM || val == MH_CIGAM_64 {
 		return true

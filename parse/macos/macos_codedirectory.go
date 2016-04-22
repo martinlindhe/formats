@@ -10,15 +10,14 @@ import (
 
 func CodeDirectory(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isCodeDirectory(&c.Header) {
+	if !isCodeDirectory(c.Header) {
 		return nil, nil
 	}
 	return parseCodeDirectory(c.File, c.ParsedLayout)
 }
 
-func isCodeDirectory(hdr *[0xffff]byte) bool {
+func isCodeDirectory(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0xfa || b[1] != 0xde || b[2] != 0x0c {
 		if b[3] != 0x01 && b[3] != 0x02 {
 			return false

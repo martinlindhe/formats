@@ -12,15 +12,14 @@ import (
 
 func GnuPG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGPG(&c.Header) {
+	if !isGPG(c.Header) {
 		return nil, nil
 	}
 	return parseGPG(c.File, c.ParsedLayout)
 }
 
-func isGPG(hdr *[0xffff]byte) bool {
+func isGPG(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0x99 || b[1] != 1 {
 		return false
 	}

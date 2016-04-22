@@ -10,15 +10,14 @@ import (
 
 func SevenZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isSevenZIP(&c.Header) {
+	if !isSevenZIP(c.Header) {
 		return nil, nil
 	}
 	return parseSevenZIP(c.File, c.ParsedLayout)
 }
 
-func isSevenZIP(hdr *[0xffff]byte) bool {
+func isSevenZIP(b []byte) bool {
 
-	b := *hdr
 	if b[0] != '7' || b[1] != 'z' || b[2] != 0xbc || b[3] != 0xaf ||
 		b[4] != 0x27 || b[5] != 0x1c {
 		return false

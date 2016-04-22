@@ -10,15 +10,14 @@ import (
 
 func MKV(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isMKV(&c.Header) {
+	if !isMKV(c.Header) {
 		return nil, nil
 	}
 	return parseMKV(c.File, c.ParsedLayout)
 }
 
-func isMKV(hdr *[0xffff]byte) bool {
+func isMKV(b []byte) bool {
 
-	b := *hdr
 	// XXX what is magic sequence? just guessing
 	if b[0] != 0x1a || b[1] != 0x45 || b[2] != 0xdf || b[3] != 0xa3 {
 		return false

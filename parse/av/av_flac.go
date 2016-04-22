@@ -10,15 +10,14 @@ import (
 
 func FLAC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isFLAC(&c.Header) {
+	if !isFLAC(c.Header) {
 		return nil, nil
 	}
 	return parseFLAC(c.File, c.ParsedLayout)
 }
 
-func isFLAC(hdr *[0xffff]byte) bool {
+func isFLAC(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'f' || b[1] != 'L' || b[2] != 'a' || b[3] != 'C' {
 		return false
 	}

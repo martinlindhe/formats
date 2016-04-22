@@ -12,15 +12,14 @@ import (
 
 func HLP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isHLP(&c.Header) {
+	if !isHLP(c.Header) {
 		return nil, nil
 	}
 	return parseHLP(c.File, c.ParsedLayout)
 }
 
-func isHLP(hdr *[0xffff]byte) bool {
+func isHLP(b []byte) bool {
 
-	b := *hdr
 	// TODO what is right magic bytes? just guessing
 	if b[0] != 0x3f || b[1] != 0x5f || b[2] != 3 || b[3] != 0 {
 		return false

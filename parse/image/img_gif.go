@@ -54,15 +54,14 @@ const (
 
 func GIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGIF(&c.Header) {
+	if !isGIF(c.Header) {
 		return nil, nil
 	}
 	return parseGIF(c)
 }
 
-func isGIF(hdr *[0xffff]byte) bool {
+func isGIF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'G' || b[1] != 'I' || b[2] != 'F' || b[3] != '8' {
 		return false
 	}

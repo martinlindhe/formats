@@ -12,15 +12,14 @@ import (
 
 func ICNS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isICNS(&c.Header) {
+	if !isICNS(c.Header) {
 		return nil, nil
 	}
 	return parseICNS(c.File, c.ParsedLayout)
 }
 
-func isICNS(hdr *[0xffff]byte) bool {
+func isICNS(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'i' || b[1] != 'c' || b[2] != 'n' || b[3] != 's' {
 		return false
 	}

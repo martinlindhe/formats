@@ -11,15 +11,14 @@ import (
 
 func RIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRIFF(&c.Header) {
+	if !isRIFF(c.Header) {
 		return nil, nil
 	}
 	return parseRIFF(c.File, c.ParsedLayout)
 }
 
-func isRIFF(hdr *[0xffff]byte) bool {
+func isRIFF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'R' || b[1] != 'I' || b[2] != 'F' || b[3] != 'F' {
 		return false
 	}

@@ -15,15 +15,14 @@ import (
 
 func GnuMO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGnuMO(&c.Header) {
+	if !isGnuMO(c.Header) {
 		return nil, nil
 	}
 	return parseGnuMO(c.File, c.ParsedLayout)
 }
 
-func isGnuMO(hdr *[0xffff]byte) bool {
+func isGnuMO(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 0xde && b[1] == 0x12 && b[2] == 4 && b[3] == 0x95 {
 		return true // le
 	}

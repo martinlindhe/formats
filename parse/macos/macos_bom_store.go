@@ -12,15 +12,14 @@ import (
 
 func BOMStore(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isBOMStore(&c.Header) {
+	if !isBOMStore(c.Header) {
 		return nil, nil
 	}
 	return parseBOMStore(c.File, c.ParsedLayout)
 }
 
-func isBOMStore(hdr *[0xffff]byte) bool {
+func isBOMStore(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'B' || b[1] != 'O' || b[2] != 'M' || b[3] != 'S' ||
 		b[4] != 't' || b[5] != 'o' || b[6] != 'r' || b[7] != 'e' {
 		return false

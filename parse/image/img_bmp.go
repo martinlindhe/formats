@@ -28,15 +28,14 @@ var (
 
 func BMP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isBMP(&c.Header) {
+	if !isBMP(c.Header) {
 		return nil, nil
 	}
 	return parseBMP(c.File, c.ParsedLayout)
 }
 
-func isBMP(hdr *[0xffff]byte) bool {
+func isBMP(b []byte) bool {
 
-	b := *hdr
 	return b[0] == 'B' && b[1] == 'M'
 }
 

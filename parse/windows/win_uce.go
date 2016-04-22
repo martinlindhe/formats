@@ -12,15 +12,14 @@ import (
 
 func UCE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isUCE(&c.Header) {
+	if !isUCE(c.Header) {
 		return nil, nil
 	}
 	return parseUCE(c.File, c.ParsedLayout)
 }
 
-func isUCE(hdr *[0xffff]byte) bool {
+func isUCE(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'U' || b[1] != 'C' || b[2] != 'E' || b[3] != 'X' {
 		return false
 	}

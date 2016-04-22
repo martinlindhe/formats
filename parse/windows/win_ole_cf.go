@@ -19,15 +19,14 @@ import (
 
 func OLECF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isOLECF(&c.Header) {
+	if !isOLECF(c.Header) {
 		return nil, nil
 	}
 	return parseOLECF(c.File, c.ParsedLayout)
 }
 
-func isOLECF(hdr *[0xffff]byte) bool {
+func isOLECF(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0xd0 || b[1] != 0xcf || b[2] != 0x11 || b[3] != 0xe0 ||
 		b[4] != 0xa1 || b[5] != 0xb1 || b[6] != 0x1a || b[7] != 0xe1 {
 		return false

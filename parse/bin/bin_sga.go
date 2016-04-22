@@ -13,15 +13,14 @@ import (
 
 func SGA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isSGA(&c.Header) {
+	if !isSGA(c.Header) {
 		return nil, nil
 	}
 	return parseSGA(c.File, c.ParsedLayout)
 }
 
-func isSGA(hdr *[0xffff]byte) bool {
+func isSGA(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 'S' && b[1] == 'G' && b[2] == 'A' && b[3] == '3' {
 		return true
 	}

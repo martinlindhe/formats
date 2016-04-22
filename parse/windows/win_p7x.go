@@ -12,15 +12,14 @@ import (
 
 func P7X(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isP7X(&c.Header) {
+	if !isP7X(c.Header) {
 		return nil, nil
 	}
 	return parseP7X(c.File, c.ParsedLayout)
 }
 
-func isP7X(hdr *[0xffff]byte) bool {
+func isP7X(b []byte) bool {
 
-	b := *hdr
 	// XXX just guessing
 	if b[0] != 'P' || b[1] != 'K' || b[2] != 'C' || b[3] != 'X' {
 		return false

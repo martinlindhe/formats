@@ -13,15 +13,14 @@ import (
 
 func XBF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isXBF(&c.Header) {
+	if !isXBF(c.Header) {
 		return nil, nil
 	}
 	return parseXBF(c.File, c.ParsedLayout)
 }
 
-func isXBF(hdr *[0xffff]byte) bool {
+func isXBF(b []byte) bool {
 
-	b := *hdr
 	// XXX just guessing
 	if b[0] != 'X' || b[1] != 'B' || b[2] != 'F' || b[3] != 0 {
 		return false

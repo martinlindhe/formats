@@ -15,15 +15,14 @@ import (
 
 func DXBC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isDXBC(&c.Header) {
+	if !isDXBC(c.Header) {
 		return nil, nil
 	}
 	return parseDXBC(c.File, c.ParsedLayout)
 }
 
-func isDXBC(hdr *[0xffff]byte) bool {
+func isDXBC(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'D' || b[1] != 'X' || b[2] != 'B' || b[3] != 'C' {
 		return false
 	}

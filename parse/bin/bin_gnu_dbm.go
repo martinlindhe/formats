@@ -13,15 +13,14 @@ import (
 
 func GnuDBM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isGnuDBM(&c.Header) {
+	if !isGnuDBM(c.Header) {
 		return nil, nil
 	}
 	return parseGnuDBM(c.File, c.ParsedLayout)
 }
 
-func isGnuDBM(hdr *[0xffff]byte) bool {
+func isGnuDBM(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 0xce && b[1] == 0x9a && b[2] == 0x57 && b[3] == 0x13 {
 		return true // v1.x le
 	}

@@ -12,15 +12,14 @@ import (
 
 func N64ROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isN64ROM(&c.Header) {
+	if !isN64ROM(c.Header) {
 		return nil, nil
 	}
 	return parseN64ROM(c.File, c.ParsedLayout)
 }
 
-func isN64ROM(hdr *[0xffff]byte) bool {
+func isN64ROM(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0x80 || b[1] != 0x37 || b[2] != 0x12 || b[3] != 0x40 {
 		return false
 	}

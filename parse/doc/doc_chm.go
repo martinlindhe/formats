@@ -12,15 +12,14 @@ import (
 
 func CHM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isCHM(&c.Header) {
+	if !isCHM(c.Header) {
 		return nil, nil
 	}
 	return parseCHM(c.File, c.ParsedLayout)
 }
 
-func isCHM(hdr *[0xffff]byte) bool {
+func isCHM(b []byte) bool {
 
-	b := *hdr
 	// TODO what is right magic bytes? just guessing
 	if b[0] != 'I' || b[1] != 'T' || b[2] != 'S' || b[3] != 'F' {
 		return false

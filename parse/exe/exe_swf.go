@@ -10,15 +10,14 @@ import (
 
 func SWF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isSWF(&c.Header) {
+	if !isSWF(c.Header) {
 		return nil, nil
 	}
 	return parseSWF(c.File, c.ParsedLayout)
 }
 
-func isSWF(hdr *[0xffff]byte) bool {
+func isSWF(b []byte) bool {
 
-	b := *hdr
 	if b[0] == 'F' || b[0] == 'C' || b[0] == 'Z' {
 		if b[1] == 'W' && b[2] == 'S' {
 			return true

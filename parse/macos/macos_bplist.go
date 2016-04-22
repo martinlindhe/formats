@@ -14,15 +14,14 @@ import (
 
 func BPLIST(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isBPLIST(&c.Header) {
+	if !isBPLIST(c.Header) {
 		return nil, nil
 	}
 	return parseBPLIST(c.File, c.ParsedLayout)
 }
 
-func isBPLIST(hdr *[0xffff]byte) bool {
+func isBPLIST(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'b' || b[1] != 'p' || b[2] != 'l' || b[3] != 'i' ||
 		b[4] != 's' || b[5] != 't' {
 		return false

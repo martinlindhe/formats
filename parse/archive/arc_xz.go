@@ -10,15 +10,14 @@ import (
 
 func XZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isXZ(&c.Header) {
+	if !isXZ(c.Header) {
 		return nil, nil
 	}
 	return parseXZ(c.File, c.ParsedLayout)
 }
 
-func isXZ(hdr *[0xffff]byte) bool {
+func isXZ(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 0xfd || b[1] != '7' || b[2] != 'z' || b[3] != 'X' ||
 		b[4] != 'Z' || b[5] != 0x00 {
 		return false

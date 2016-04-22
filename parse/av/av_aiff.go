@@ -13,16 +13,15 @@ import (
 
 func AIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isAIFF(&c.Header) {
+	if !isAIFF(c.Header) {
 		return nil, nil
 	}
 	return parseAIFF(c.File, c.ParsedLayout)
 }
 
-func isAIFF(hdr *[0xffff]byte) bool {
+func isAIFF(b []byte) bool {
 
 	// TODO also detect "AIFF" string
-	b := *hdr
 	if b[0] != 'F' || b[1] != 'O' || b[2] != 'R' || b[3] != 'M' {
 		return false
 	}

@@ -14,13 +14,13 @@ import (
 
 func DSStore(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isDSSTORE(&c.Header) {
+	if !isDSSTORE(c.Header) {
 		return nil, nil
 	}
 	return parseDSSTORE(c.File, c.ParsedLayout)
 }
 
-func isDSSTORE(hdr *[0xffff]byte) bool {
+func isDSSTORE(b []byte) bool {
 
 	return false
 	/*

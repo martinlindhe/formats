@@ -14,15 +14,14 @@ import (
 
 func ARI8(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isARI8(&c.Header) {
+	if !isARI8(c.Header) {
 		return nil, nil
 	}
 	return parseARI8(c.File, c.ParsedLayout)
 }
 
-func isARI8(hdr *[0xffff]byte) bool {
+func isARI8(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'A' || b[1] != 'R' || b[2] != 'I' || b[3] != '8' {
 		return false
 	}

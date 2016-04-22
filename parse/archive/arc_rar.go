@@ -8,15 +8,14 @@ import (
 
 func RAR(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRAR(&c.Header) {
+	if !isRAR(c.Header) {
 		return nil, nil
 	}
 	return parseRAR(c.File, c.ParsedLayout)
 }
 
-func isRAR(hdr *[0xffff]byte) bool {
+func isRAR(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'R' || b[1] != 'a' || b[2] != 'r' || b[3] != '!' {
 		return false
 	}

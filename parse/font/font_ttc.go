@@ -10,15 +10,14 @@ import (
 
 func TTC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isTTC(&c.Header) {
+	if !isTTC(c.Header) {
 		return nil, nil
 	}
 	return parseTTC(c.File, c.ParsedLayout)
 }
 
-func isTTC(hdr *[0xffff]byte) bool {
+func isTTC(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 't' || b[1] != 't' || b[2] != 'c' || b[3] != 'f' {
 		return false
 	}

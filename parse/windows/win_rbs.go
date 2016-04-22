@@ -14,15 +14,14 @@ import (
 
 func RBS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isRBS(&c.Header) {
+	if !isRBS(c.Header) {
 		return nil, nil
 	}
 	return parseRBS(c.File, c.ParsedLayout)
 }
 
-func isRBS(hdr *[0xffff]byte) bool {
+func isRBS(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'U' || b[1] != 'T' || b[2] != 'C' || b[3] != 'R' ||
 		b[4] != 'B' || b[5] != 'E' || b[6] != 'S' || b[7] != '3' {
 		return false

@@ -14,15 +14,14 @@ import (
 
 func XKM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isXKM(&c.Header) {
+	if !isXKM(c.Header) {
 		return nil, nil
 	}
 	return parseXKM(c.File, c.ParsedLayout)
 }
 
-func isXKM(hdr *[0xffff]byte) bool {
+func isXKM(b []byte) bool {
 
-	b := *hdr
 	if b[1] == 'm' && b[2] == 'k' && b[3] == 'x' {
 		return true // le
 	}

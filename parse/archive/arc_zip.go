@@ -10,15 +10,14 @@ import (
 
 func ZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
-	if !isZIP(&c.Header) {
+	if !isZIP(c.Header) {
 		return nil, nil
 	}
 	return parseZIP(c.File, c.ParsedLayout)
 }
 
-func isZIP(hdr *[0xffff]byte) bool {
+func isZIP(b []byte) bool {
 
-	b := *hdr
 	if b[0] != 'P' || b[1] != 'K' || b[2] != 3 || b[3] != 4 {
 		return false
 	}

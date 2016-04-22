@@ -8,8 +8,9 @@ package exe
 
 import (
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -79,13 +80,12 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 func parsePESections(file *os.File, pos int64, numberOfSections uint16) []parse.Layout {
 
+	res := []parse.Layout{}
 	sectionHeader := parse.Layout{
 		Offset: pos,
 		Length: int64(numberOfSections) * peSectionHeaderLen,
 		Info:   "section header",
 		Type:   parse.Group}
-
-	res := []parse.Layout{sectionHeader}
 
 	for i := 0; i < int(numberOfSections); i++ {
 
@@ -126,7 +126,7 @@ func parsePESections(file *os.File, pos int64, numberOfSections uint16) []parse.
 				{Low: 12, Length: 1, Info: "COMDAT data", Spec: "IMAGE_SCN_LNK_COMDAT"},
 				{Low: 13, Length: 4, Info: "reserved"},
 				{Low: 17, Length: 1, Info: "data referenced through the global pointer", Spec: "IMAGE_SCN_GPREL"},
-				{Low: 18, Length: 4, Info: "reserved"},
+				{Low: 18, Length: 2, Info: "reserved"},
 				{Low: 20, Length: 4, Info: "align x-bytes", Spec: "IMAGE_SCN_ALIGN_xBYTES"},
 				{Low: 24, Length: 1, Info: "extended relocations", Spec: "IMAGE_SCN_LNK_NRELOC_OVFL"},
 				{Low: 25, Length: 1, Info: "discardable", Spec: "IMAGE_SCN_MEM_DISCARDABLE"},
@@ -141,6 +141,8 @@ func parsePESections(file *os.File, pos int64, numberOfSections uint16) []parse.
 		sectionHeader.Childs = append(sectionHeader.Childs, chunk...)
 		pos += peSectionHeaderLen
 	}
+
+	res = append(res, sectionHeader)
 	return res
 }
 

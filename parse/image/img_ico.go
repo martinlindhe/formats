@@ -50,6 +50,7 @@ var (
 func parseICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	c.ParsedLayout.FileKind = parse.Image
+	c.ParsedLayout.MimeType = "image/x-ico"
 	pos := int64(0)
 	typeName := ""
 

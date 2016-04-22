@@ -47,7 +47,7 @@ func parsePSType1(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 		c.ParsedLayout.FormatName = "type1 program data"
 		layout = parse.Layout{
 			Offset: pos,
-			Length: 17, // XXX
+			Length: 23, // XXX
 			Info:   "header",
 			Type:   parse.Group,
 			Childs: []parse.Layout{
@@ -57,7 +57,6 @@ func parsePSType1(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	}
 
 	c.ParsedLayout.Layout = []parse.Layout{layout}
-
 	return &c.ParsedLayout, nil
 }
 

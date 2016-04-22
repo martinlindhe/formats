@@ -44,6 +44,7 @@ func parseBMP(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	pos := int64(0)
 	fileHeaderLen := int64(14)
 	pl.FileKind = parse.Image
+	pl.MimeType = "image/x-ms-bmp"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: fileHeaderLen,

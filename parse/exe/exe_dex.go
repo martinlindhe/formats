@@ -1,6 +1,10 @@
 package exe
 
 // Dalvik Executable (android java code)
+// Extensions: .dex
+// XXX .odex (optimized .dex), sample plz
+// https://en.wikipedia.org/wiki/Dalvik_%28software%29
+
 // STATUS: 1%
 
 import (
@@ -18,6 +22,12 @@ func DEX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 func isDEX(b []byte) bool {
 
+	/* XXX
+	0	string	dey\n
+	>0	regex	dey\n[0-9][0-9][0-9]\0	Dalvik dex file (optimized for host)
+	>4	string	>000			version %s
+	*/
+
 	if b[0] == 'd' && b[1] == 'e' && b[2] == 'x' && b[3] == '\n' &&
 		b[4] == '0' && b[5] == '3' && b[6] == '5' && b[7] == 0 {
 		return true
@@ -29,6 +39,7 @@ func parseDEX(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.Executable
+	pl.MimeType = "application/x-dex"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 112, // XXX

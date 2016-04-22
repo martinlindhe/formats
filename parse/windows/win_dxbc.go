@@ -36,7 +36,6 @@ func parseDXBC(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 
 	chunkCount, _ := parse.ReadUint32le(file, pos+28)
 	header := dxbcHeader(pos)
-	pl.Layout = []parse.Layout{header}
 	pos += header.Length
 
 	if chunkCount > 0 {
@@ -75,7 +74,7 @@ func parseDXBC(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 		}
 		pos += int64(chunkCount) * 4
 	}
-
+	pl.Layout = []parse.Layout{header}
 	return &pl, nil
 }
 

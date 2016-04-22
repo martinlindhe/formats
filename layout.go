@@ -131,8 +131,8 @@ func (mp *MatchingParsers) ChoseOne(file *os.File) (*parse.ParsedLayout, error) 
 
 	i := 1
 	fmt.Println("multiple parsers matched input file, please choose one:\n")
-	for name, _ := range parsers {
-		fmt.Printf("%d: %s\n", i, name)
+	for _, pl := range *mp {
+		fmt.Printf("%d: %s\n", i, pl.FormatName)
 		i++
 	}
 
@@ -145,24 +145,10 @@ func (mp *MatchingParsers) ChoseOne(file *os.File) (*parse.ParsedLayout, error) 
 		return nil, fmt.Errorf("invalid input")
 	}
 
-	fileSize, _ := fileSize(file)
-	layout := parse.ParsedLayout{
-		FileName: fileGetName(file),
-		FileSize: fileSize}
-	checker := parse.ParseChecker{
-		File:         file,
-		ParsedLayout: layout}
-
 	i = 1
-	for name, parser := range parsers {
+	for _, pl := range *mp {
 		if i == int(u) {
-
-			pl, err2 := parser(&checker)
-			if err2 != nil {
-				fmt.Println("XXX parser", name, "failed")
-				return nil, err2
-			}
-			return pl, nil
+			return &pl, nil
 		}
 		i++
 	}

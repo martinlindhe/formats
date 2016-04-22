@@ -105,6 +105,7 @@ var (
 		"pri":            windows.PRI,
 		"rbs":            windows.RBS,
 		"rsrc":           windows.RSRC,
+		"uce":            windows.UCE,
 		"xbf":            windows.XBF,
 		"tga":            image.TGA, // XXX has loose detection, so put it last for now
 	}

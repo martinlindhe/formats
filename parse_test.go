@@ -50,6 +50,9 @@ func TestParsedLayout(t *testing.T) {
 			fmt.Println("warning: ", layout.FormatName, "has no mime")
 		}
 
+		// XXX run "file --mime-type util.go"
+		// and show if mime differs. move that to separate test
+
 		for _, l := range layout.Layout {
 			if l.Type != parse.Group {
 				t.Fatalf("root level must be group %v, %s", l, path)

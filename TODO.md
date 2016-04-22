@@ -4,12 +4,14 @@
 * FIX  ARJ (parser broken)
 * FIX TTF detection (magic ids ??? - or just parse struct?)
 * improve MP4 / MOV parser
-
+* add mime types
 
 
 basic detection of the following formats:
   - MSI exec
-  - plist (macos)  = xml doc
+  - photoshop psd
+  - 3ds max .3ds file
+
 
 
 

@@ -7,7 +7,6 @@ package windows
 // STATUS: 1%
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -24,7 +23,6 @@ func RSRC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 func isRSRC(file *os.File) bool {
 
 	val, _ := parse.ReadUint32le(file, 0)
-	fmt.Printf("rsrc xxx = %04x\n", val)
 	if val == 0xbeefcace {
 		return true
 	}

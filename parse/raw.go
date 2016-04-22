@@ -2,6 +2,10 @@ package parse
 
 // for unrecognized files
 
+import (
+	"fmt"
+)
+
 func RAW(c *ParseChecker) (*ParsedLayout, error) {
 
 	format := "raw"
@@ -21,6 +25,10 @@ func RAW(c *ParseChecker) (*ParsedLayout, error) {
 		Childs: []Layout{
 			{Offset: pos, Length: 0, Info: "data", Type: Bytes},
 		}}}
+
+	val, _ := ReadUint32le(c.File, 0)
+	sig, _, _ := ReadZeroTerminatedASCIIUntil(c.File, 0, 4)
+	c.ParsedLayout.FormatName += fmt.Sprintf(" [%08x, %s]", val, sig)
 
 	return &c.ParsedLayout, nil
 }

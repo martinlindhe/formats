@@ -6,7 +6,6 @@ package bin
 // STATUS: 1%
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -23,7 +22,6 @@ func MapleDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 func isMapleDB(file *os.File) bool {
 
 	val, _ := parse.ReadUint32le(file, 0)
-	fmt.Printf("val %08x", val)
 	if val == 0x00040000 {
 		return true
 	}

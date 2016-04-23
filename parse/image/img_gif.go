@@ -2,6 +2,7 @@ package image
 
 // STATUS: 90%
 
+// XXX problems parsing samples/images/gif/gif_89a_macos_letter_bg.gif
 // XXX problems parsing samples/images/gif/gif_89a_005_with_application.gif
 
 import (

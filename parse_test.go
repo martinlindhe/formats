@@ -15,7 +15,8 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples"
+	// searchDir := "./samples"
+	searchDir := "/Users/m/Downloads/old-windows/Windows 3.11"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -24,6 +25,10 @@ func TestParsedLayout(t *testing.T) {
 		}
 
 		if fi.IsDir() {
+			return nil
+		}
+
+		if fi.Size() == 0 {
 			return nil
 		}
 
@@ -52,22 +57,23 @@ func TestParsedLayout(t *testing.T) {
 		assert.Equal(t, false, layout.FileKind == 0)
 
 		if layout.MimeType == "" {
-
-			// ask "file" about mime type
-			filemagicMime, _ := runCommandReturnStdout("file --mime-type " + path)
-			filemagicMime = strings.TrimSpace(filemagicMime)
-			res := strings.Split(filemagicMime, " ")
-			mime := ""
-			if len(res) > 1 {
-				mime = res[1]
-			} else {
-				mime = filemagicMime
-			}
-			if filemagicMime != "" {
-				t.Log("warning:", layout.FormatName, "has no mime. file suggests", mime)
-			} else {
-				t.Log("warning:", layout.FormatName, "has no mime")
-			}
+			/*
+				// ask "file" about mime type
+				filemagicMime, _ := runCommandReturnStdout("file --mime-type " + path)
+				filemagicMime = strings.TrimSpace(filemagicMime)
+				res := strings.Split(filemagicMime, " ")
+				mime := ""
+				if len(res) > 1 {
+					mime = res[1]
+				} else {
+					mime = filemagicMime
+				}
+				if filemagicMime != "" {
+					t.Log("warning:", layout.FormatName, "has no mime. file suggests", mime)
+				} else {
+					t.Log("warning:", layout.FormatName, "has no mime")
+				}
+			*/
 		}
 
 		for _, l := range layout.Layout {
@@ -96,7 +102,7 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
 			}
 			if l.Offset+l.Length > layout.FileSize {
-				t.Fatalf("%s data extends above end of file with %d bytes", l.Info, layout.FileSize-(l.Offset+l.Length))
+				t.Fatalf("%s data extends above end of file with %d bytes in %s", l.Info, layout.FileSize-(l.Offset+l.Length), path)
 			}
 			sum := int64(0)
 			for _, child := range l.Childs {

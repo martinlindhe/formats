@@ -77,6 +77,7 @@ var (
 		"python":         exe.PythonBytecode,
 		"swf":            exe.SWF,
 		"vbe":            exe.VBE,
+		"dfont":          font.DFont,
 		"eot":            font.EOT,
 		"otf":            font.OTF,
 		"pfb":            font.PFB,
@@ -87,6 +88,7 @@ var (
 		"woff2":          font.WOFF2,
 		"x11-snf":        font.X11FontSNF,
 		"bmp":            image.BMP,
+		"bpg":            image.BPG,
 		"gif":            image.GIF,
 		"icns":           image.ICNS,
 		"ico":            image.ICO,
@@ -95,7 +97,6 @@ var (
 		"png":            image.PNG,
 		"tga":            image.TGA, // XXX has too loose detection. thinks samples/images/ico/icon_003_win2k_cross.cur is tga!
 		"tiff":           image.TIFF,
-		"webp":           image.WebP,
 		"xcursor":        image.XCursor,
 		"bom_store":      macos.BOMStore,
 		"bplist":         macos.BPLIST,

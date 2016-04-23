@@ -81,7 +81,7 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 	}
 
 	line := 1
-	maxLines := 100
+	maxLines := 50
 	for {
 		_, len, err := ReadBytesUntilNewline(c.File, pos)
 		if err != nil {
@@ -104,7 +104,7 @@ func parseText(c *ParseChecker) (*ParsedLayout, error) {
 			break
 		}
 		if line >= maxLines {
-			fmt.Println("text: only mapping the first", maxLines, "lines")
+			// fmt.Println("text: only mapping the first", maxLines, "lines")
 			break
 		}
 	}

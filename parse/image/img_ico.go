@@ -15,6 +15,13 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
+var (
+	iconTypes = map[uint16]string{
+		1: "icon",
+		2: "cursor",
+	}
+)
+
 func ICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	if !isICO(c.Header) {
@@ -40,30 +47,17 @@ func isICO(b []byte) bool {
 	return true
 }
 
-var (
-	iconTypes = map[byte]string{
-		1: "icon",
-		2: "cursor",
-	}
-)
-
 func parseICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	c.ParsedLayout.FileKind = parse.Image
 	c.ParsedLayout.MimeType = "image/x-ico"
 	pos := int64(0)
-	typeName := ""
 
 	hdr := readIconHeader(c.Header)
-	switch hdr[1] {
-	case 1:
-		typeName = "icon"
-	case 2:
-		typeName = "cursor"
-	default:
-		typeName = "unknown"
+	typeName := "?"
+	if val, ok := iconTypes[hdr[1]]; ok {
+		typeName = val
 	}
-
 	fileHeader := parse.Layout{
 		Offset: pos,
 		Length: 6,

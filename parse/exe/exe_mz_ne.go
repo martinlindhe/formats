@@ -14,11 +14,11 @@ import (
 
 var (
 	neTargetOS = map[byte]string{
-		1: "OS/2",
-		2: "Windows",
-		3: "European MS-DOS 4.x",
-		4: "Windows 386",
-		5: "BOSS", // Borland Operating System Services
+		1: "os/2",
+		2: "windows",
+		3: "european ms-dos 4.x",
+		4: "windows 386",
+		5: "boss", // Borland Operating System Services
 	}
 
 	neResourceType = map[uint16]string{
@@ -135,45 +135,47 @@ func parseMZ_NEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	fastloadAreaOffset, _ := parse.ReadUint16le(file, pos+56)
 	fastloadAreaLength, _ := parse.ReadUint16le(file, pos+58)
 
-	// XXX offset seems wrong
-	res = append(res, parse.Layout{
-		Offset: int64(fastloadAreaOffset) * 16,
-		Length: int64(fastloadAreaLength),
-		Info:   "fast-load area", // XXX
-		Type:   parse.Group,
-		Childs: []parse.Layout{
-			{Offset: int64(fastloadAreaOffset) * 16, Length: int64(fastloadAreaLength), Info: "fast-load data", Type: parse.Bytes},
-		}})
+	if fastloadAreaLength > 0 {
+		// XXX offset seems wrong
+		res = append(res, parse.Layout{
+			Offset: int64(fastloadAreaOffset) * 16,
+			Length: int64(fastloadAreaLength),
+			Info:   "fast-load area", // XXX
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: int64(fastloadAreaOffset) * 16, Length: int64(fastloadAreaLength), Info: "fast-load data", Type: parse.Bytes},
+			}})
+	}
 
 	return res, nil
 }
 
-func parseNEModuleReferenceTable(offset int64, count uint16) *parse.Layout {
+func parseNEModuleReferenceTable(pos int64, count uint16) *parse.Layout {
 
 	res := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: int64(count) * 2,
 		Info:   "NE module reference table",
 		Type:   parse.Group}
 
 	for i := uint16(1); i <= count; i++ {
 		res.Childs = append(res.Childs, parse.Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: 2,
 			Info:   "module reference " + fmt.Sprintf("%d", i),
 			Type:   parse.Uint16le})
-		offset += 2
+		pos += 2
 	}
 	return &res
 }
 
-func parseNEEntryTable(file *os.File, offset int64, length uint16) *parse.Layout {
+func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 
 	res := parse.Layout{
-		Offset: offset,
-		Length: int64(length),
-		Info:   "NE entry table",
-		Type:   parse.Group}
+		Offset: pos,
+		// Length: int64(length),
+		Info: "NE entry table",
+		Type: parse.Group}
 
 	// The entry-table data is organized by bundle, each of which begins with
 	// a 2-byte header. The first byte of the header specifies the number of
@@ -184,78 +186,71 @@ func parseNEEntryTable(file *os.File, offset int64, length uint16) *parse.Layout
 	// but refers, instead, to a constant defined within the module. If the
 	// value in this byte is neither 0FFh nor 0FEh, it is a segment index.
 
-	entryTableLen := 0
-	for entryTableLen < int(length) {
+	for {
 
-		entries, _ := parse.ReadUint8(file, offset)
-		entryTableLen += 1
+		items, _ := parse.ReadUint8(file, pos)
+		segNumber, _ := parse.ReadUint8(file, pos+1)
 
-		segNumber, _ := parse.ReadUint8(file, offset+1)
-		entryTableLen += 1
-
-		if entries == 0 {
+		if items == 0 {
+			// NOTE: tagging the empty "items" block as end marker
 			res.Childs = append(res.Childs, parse.Layout{
-				Offset: offset,
-				Length: 2,
+				Offset: pos,
+				Length: 1,
 				Info:   "end marker",
 				Type:   parse.Uint16le})
-			entryTableLen += 2
-			offset += 2
-			continue
+			pos += 1
+			break
 		}
 
 		res.Childs = append(res.Childs, []parse.Layout{
-			{Offset: offset, Length: 1, Info: "items", Type: parse.Uint8},
-			{Offset: offset + 1, Length: 1, Info: "segment", Type: parse.Uint8},
+			{Offset: pos, Length: 1, Info: "items", Type: parse.Uint8},
+			{Offset: pos + 1, Length: 1, Info: "segment", Type: parse.Uint8},
 		}...)
+		pos += 2
 
-		offset += 2
+		for i := 1; i <= int(items); i++ {
 
-		for i := 1; i <= int(entries); i++ {
 			switch segNumber {
 			case 0xff:
-				entryTableLen += 6
 
 				id := fmt.Sprintf("%d", i)
 				res.Childs = append(res.Childs, []parse.Layout{
-					{Offset: offset, Length: 1, Info: "movable " + id + " flags", Type: parse.Uint8, Masks: []parse.Mask{
+					{Offset: pos, Length: 1, Info: "movable " + id + " flags", Type: parse.Uint8, Masks: []parse.Mask{
 						{Low: 0, Length: 1, Info: "exported"},
 						{Low: 1, Length: 1, Info: "global data segment"},
 						{Low: 2, Length: 1, Info: "reserved"},
 						{Low: 3, Length: 5, Info: "ring transition words"},
 					}},
-					{Offset: offset + 1, Length: 2, Info: "movable " + id + " int3f", Type: parse.Uint16le},
-					{Offset: offset + 3, Length: 1, Info: "movable " + id + " segment", Type: parse.Uint8},
-					{Offset: offset + 4, Length: 2, Info: "movable " + id + " offset", Type: parse.Uint16le},
+					{Offset: pos + 1, Length: 2, Info: "movable " + id + " int3f", Type: parse.Uint16le},
+					{Offset: pos + 3, Length: 1, Info: "movable " + id + " segment", Type: parse.Uint8},
+					{Offset: pos + 4, Length: 2, Info: "movable " + id + " offset", Type: parse.Uint16le},
 				}...)
-				offset += 6
+				pos += 6
 
-			case 0xfe:
-				// panic("  TODO   refer to constant defined within module")
-				// struct entry_tab_fixed_s
-				// unsigned char flags;
-				// unsigned short offset;
-
+				/*			case 0xfe:
+							// panic("  TODO   refer to constant defined within module")
+							// struct entry_tab_fixed_s
+							// unsigned char flags;
+							// unsigned short offset;
+				*/
 			default:
-				if entries > 1 {
-					// panic("sample please! entries > 1")
-				}
-				//Log("  TODO segment index " + nSegNumber);
+				fmt.Println("  TODO segment index ", segNumber, ", entries", items)
 				//NOTE: only sample i seen was empty here
 				// panic("xxx")
 			}
 		}
 	}
 
+	res.Length = int64(length)
 	return &res
 }
 
-func parseNESegmentTable(file *os.File, offset int64, count uint16) *parse.Layout {
+func parseNESegmentTable(file *os.File, pos int64, count uint16) *parse.Layout {
 
 	segmentLen := int64(8)
 
 	res := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Length: segmentLen * int64(count),
 		Info:   "NE segment table",
 		Type:   parse.Group}
@@ -264,9 +259,9 @@ func parseNESegmentTable(file *os.File, offset int64, count uint16) *parse.Layou
 		id := fmt.Sprintf("%d", i)
 
 		res.Childs = append(res.Childs, []parse.Layout{
-			{Offset: offset, Length: 2, Info: "segment " + id + " offset", Type: parse.Uint16le}, // in segments. 0 = no data exists
-			{Offset: offset + 2, Length: 2, Info: "segment " + id + " length", Type: parse.Uint16le},
-			{Offset: offset + 4, Length: 2, Info: "segment " + id + " flags", Type: parse.Uint16le, Masks: []parse.Mask{
+			{Offset: pos, Length: 2, Info: "segment " + id + " offset", Type: parse.Uint16le}, // in segments. 0 = no data exists
+			{Offset: pos + 2, Length: 2, Info: "segment " + id + " length", Type: parse.Uint16le},
+			{Offset: pos + 4, Length: 2, Info: "segment " + id + " flags", Type: parse.Uint16le, Masks: []parse.Mask{
 				{Low: 0, Length: 1, Info: "segment " + id + " type"}, // 0=code, 1=data
 				{Low: 1, Length: 1, Info: "allocated"},
 				{Low: 2, Length: 1, Info: "loaded"},
@@ -280,34 +275,34 @@ func parseNESegmentTable(file *os.File, offset int64, count uint16) *parse.Layou
 				{Low: 12, Length: 1, Info: "discardable"},
 				{Low: 13, Length: 3, Info: "reserved"},
 			}},
-			{Offset: offset + 6, Length: 2, Info: "segment " + id + " min alloc size", Type: parse.Uint16le}, // 0 = 64k
+			{Offset: pos + 6, Length: 2, Info: "segment " + id + " min alloc size", Type: parse.Uint16le}, // 0 = 64k
 		}...)
-		offset += segmentLen
+		pos += segmentLen
 	}
 
 	return &res
 }
 
-func parseNEImportedTable(file *os.File, offset int64) *parse.Layout {
+func parseNEImportedTable(file *os.File, pos int64) *parse.Layout {
 
 	res := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Info:   "NE imported names table",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: offset, Length: 1, Info: "reserved", Type: parse.Uint8}, // XXX ?
+			{Offset: pos, Length: 1, Info: "reserved", Type: parse.Uint8}, // XXX ?
 		}}
 
-	offset++
+	pos++
 
 	var len byte
 
 	totLen := int64(1)
 	for {
 
-		len, _ = parse.ReadUint8(file, offset)
+		len, _ = parse.ReadUint8(file, pos)
 
-		b := parse.ReadBytesFrom(file, offset+1, int64(len))
+		b := parse.ReadBytesFrom(file, pos+1, int64(len))
 
 		subLen := int64(len) + 1
 		info := string(b)
@@ -321,13 +316,13 @@ func parseNEImportedTable(file *os.File, offset int64) *parse.Layout {
 		}
 
 		res.Childs = append(res.Childs, parse.Layout{
-			Offset: offset,
+			Offset: pos,
 			Length: subLen,
 			Info:   info,
 			Type:   subType,
 		})
 
-		offset += subLen
+		pos += subLen
 		totLen += subLen
 
 		if brk {
@@ -340,10 +335,10 @@ func parseNEImportedTable(file *os.File, offset int64) *parse.Layout {
 	return &res
 }
 
-func parseNEResidentTable(file *os.File, offset int64) *parse.Layout {
+func parseNEResidentTable(file *os.File, pos int64) *parse.Layout {
 
 	res := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Info:   "NE resident names table",
 		Type:   parse.Group}
 
@@ -351,21 +346,21 @@ func parseNEResidentTable(file *os.File, offset int64) *parse.Layout {
 	var len byte
 	for {
 
-		len, _ = parse.ReadUint8(file, offset)
+		len, _ = parse.ReadUint8(file, pos)
 		chunkLen := 1 + int64(len)
 
 		if len == 0 {
 			res.Childs = append(res.Childs,
-				parse.Layout{Offset: offset, Length: 1, Info: "end marker", Type: parse.Uint8})
+				parse.Layout{Offset: pos, Length: 1, Info: "end marker", Type: parse.Uint8})
 		} else {
 			res.Childs = append(res.Childs, []parse.Layout{
-				{Offset: offset, Length: 1 + int64(len), Info: "data", Type: parse.ASCIIC},
-				{Offset: offset + 1 + int64(len), Length: 2, Info: "ord", Type: parse.Uint16le}, // XXX ordinal value
+				{Offset: pos, Length: 1 + int64(len), Info: "data", Type: parse.ASCIIC},
+				{Offset: pos + 1 + int64(len), Length: 2, Info: "ord", Type: parse.Uint16le}, // XXX ordinal value
 			}...)
 			chunkLen += 2
 		}
 
-		offset += chunkLen
+		pos += chunkLen
 		residentLen += chunkLen
 
 		if len == 0 {
@@ -377,10 +372,10 @@ func parseNEResidentTable(file *os.File, offset int64) *parse.Layout {
 	return &res
 }
 
-func parseNENonResidentTable(file *os.File, offset int64, size uint16) *parse.Layout {
+func parseNENonResidentTable(file *os.File, pos int64, size uint16) *parse.Layout {
 
 	res := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Info:   "NE nonresident names table",
 		Type:   parse.Group}
 
@@ -388,22 +383,22 @@ func parseNENonResidentTable(file *os.File, offset int64, size uint16) *parse.La
 
 	var len byte
 	for {
-		len, _ = parse.ReadUint8(file, offset)
+		len, _ = parse.ReadUint8(file, pos)
 		if len == 0 {
 			res.Childs = append(res.Childs,
-				parse.Layout{Offset: offset, Length: 1, Info: "end marker", Type: parse.Uint8})
+				parse.Layout{Offset: pos, Length: 1, Info: "end marker", Type: parse.Uint8})
 			nonresidentLen += 1
 		} else {
 			res.Childs = append(res.Childs, []parse.Layout{
-				{Offset: offset, Length: 1 + int64(len), Info: "name", Type: parse.ASCIIC},
-				{Offset: offset + 1 + int64(len), Length: 2, Info: "ord", Type: parse.Uint16le},
+				{Offset: pos, Length: 1 + int64(len), Info: "name", Type: parse.ASCIIC},
+				{Offset: pos + 1 + int64(len), Length: 2, Info: "ord", Type: parse.Uint16le},
 			}...)
 		}
 		if len == 0 {
 			break
 		}
 		nonresidentLen += 1 + int64(len) + 2
-		offset += 1 + int64(len) + 2
+		pos += 1 + int64(len) + 2
 	}
 	if int64(size) != nonresidentLen {
 		fmt.Println("warning: NE nonresident table length not expected")
@@ -412,26 +407,26 @@ func parseNENonResidentTable(file *os.File, offset int64, size uint16) *parse.La
 	return &res
 }
 
-func parseNEResourceTable(file *os.File, offset int64, count uint16) *parse.Layout {
+func parseNEResourceTable(file *os.File, pos int64, count uint16) *parse.Layout {
 
 	res := parse.Layout{
-		Offset: offset,
+		Offset: pos,
 		Info:   "NE resource table",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
-			{Offset: offset, Length: 2, Info: "shift", Type: parse.Uint16le},
+			{Offset: pos, Length: 2, Info: "shift", Type: parse.Uint16le},
 		}}
 
 	len := int64(2)
-	offset += 2
+	pos += 2
 	tnameInfoLen := int64(12)
 
 	for {
 
-		resourceType, _ := parse.ReadUint16le(file, offset)
+		resourceType, _ := parse.ReadUint16le(file, pos)
 		if resourceType == 0 {
 			res.Childs = append(res.Childs, parse.Layout{
-				Offset: offset,
+				Offset: pos,
 				Length: 2,
 				Info:   "end marker",
 				Type:   parse.Uint16le})
@@ -439,7 +434,7 @@ func parseNEResourceTable(file *os.File, offset int64, count uint16) *parse.Layo
 			break
 		}
 
-		resourceCount, _ := parse.ReadUint16le(file, offset+2)
+		resourceCount, _ := parse.ReadUint16le(file, pos+2)
 
 		info := "type"
 		if val, ok := neResourceType[resourceType]; ok {
@@ -447,25 +442,25 @@ func parseNEResourceTable(file *os.File, offset int64, count uint16) *parse.Layo
 		}
 
 		res.Childs = append(res.Childs, []parse.Layout{ // TTYPEINFO
-			{Offset: offset, Length: 2, Info: info, Type: parse.Uint16le},
-			{Offset: offset + 2, Length: 2, Info: "resource count", Type: parse.Uint16le},
-			{Offset: offset + 4, Length: 4, Info: "reserved", Type: parse.Uint32le},
+			{Offset: pos, Length: 2, Info: info, Type: parse.Uint16le},
+			{Offset: pos + 2, Length: 2, Info: "resource count", Type: parse.Uint16le},
+			{Offset: pos + 4, Length: 4, Info: "reserved", Type: parse.Uint32le},
 		}...)
 
-		offset += 8
+		pos += 8
 		len += 8
 
 		for i := 0; i < int(resourceCount); i++ {
 			res.Childs = append(res.Childs, []parse.Layout{ // TNAMEINFO
-				{Offset: offset, Length: 2, Info: "offset", Type: parse.Uint16le},
-				{Offset: offset + 2, Length: 2, Info: "size", Type: parse.Uint16le},
-				{Offset: offset + 4, Length: 2, Info: "flags", Type: parse.Uint16le},
-				{Offset: offset + 6, Length: 2, Info: "id", Type: parse.Uint16le},
-				{Offset: offset + 8, Length: 2, Info: "reserved 1", Type: parse.Uint16le},
-				{Offset: offset + 10, Length: 2, Info: "reserved 2", Type: parse.Uint16le},
+				{Offset: pos, Length: 2, Info: "offset", Type: parse.Uint16le},
+				{Offset: pos + 2, Length: 2, Info: "size", Type: parse.Uint16le},
+				{Offset: pos + 4, Length: 2, Info: "flags", Type: parse.Uint16le},
+				{Offset: pos + 6, Length: 2, Info: "id", Type: parse.Uint16le},
+				{Offset: pos + 8, Length: 2, Info: "reserved 1", Type: parse.Uint16le},
+				{Offset: pos + 10, Length: 2, Info: "reserved 2", Type: parse.Uint16le},
 			}...)
 
-			offset += tnameInfoLen
+			pos += tnameInfoLen
 			len += tnameInfoLen
 		}
 	}

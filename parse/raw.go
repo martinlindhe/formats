@@ -14,9 +14,7 @@ func RAW(c *ParseChecker) (*ParsedLayout, error) {
 		format = "empty"
 	}
 
-	// TODO: make cmd/formats work without any Layout, to avoid a 0-length selected area
 	pos := int64(0)
-	c.ParsedLayout.FormatName = format
 	c.ParsedLayout.FileKind = Binary
 	c.ParsedLayout.MimeType = "application/octet-stream"
 	c.ParsedLayout.Layout = []Layout{{
@@ -30,7 +28,7 @@ func RAW(c *ParseChecker) (*ParsedLayout, error) {
 
 	val := binary.LittleEndian.Uint32(c.Header)
 	sig := string(c.Header[0:4])
-	c.ParsedLayout.FormatName += fmt.Sprintf(" [%08x, %s]", val, sig)
+	c.ParsedLayout.FormatName = fmt.Sprintf(" [%08x, %s]", val, sig) + " " + format
 
 	return &c.ParsedLayout, nil
 }

@@ -22,7 +22,7 @@ func REGF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 func isREGF(b []byte) bool {
 
-	if b[0] != 'R' || b[1] != 'E' || b[2] != 'G' || b[3] != 'F' {
+	if b[0] != 'r' || b[1] != 'e' || b[2] != 'g' || b[3] != 'f' {
 		return false
 	}
 	return true

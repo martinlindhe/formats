@@ -107,6 +107,7 @@ var (
 		"cat":            windows.CAT,
 		"dxbc":           windows.DXBC,
 		"elst":           windows.ELST,
+		"evtx":           windows.EVTX,
 		"faxc":           windows.FAXC,
 		"grp":            windows.GRP,
 		"gres":           windows.GRES,
@@ -116,6 +117,7 @@ var (
 		"ldmf":           windows.LDMF,
 		"lnk":            windows.LNK,
 		"mam":            windows.MAM,
+		"msft":           windows.MSFT,
 		"ole-cf":         windows.OLECF,
 		"p7x":            windows.P7X,
 		"pcmh":           windows.PCMH,
@@ -124,9 +126,11 @@ var (
 		"pri":            windows.PRI,
 		"rbs":            windows.RBS,
 		"regf":           windows.REGF,
+		"rlfs":           windows.RLFS,
 		"rsrc":           windows.RSRC,
 		"sdi":            windows.SDI,
 		"uce":            windows.UCE,
+		"wave":           windows.WAVE,
 		"xbf":            windows.XBF,
 	}
 )

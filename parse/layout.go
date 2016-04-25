@@ -36,6 +36,9 @@ const (
 	// timestamps
 	DOSDateTime
 
+	// positions
+	DOSOffsetSegment // ip:cs
+
 	// groups of bytes
 	Bytes
 	ASCII
@@ -68,27 +71,28 @@ const (
 
 var (
 	dataTypes = map[DataType]string{
-		Group:          "group",
-		Int8:           "int8",
-		Uint8:          "uint8",
-		Int16le:        "int16-le",
-		Uint16le:       "uint16-le",
-		Int32le:        "int32-le",
-		Uint32le:       "uint32-le",
-		Uint64le:       "uint64-le",
-		Uint16be:       "uint16-be",
-		Uint32be:       "uint32-be",
-		MajorMinor8:    "major.minor-8",
-		MajorMinor16le: "major.minor-16le",
-		MajorMinor16be: "major.minor-16be",
-		MajorMinor32le: "major.minor-32le",
-		MinorMajor16le: "minor.major-16le",
-		DOSDateTime:    "datetime.dos-32le",
-		Bytes:          "bytes",
-		ASCII:          "ASCII",
-		ASCIIC:         "ASCIIC",
-		ASCIIZ:         "ASCIIZ",
-		RGB:            "RGB",
+		Group:            "group",
+		Int8:             "int8",
+		Uint8:            "uint8",
+		Int16le:          "int16-le",
+		Uint16le:         "uint16-le",
+		Int32le:          "int32-le",
+		Uint32le:         "uint32-le",
+		Uint64le:         "uint64-le",
+		Uint16be:         "uint16-be",
+		Uint32be:         "uint32-be",
+		MajorMinor8:      "major.minor-8",
+		MajorMinor16le:   "major.minor-16le",
+		MajorMinor16be:   "major.minor-16be",
+		MajorMinor32le:   "major.minor-32le",
+		MinorMajor16le:   "minor.major-16le",
+		DOSDateTime:      "datetime-dos-32le",
+		DOSOffsetSegment: "offset.segment-dos-16le",
+		Bytes:            "bytes",
+		ASCII:            "ASCII",
+		ASCIIC:           "ASCIIC",
+		ASCIIZ:           "ASCIIZ",
+		RGB:              "RGB",
 	}
 	textEncodings = map[TextEncoding]string{
 		None:     "none",

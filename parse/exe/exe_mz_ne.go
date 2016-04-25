@@ -401,7 +401,7 @@ func parseNENonResidentTable(file *os.File, pos int64, size uint16) *parse.Layou
 		pos += 1 + int64(len) + 2
 	}
 	if int64(size) != nonresidentLen {
-		fmt.Println("warning: NE nonresident table length not expected")
+		fmt.Println("warning: NE nonresident table length expected ", int64(size), ", found", nonresidentLen)
 	}
 	res.Length = nonresidentLen
 	return &res

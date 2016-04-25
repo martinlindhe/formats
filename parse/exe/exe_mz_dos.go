@@ -8,6 +8,13 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
+var (
+	lzexeVersions = map[uint16]string{
+		0x3130: "0.9",  // "09"
+		0x3139: "0.91", // "91"
+	}
+)
+
 func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 
 	pos := int64(0x1c)
@@ -35,6 +42,8 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 	tok = string(b[pos : pos+4])
 	if tok == "LZ09" || tok == "LZ91" {
 
+		version, _ := parse.ReadToMap(file, parse.Uint16le, pos+2, lzexeVersions)
+
 		return []parse.Layout{{
 			Offset: pos,
 			Length: 6, // XXX
@@ -42,39 +51,25 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 			Type:   parse.Group,
 			Childs: []parse.Layout{
 				{Offset: pos, Length: 2, Info: "identifier", Type: parse.ASCII},
-				{Offset: pos + 2, Length: 2, Info: "version", Type: parse.ASCII},
+				{Offset: pos + 2, Length: 2, Info: "version = " + version, Type: parse.Uint16le},
 				{Offset: pos + 4, Length: 2, Info: "exe version", Type: parse.MajorMinor16le},
 			}}}
-
-		// XXX version
-		// "09" = v 0.9
-		// "91" = v 0.91
 	}
 
 	u32tok := binary.LittleEndian.Uint32(b[pos:])
 	if u32tok == 0x018a0001 {
 
-		fmt.Println("info: TOPSPEED sample plz!")
+		fmt.Println("info: exe-dos TOPSPEED compressed sample plz!")
 
 		return []parse.Layout{{
 			Offset: pos,
-			Length: 4, // XXX
-			Info:   "TOPSPEED header",
+			Length: 6,                 // XXX
+			Info:   "TOPSPEED header", // topspeed C 3.0 Crunch
 			Type:   parse.Group,
 			Childs: []parse.Layout{
 				{Offset: pos, Length: 4, Info: "identifier", Type: parse.Uint32le},
+				{Offset: pos + 4, Length: 2, Info: "id 2", Type: parse.Uint16le}, // 0x1565 ...
 			}}}
-		/*
-			return &Layout{
-				Offset: offset,
-				Length: 6,                 // XXX
-				Info:   "TOPSPEED header", // topspeed C 3.0 Crunch
-				Type:   Group,
-				Childs: []Layout{
-					Layout{Offset: offset, Length: 4, Info: "identifier", Type: parse.Uint32le},
-					Layout{Offset: offset + 4, Length: 2, Info: "id 2", Type: parse.Uint16le}, // 0x1565 ...
-				}}
-		*/
 	}
 
 	tlink1 := binary.LittleEndian.Uint16(b[pos:])
@@ -97,7 +92,7 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 	headerSizeInParagraphs := binary.LittleEndian.Uint16(b[pos+8:])
 	cs := binary.LittleEndian.Uint16(b[pos+22:])
 	ip := binary.LittleEndian.Uint16(b[pos+20:])
-	exePackOffset := (int64(headerSizeInParagraphs) * 16) // XXX hack
+	exePackOffset := (int64(headerSizeInParagraphs) * 16)
 	exePackSize := int64(cs)*16 + int64(ip)
 
 	exepackCheck := parse.ReadBytesFrom(file, exePackOffset+exePackSize-2, 2)

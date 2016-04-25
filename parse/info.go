@@ -129,6 +129,9 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	case DOSDateTime:
 		res += infoDOSDateTime(f, field)
 
+	case DOSOffsetSegment:
+		res += infoDOSOffsetSegment(f, field)
+
 	case Bytes:
 		res += infoBytes(f, field)
 
@@ -192,6 +195,16 @@ func infoDOSDateTime(f *os.File, field *Layout) string {
 	}
 	t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
 	return fmt.Sprintf("%v", t)
+}
+
+func infoDOSOffsetSegment(f *os.File, field *Layout) string {
+
+	var b [2]uint16
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	abs := b[1]*16 + b[0]
+	return fmt.Sprintf("%04x:%04x = %04x", b[1], b[0], abs)
 }
 
 func infoMajorMinor32le(f *os.File, field *Layout) string {

@@ -1,6 +1,7 @@
 package exe
 
 // Lua bytecode
+
 // STATUS: 1%
 
 import (

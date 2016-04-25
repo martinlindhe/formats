@@ -186,7 +186,7 @@ func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {
 	pos += peOptHeaderMainLen
 
 	if numberOfRva != 16 {
-		fmt.Println("error: odd number of RVA:s = " + fmt.Sprintf("%d", numberOfRva))
+		fmt.Println("error: expected 16 RVA:s, found " + fmt.Sprintf("%d", numberOfRva))
 	}
 
 	ddLen := int64(8)

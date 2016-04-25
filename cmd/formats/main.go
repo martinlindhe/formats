@@ -172,6 +172,18 @@ func uiLoop(file *os.File) {
 		refreshUI(file)
 	})
 
+	termui.Handle("/sys/kbd/?", func(termui.Event) {
+		// search
+		// XXX show input for search field
+
+		//q := "0x06 0x0E 0x1F"
+
+		// XXX find pos of sequence, and focus on it...
+		// XXX for this to work, we need a new browsing mode, which is "browse matches",
+		// where right-left button browse between the matches...
+		// XXX so, we need to create a ParsedLayout of the matches ..!
+	})
+
 	termui.Handle("/sys/wnd/resize", func(termui.Event) {
 		// XXX resize is bugged on some heights...
 		calcVisibleRows()

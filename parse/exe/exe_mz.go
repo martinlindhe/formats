@@ -3,7 +3,10 @@ package exe
 // STATUS: 60%
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/martinlindhe/formats/parse"
 )
@@ -133,6 +136,7 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, dosStub)
 
 	} else {
+		cs, _ := parse.ReadUint16le(c.File, pos+22)
 		relocItems, _ := parse.ReadUint16le(c.File, pos+6)
 		if relocItems > 0 {
 			pos = int64(relocOffset)
@@ -143,14 +147,45 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 				Type:   parse.Group}
 
 			for i := 1; i <= int(relocItems); i++ {
+				id := fmt.Sprintf("%d", i)
+
+				c.File.Seek(pos, os.SEEK_SET)
+
+				var b [2]uint16
+				if err := binary.Read(c.File, binary.LittleEndian, &b); err != nil && err != io.EOF {
+					return nil, err
+				}
+				fmt.Println("x = ", cs-b[1])
+				abs := (cs-b[1])*16 + b[0]
+
 				reloc.Childs = append(reloc.Childs, []parse.Layout{
-					{Offset: pos, Length: 2, Info: "offset " + fmt.Sprintf("%d", i), Type: parse.Uint16le},
-					{Offset: pos + 2, Length: 2, Info: "segment " + fmt.Sprintf("%d", i), Type: parse.Uint16le},
+					{Offset: pos, Length: 4, Info: "offset:segment " + id, Type: parse.DOSOffsetSegment},
 				}...)
+
+				// XXX section length ?
+				c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, parse.Layout{
+					Offset: int64(abs),
+					Length: 4,
+					Info:   "relocation " + id,
+					Type:   parse.Bytes})
 				pos += 4
 			}
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, reloc)
 		}
+
+		// XXX point to dos entry point
+		exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)
+		pos = exeStart
+		dosEntry := parse.Layout{
+			Offset: pos,
+			Length: 4, // XXX
+			Info:   "program",
+			Type:   parse.Group,
+			Childs: []parse.Layout{
+				{Offset: pos, Length: 4, Info: "entry point", Type: parse.Bytes},
+			}}
+
+		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, dosEntry)
 	}
 
 	c.ParsedLayout.Sort()

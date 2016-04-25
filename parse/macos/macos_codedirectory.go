@@ -18,10 +18,8 @@ func CodeDirectory(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 func isCodeDirectory(b []byte) bool {
 
-	if b[0] != 0xfa || b[1] != 0xde || b[2] != 0x0c {
-		if b[3] != 0x01 && b[3] != 0x02 {
-			return false
-		}
+	if b[0] != 0xfa || b[1] != 0xde || b[2] != 0x0c || (b[3] != 0x01 && b[3] != 0x02) {
+		return false
 	}
 	return true
 }

@@ -15,7 +15,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples"
+	searchDir := "./samples/exe"
 	//searchDir := "/usr/local"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {

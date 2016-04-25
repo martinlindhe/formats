@@ -155,19 +155,23 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 				if err := binary.Read(c.File, binary.LittleEndian, &b); err != nil && err != io.EOF {
 					return nil, err
 				}
-				fmt.Println("x = ", cs-b[1])
-				abs := (cs-b[1])*16 + b[0]
+				// XXX abs offset seems wrong
+				fmt.Println("x = ", hdrSizeInParagraphs+cs-b[1])
+				abs := (hdrSizeInParagraphs+cs-b[1])*16 + b[0]
 
 				reloc.Childs = append(reloc.Childs, []parse.Layout{
 					{Offset: pos, Length: 4, Info: "offset:segment " + id, Type: parse.DOSOffsetSegment},
 				}...)
 
-				// XXX section length ?
+				relocLen := int64(4) // XXX section length ?
 				c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, parse.Layout{
 					Offset: int64(abs),
-					Length: 4,
+					Length: relocLen,
 					Info:   "relocation " + id,
-					Type:   parse.Bytes})
+					Type:   parse.Group,
+					Childs: []parse.Layout{
+						{Offset: int64(abs), Length: relocLen, Info: "relocation " + id, Type: parse.Bytes},
+					}})
 				pos += 4
 			}
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, reloc)
@@ -175,6 +179,7 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 		// XXX point to dos entry point
 		exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)
+
 		pos = exeStart
 		dosEntry := parse.Layout{
 			Offset: pos,
@@ -192,137 +197,3 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 	return &c.ParsedLayout, nil
 }
-
-/*
-
-override public List<Chunk> GetFileStructure()
-{
-
-    ## XXXXX new exes:
-
-
-    // calculates real offset from virtual address
-    foreach (var tmp in sections) {
-        var chunk = new Chunk("Section " + tmp.Text);
-        chunk.length = tmp.length;
-        if (chunk.length > 0) {
-            tmp.realOffset = FileOffsetFromVirtualAddress(tmp.virtualOffset);
-            chunk.offset = tmp.realOffset;
-            res.Add(chunk);
-        }
-    }
-
-    // calculates real offset from virtual address
-    foreach (var tmp in dataDirectory) {
-        var chunk = new Chunk("DataDirectory " + tmp.Text);
-        chunk.length = tmp.length;
-
-        if (chunk.length > 0) {
-            tmp.realOffset = FileOffsetFromVirtualAddress(tmp.virtualOffset);
-            chunk.offset = tmp.realOffset;
-
-            // TODO use ImportChunk class or soemthing
-            if (tmp.Text == "Imports") {
-                var OriginalFirstThunk = new LittleEndian32BitChunk("Original First Thunk");
-                OriginalFirstThunk.offset = chunk.offset;
-                BaseStream.Position = OriginalFirstThunk.offset;
-                int OriginalFirstThunkValue = ReadInt32();
-
-                if (OriginalFirstThunkValue > 0) {
-                    long OriginalFirstThunkRealOffset = FileOffsetFromVirtualAddress(OriginalFirstThunkValue);
-                    //OriginalFirstThunk.Text += " real offset " + OriginalFirstThunkRealOffset.ToString("x8");
-
-                    var OriginalFirstData = new Chunk("Original First Data");
-                    OriginalFirstData.offset = OriginalFirstThunkRealOffset;
-                    OriginalFirstData.length = 6; // XXX empty-entry-terminated array
-
-                    OriginalFirstThunk.Nodes.Add(OriginalFirstData);
-                }
-
-
-                chunk.Nodes.Add(OriginalFirstThunk);
-
-                var TimeDateStamp = OriginalFirstThunk.RelativeToLittleEndianDateStamp("TimeDateStamp");
-                chunk.Nodes.Add(TimeDateStamp);
-
-                var ForwarderChain = TimeDateStamp.RelativeToLittleEndian32("Forwarder Chain");
-                chunk.Nodes.Add(ForwarderChain);
-
-                var Name = ForwarderChain.RelativeToLittleEndian32("Name");
-                BaseStream.Position = Name.offset;
-                int NameValue = ReadInt32();
-                if (NameValue > 0) {
-                    long realNameOffset = FileOffsetFromVirtualAddress(NameValue);
-
-                    var NameData = new ZeroTerminatedStringChunk();
-                    NameData.offset = realNameOffset;
-                    NameData.length = 16;
-
-                    string realName = "XX FIX FIX FIXME TODO NAME";  // NameData.GetString(d);
-
-                    //Log("realName = " + realName);
-
-                    NameData.length = (uint)(realName.Length + 1); // 0-terminated string
-                    NameData.Text = realName;
-                    Name.Nodes.Add(NameData);
-                }
-
-                chunk.Nodes.Add(Name);
-
-                var FirstThunk = Name.RelativeToLittleEndian32("First Thunk");
-                BaseStream.Position = FirstThunk.offset;
-                int FirstThunkValue = ReadInt32();
-
-
-                var FirstData = new Chunk("First Data");
-                FirstData.offset = FileOffsetFromVirtualAddress(FirstThunkValue);
-                FirstData.length = 6; // XXX empty-entry-terminated array
-                FirstThunk.Nodes.Add(FirstData);
-
-
-                chunk.Nodes.Add(FirstThunk);
-            }
-
-            res.Add(chunk);
-        }
-    }
-
-    return res;
-}
-
-public class SectionPointer
-{
-    public long virtualOffset;
-    public long realOffset;
-    public parse.Uint length;
-    public string Text;
-}
-
-public List<SectionPointer> sections = new List<SectionPointer>();
-public List<SectionPointer> dataDirectory = new List<SectionPointer>();
-public long EntryPoint;
-long ExtendedHeaderOffset;
-public long ExeHeaderLength;
-
-public long FileOffsetFromVirtualAddress(long va)
-{
-    if (this.sections.Count == 0) {
-        Log("no sections - ERROR");
-        return va;
-        //throw new Exception("no sections");
-    }
-
-    // Log("translate VA " + va.ToString("x8")+ " to file offset");
-
-    foreach (var section in this.sections) {
-        if (va >= section.virtualOffset && (va < section.virtualOffset + section.length)) {
-            long res = (va - section.virtualOffset) + section.realOffset;
-            // Log("translated to " + res.ToString("x8"));
-            return res;
-        }
-    }
-    Log("FATAL ERROR not found for va " + va.ToString("x8"));
-    return va;
-    //throw new Exception("not found for va " + va.ToString("x8"));
-}
-*/

@@ -105,11 +105,17 @@ func ELF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 func isELF(b []byte) bool {
 
-	if b[0] == 0x7f && b[1] == 'E' && b[2] == 'L' && b[3] == 'F' {
-		// XXX 16 first bytes are id
-		return true
+	if b[5] != 1 && b[5] != 2 { // endian
+		return false
 	}
-	return false
+	if b[5] == 2 {
+		fmt.Println("TODO: handle big-endian ELF")
+		return false
+	}
+	if b[0] != 0x7f || b[1] != 'E' || b[2] != 'L' || b[3] != 'F' {
+		return false
+	}
+	return true
 }
 
 func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
@@ -145,7 +151,7 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 func elfHeader(file *os.File, pos int64) parse.Layout {
 
 	className, _ := parse.ReadToMap(file, parse.Uint8, pos+4, elfClasses)
-	encodingName, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfEndian)
+	endian, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfEndian)
 	osABIName, _ := parse.ReadToMap(file, parse.Uint8, pos+7, elfOSABIs)
 	typeName, _ := parse.ReadToMap(file, parse.Uint16le, pos+16, elfTypes)
 	machineName, _ := parse.ReadToMap(file, parse.Uint16le, pos+18, elfMachines)
@@ -158,7 +164,7 @@ func elfHeader(file *os.File, pos int64) parse.Layout {
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 4, Info: "magic", Type: parse.Uint32le},
 			{Offset: pos + 4, Length: 1, Info: "class = " + className, Type: parse.Uint8},
-			{Offset: pos + 5, Length: 1, Info: "endian = " + encodingName, Type: parse.Uint8},
+			{Offset: pos + 5, Length: 1, Info: "endian = " + endian, Type: parse.Uint8},
 			{Offset: pos + 6, Length: 1, Info: "header version", Type: parse.Uint8},
 			{Offset: pos + 7, Length: 1, Info: "os abi = " + osABIName, Type: parse.Bytes},
 			{Offset: pos + 8, Length: 1, Info: "abi version", Type: parse.Uint8},

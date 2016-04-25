@@ -212,3 +212,27 @@ func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {
 
 	return optHeader
 }
+
+/* XXX
+public long FileOffsetFromVirtualAddress(long va)
+{
+    if (this.sections.Count == 0) {
+        Log("no sections - ERROR");
+        return va;
+        //throw new Exception("no sections");
+    }
+
+    // Log("translate VA " + va.ToString("x8")+ " to file offset");
+
+    foreach (var section in this.sections) {
+        if (va >= section.virtualOffset && (va < section.virtualOffset + section.length)) {
+            long res = (va - section.virtualOffset) + section.realOffset;
+            // Log("translated to " + res.ToString("x8"));
+            return res;
+        }
+    }
+    Log("FATAL ERROR not found for va " + va.ToString("x8"));
+    return va;
+    //throw new Exception("not found for va " + va.ToString("x8"));
+}
+*/

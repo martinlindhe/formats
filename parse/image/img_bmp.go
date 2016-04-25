@@ -154,12 +154,7 @@ func parseBMPVersion2Header(file *os.File, pos int64) []parse.Layout {
 
 func parseBMPVersion3Header(file *os.File, pos int64) []parse.Layout {
 
-	compression, _ := parse.ReadUint32le(file, pos+16)
-	compressionName := "?"
-	if val, ok := bmpCompressions[compression]; ok {
-		compressionName = val
-	}
-
+	compressionName, _ := parse.ReadToMap(file, parse.Uint32le, pos+16, bmpCompressions)
 	return []parse.Layout{
 		{Offset: pos, Length: 4, Type: parse.Uint32le, Info: "info header size"},
 		{Offset: pos + 4, Length: 4, Type: parse.Uint32le, Info: "width"},

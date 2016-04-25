@@ -8,7 +8,6 @@
 
 basic detection of the following formats:
   - MSI exec
-  - photoshop psd
   - 3ds max .3ds file
 
 

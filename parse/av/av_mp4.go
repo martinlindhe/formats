@@ -21,13 +21,8 @@ func MP4(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 
 func isMP4(b []byte) bool {
 
-	// TODO what is right magic bytes? just guessing
-	if b[0] != 0 || b[1] != 0 || b[2] != 0 {
-		if b[3] != 0x18 && b[3] != 0x20 {
-			return false
-		}
-	}
-	return true
+	// XXX
+	return false
 }
 
 func parseMP4(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

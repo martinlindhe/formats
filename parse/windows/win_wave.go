@@ -7,7 +7,6 @@ package windows
 // STATUS: 1%
 
 import (
-	"encoding/binary"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"

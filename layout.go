@@ -56,6 +56,7 @@ var (
 		"mapledb":        bin.MapleDB,
 		"sqlite3":        bin.SQLITE3,
 		"pdb":            bin.PDB,
+		"perl-enc":       bin.PerlENC,
 		"rdb":            bin.RDB,
 		"terminfo":       bin.Terminfo,
 		"timezone":       bin.Timezone,
@@ -95,6 +96,7 @@ var (
 		"jpeg":           image.JPEG,
 		"pcx":            image.PCX,
 		"png":            image.PNG,
+		"psd":            image.PSD,
 		"tga":            image.TGA, // XXX has too loose detection. thinks samples/images/ico/icon_003_win2k_cross.cur is tga!
 		"tiff":           image.TIFF,
 		"xcursor":        image.XCursor,
@@ -148,7 +150,7 @@ func (mp *MatchingParsers) First() *parse.ParsedLayout {
 func (mp *MatchingParsers) ChoseOne(file *os.File) (*parse.ParsedLayout, error) {
 
 	i := 1
-	fmt.Println("multiple parsers matched input file, please choose one:\n")
+	fmt.Println("multiple parsers matched input file, please choose one:")
 	for _, pl := range *mp {
 		fmt.Printf("%d: %s\n", i, pl.FormatName)
 		i++

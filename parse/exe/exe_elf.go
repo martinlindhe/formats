@@ -19,7 +19,7 @@ var (
 		1: "ELF32",
 		2: "ELF64",
 	}
-	elfDataEncodings = map[byte]string{
+	elfEndian = map[byte]string{
 		1: "lsb",
 		2: "msb",
 	}
@@ -145,7 +145,7 @@ func parseELF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 func elfHeader(file *os.File, pos int64) parse.Layout {
 
 	className, _ := parse.ReadToMap(file, parse.Uint8, pos+4, elfClasses)
-	encodingName, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfDataEncodings)
+	encodingName, _ := parse.ReadToMap(file, parse.Uint8, pos+5, elfEndian)
 	osABIName, _ := parse.ReadToMap(file, parse.Uint8, pos+7, elfOSABIs)
 	typeName, _ := parse.ReadToMap(file, parse.Uint16le, pos+16, elfTypes)
 	machineName, _ := parse.ReadToMap(file, parse.Uint16le, pos+18, elfMachines)

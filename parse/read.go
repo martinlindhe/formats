@@ -56,6 +56,15 @@ func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (stri
 		if val, ok := a[idx]; ok {
 			return val, nil
 		}
+	case Uint16be:
+		idx, err := ReadUint16be(file, pos)
+		if err != nil {
+			return "", err
+		}
+		a := i.(map[uint16]string)
+		if val, ok := a[idx]; ok {
+			return val, nil
+		}
 	case Uint32be:
 		idx, err := ReadUint32be(file, pos)
 		if err != nil {

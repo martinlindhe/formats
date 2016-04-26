@@ -38,6 +38,9 @@ APK (android application package, JAR-based)
 JAR (java archive)
     https://en.wikipedia.org/wiki/JAR_%28file_format%29
 
+EPUB (ebook)
+
+
 # TODO RAW images
     http://fileformats.archiveteam.org/wiki/Cameras_and_Digital_Image_Sensors
     https://www.rawsamples.ch/

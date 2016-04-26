@@ -77,7 +77,7 @@ func uiLoop(file *os.File) {
 	err := termui.Init()
 	defer termui.Close()
 	if err != nil {
-		fmt.Println("uiLoop error:", err)
+		fmt.Println("termui error:", err)
 		return
 	}
 
@@ -196,10 +196,12 @@ func uiLoop(file *os.File) {
 }
 
 func calcVisibleRows() {
+
 	hexView.VisibleRows = termui.TermHeight() - 2
 }
 
 func createUIComponents() {
+
 	offsetsPar = termui.NewPar("")
 	offsetsPar.BorderLeft = false
 	offsetsPar.Width = 10

@@ -109,7 +109,7 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 					{Offset: pos + 8, Length: 4, Info: "real ss:sp", Type: parse.DOSOffsetSegment},
 					{Offset: pos + 12, Length: 2, Info: "compressed load module size", Type: parse.Uint16le},
 					{Offset: pos + 14, Length: 2, Info: "increase load module size", Type: parse.Uint16le},
-					{Offset: pos + 16, Length: 2, Info: "decompressor size", Type: parse.Uint16le},
+					{Offset: pos + 16, Length: 2, Info: "uncompressor size", Type: parse.Uint16le}, // XXX ?
 					{Offset: pos + 18, Length: 2, Info: "checksum", Type: parse.Uint16le},
 				}},
 			{

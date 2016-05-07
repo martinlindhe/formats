@@ -93,14 +93,16 @@ func parsePESections(file *os.File, pos int64, numberOfSections uint16) []parse.
 		rawDataSize, _ := parse.ReadUint32le(file, pos+16)
 		rawDataOffset, _ := parse.ReadUint32le(file, pos+20)
 
-		res = append(res, parse.Layout{
-			Offset: int64(rawDataOffset),
-			Length: int64(rawDataSize),
-			Info:   "section " + sectionName,
-			Type:   parse.Group,
-			Childs: []parse.Layout{
-				{Offset: int64(rawDataOffset), Length: int64(rawDataSize), Info: "data", Type: parse.Bytes},
-			}})
+		if rawDataSize > 0 {
+			res = append(res, parse.Layout{
+				Offset: int64(rawDataOffset),
+				Length: int64(rawDataSize),
+				Info:   "section " + sectionName,
+				Type:   parse.Group,
+				Childs: []parse.Layout{
+					{Offset: int64(rawDataOffset), Length: int64(rawDataSize), Info: "data", Type: parse.Bytes},
+				}})
+		}
 
 		chunk := []parse.Layout{
 			{Offset: pos, Length: 8, Info: "name", Type: parse.ASCIIZ},

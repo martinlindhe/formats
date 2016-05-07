@@ -224,7 +224,7 @@ func createUIComponents() {
 	asciiPar.BorderFg = termui.ColorCyan
 
 	boxPar = termui.NewPar("")
-	boxPar.Height = 14
+	boxPar.Height = 30
 	boxPar.Width = 34
 	boxPar.X = 73
 	boxPar.TextFgColor = termui.ColorWhite

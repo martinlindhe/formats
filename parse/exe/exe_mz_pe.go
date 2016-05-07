@@ -104,7 +104,7 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 				{Low: 4, Length: 1, Info: "aggressive ws trim", Spec: "IMAGE_FILE_AGGRESSIVE_WS_TRIM"},
 				{Low: 5, Length: 1, Info: "large address aware", Spec: "IMAGE_FILE_LARGE_ADDRESS_ AWARE"},
 				{Low: 6, Length: 1, Info: "reserved lo", Spec: ""},
-				{Low: 7, Length: 1, Info: "revered", Spec: "IMAGE_FILE_BYTES_REVERSED_LO"},
+				{Low: 7, Length: 1, Info: "reversed", Spec: "IMAGE_FILE_BYTES_REVERSED_LO"},
 				{Low: 8, Length: 1, Info: "32bit", Spec: "IMAGE_FILE_32BIT_MACHINE"},
 				{Low: 9, Length: 1, Info: "debug stripped", Spec: "IMAGE_FILE_DEBUG_STRIPPED"},
 				{Low: 10, Length: 1, Info: "removable run from swap", Spec: "IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP"},

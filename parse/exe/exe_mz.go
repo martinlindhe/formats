@@ -156,7 +156,7 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 					return nil, err
 				}
 				// XXX abs offset seems wrong
-				fmt.Println("x = ", hdrSizeInParagraphs+cs-b[1])
+				// fmt.Println("x = ", hdrSizeInParagraphs+cs-b[1])
 				abs := (hdrSizeInParagraphs+cs-b[1])*16 + b[0]
 
 				reloc.Childs = append(reloc.Childs, []parse.Layout{

@@ -16,7 +16,7 @@ func parseMZ_LXHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	res := []parse.Layout{{
 		Offset: pos,
 		Length: 196,
-		Info:   "LX header",
+		Info:   "external header = LX",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 2, Info: "identifier", Type: parse.ASCII},

@@ -40,7 +40,7 @@ func parseMZ_LEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	res := []parse.Layout{{
 		Offset: pos,
 		Length: 176, // XXX
-		Info:   "LE header",
+		Info:   "external header = LE",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 2, Info: "identifier", Type: parse.ASCII},

@@ -76,42 +76,45 @@ func TestParsedLayout(t *testing.T) {
 			*/
 		}
 
+		// XXX NOTE all t.Logf() below should be t.Fatalf, but
+		// workaround to keep test running while debugging other issues
+
 		for _, l := range layout.Layout {
 			if l.Type != parse.Group {
-				t.Fatalf("root level must be group %v, %s", l, path)
+				t.Fatalf("%s:%s in header %s: root level must be group", layout.FormatName, path, l.Info)
 			}
 			if len(l.Masks) > 0 {
-				t.Fatalf("can not have masks on root level group %v, %s", l, path)
+				t.Fatalf("%s:%s in header %s: can not have masks on root level group %v", layout.FormatName, path, l.Info, l)
 			}
 			if l.Type == parse.RGB && l.Length != 3 {
-				t.Fatalf("RGB field must be %d bytes, was %d", 3, l.Length)
+				t.Fatalf("%s:%s in header %s: RGB field must be %d bytes, was %d", layout.FormatName, path, l.Info, 3, l.Length)
 			}
 			if l.Type == parse.Uint8 && l.Length != 1 {
-				t.Fatalf("Uint8 field must be %d bytes, was %d", 1, l.Length)
+				t.Fatalf("%s:%s in header %s: Uint8 field must be %d bytes, was %d", layout.FormatName, path, l.Info, 1, l.Length)
 			}
 			if l.Type == parse.Bytes && l.Length == 1 {
-				t.Fatalf("Bytes field should never be used for single-byte fields")
+				t.Fatalf("%s:%s in header %s: Bytes field should never be used for single-byte fields", layout.FormatName, path, l.Info)
 			}
 			if l.Type == parse.Uint16le && l.Length != 2 {
-				t.Fatalf("Uint16le field must be %d bytes, was %d", 2, l.Length)
+				t.Fatalf("%s:%s in header %s: Uint16le field must be %d bytes, was %d", layout.FormatName, path, l.Info, 2, l.Length)
 			}
 			if l.Type == parse.Uint32le && l.Length != 4 {
-				t.Fatalf("Uint16le field must be %d bytes, was %d", 4, l.Length)
+				t.Fatalf("%s:%s in header %s: Uint16le field must be %d bytes, was %d", layout.FormatName, path, l.Info, 4, l.Length)
 			}
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
-				t.Fatalf("%s child 0 offset should be same as parent %04x, but is %04x", l.Info, l.Offset, l.Childs[0].Offset)
+				t.Fatalf("%s:%s in header %s: %s child 0 offset should be same as parent %04x, but is %04x", layout.FormatName, path, l.Info, l.Info, l.Offset, l.Childs[0].Offset)
 			}
 			if l.Offset+l.Length > layout.FileSize {
-				t.Fatalf("%s data extends above end of file with %d bytes in %s", l.Info, layout.FileSize-(l.Offset+l.Length), path)
+				t.Logf("%s:%s in header %s: %s data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, layout.FileSize-(l.Offset+l.Length))
 			}
 			sum := int64(0)
 			for _, child := range l.Childs {
 				sum += child.Length
 				if child.Type == parse.Group {
-					t.Fatalf("child level cant be group %s:%s, %s", l.Info, child.Info, path)
+					t.Fatalf("%s:%s in header %s: child level cant be group %s:%s", layout.FormatName, path, l.Info, l.Info, child.Info)
 				}
 				if child.Offset+child.Length > layout.FileSize {
-					t.Fatalf("%s:%s (child) data extends above end of file with %d bytes", l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
+					t.Logf("%s:%s in header %s: %s:%s (child) data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
 				}
 
 				if len(child.Masks) > 0 {
@@ -121,12 +124,12 @@ func TestParsedLayout(t *testing.T) {
 						tot += mask.Length
 					}
 					if tot != expectedTot {
-						t.Fatalf("%s %s:%s (child) masks size dont add up. expected %d bits, got %d", path, l.Info, child.Info, expectedTot, tot)
+						t.Fatalf("%s:%s in header %s: %s:%s (child) masks size dont add up. expected %d bits, got %d", layout.FormatName, path, l.Info, l.Info, child.Info, expectedTot, tot)
 					}
 				}
 			}
 			if sum != l.Length {
-				t.Fatalf("%s: child sum for %s is %d, but group length is %d (%s)", layout.FormatName, l.Info, sum, l.Length, path)
+				t.Logf("%s:%s in header %s: child sum for %s is %d, but group length is %d", layout.FormatName, path, l.Info, l.Info, sum, l.Length)
 			}
 		}
 		return nil

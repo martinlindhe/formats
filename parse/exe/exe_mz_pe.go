@@ -1,8 +1,8 @@
 package exe
 
 // PE/COFF exe (Win32, Win64)
-// https://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
 // http://wiki.osdev.org/PE
+// https://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
 
 // STATUS: 50%
 
@@ -53,7 +53,7 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	res := []parse.Layout{{
 		Offset: pos,
 		Length: peHeaderLen,
-		Info:   "PE header",
+		Info:   "external header = PE",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 4, Info: "identifier", Type: parse.ASCIIZ},
@@ -185,18 +185,27 @@ func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {
 			{Offset: pos + 88, Length: 4, Info: "loader flags", Type: parse.Uint32le},
 			{Offset: pos + 92, Length: 4, Info: "number of rva and sizes", Type: parse.Uint32le},
 		}}
-	pos += peOptHeaderMainLen
-
-	if numberOfRva != 16 {
-		fmt.Println("error: expected 16 RVA:s, found " + fmt.Sprintf("%d", numberOfRva))
-	}
 
 	ddLen := int64(8)
-
 	optHeader.Length = peOptHeaderMainLen + (int64(numberOfRva) * ddLen)
 	if optHeader.Length != int64(size) {
-		fmt.Println("error: PE unexpected opt header len. expected ", size, " actual =", optHeader.Length)
+
+		if optHeader.Length > int64(size) {
+			panic("wut")
+		}
+		padLength := int64(size) - optHeader.Length
+
+		// mark remaining bytes as unknown, TODO figure out what it is
+		optHeader.Childs = append(optHeader.Childs, parse.Layout{
+			Offset: pos + 96,
+			Length: padLength,
+			Info:   "unknown",
+			Type:   parse.Bytes,
+		})
+		optHeader.Length += padLength
 	}
+
+	pos += peOptHeaderMainLen
 
 	for i := int64(0); i < int64(numberOfRva); i++ {
 

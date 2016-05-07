@@ -46,7 +46,7 @@ func parseMZ_NEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	res = append(res, parse.Layout{
 		Offset: pos,
 		Length: 64, // XXX
-		Info:   "NE header",
+		Info:   "external header = NE",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 2, Info: "identifier", Type: parse.ASCII},

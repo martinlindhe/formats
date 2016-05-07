@@ -2,6 +2,7 @@ package exe
 
 // PE/COFF exe (Win32, Win64)
 // http://wiki.osdev.org/PE
+// https://en.wikibooks.org/wiki/X86_Disassembly/Windows_Executable_Files
 // https://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
 
 // STATUS: 50%
@@ -19,19 +20,51 @@ var (
 	peOptHeaderMainLen = int64(96)
 
 	peTypes = map[uint16]string{
+		0x107: "ROM",
 		0x10b: "PE32",
 		0x20b: "PE32+ (64-bit)",
 	}
 	peMachines = map[uint16]string{
 		0x14c:  "intel 386",
+		0x162:  "MIPS R3000",
+		0x168:  "MIPS R10000",
+		0x169:  "MIPS little endian WCI v2",
+		0x183:  "old Alpha AXP",
+		0x184:  "Alpha AXP",
+		0x1a2:  "Hitachi SH3",
+		0x1a3:  "Hitachi SH3 DSP",
+		0x1a6:  "Hitachi SH4",
+		0x1a8:  "Hitachi SH5",
+		0x1c0:  "ARM little endian",
+		0x1c2:  "ARM Thumb",
+		0x1d3:  "Matsushita AM33",
+		0x1f0:  "PowerPC little endian",
+		0x1f1:  "PowerPC with floating point support",
+		0x200:  "Intel IA64",
+		0x266:  "MIPS16",
+		0x268:  "Motorola 68000 series",
+		0x284:  "Alpha AXP 64-bit",
+		0x366:  "MIPS with FPU",
+		0x466:  "MIPS16 with FPU",
+		0xebc:  "EFI Byte Code",
 		0x8664: "AMD64",
+		0x9041: "Mitsubishi M32R little endian",
+		0xc0ee: "clr pure MSIL",
 	}
 	peSubsystems = map[uint16]string{
-		1: "native",
-		2: "GUI",
-		3: "console",
-		5: "OS/2",
-		7: "POSIX",
+		1:  "Native",
+		2:  "Windows GUI",
+		3:  "Windows console",
+		5:  "OS/2 console",
+		7:  "POSIX",
+		8:  "Native Windows",
+		9:  "Windows CE",
+		10: "EFI application",
+		11: "EFI boot service device",
+		12: "EFI runtime driver",
+		13: "EFI rom",
+		14: "XBox",
+		16: "Boot application",
 	}
 	peRvaChunks = map[int64]string{
 		0:  "exports",

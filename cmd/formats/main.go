@@ -240,7 +240,7 @@ func createUIComponents() {
 	statsPar = termui.NewPar("")
 	statsPar.Border = false
 	statsPar.Height = 1
-	statsPar.X = 10
+	statsPar.X = 9
 }
 
 func focusAtCurrentField() {
@@ -321,19 +321,23 @@ func prettyStatString() string {
 	group := fileLayout.Layout[hexView.CurrentGroup]
 
 	warn := "" // useful while debugging
+	end := int64(0)
 
 	// if in sub field view
 	if hexView.BrowseMode == parse.ByFieldInGroup {
 		field := group.Childs[hexView.CurrentField]
 
-		if field.Offset+field.Length > fileLayout.FileSize {
+		end = field.Offset + field.Length - 1
+		if end >= fileLayout.FileSize {
 			warn = " [PAST EOF-f](fg-red)"
 		}
-		return fmt.Sprintf("selected %d bytes (%x) from %04x", field.Length, field.Length, field.Offset) + warn
+		return fmt.Sprintf("selected %d bytes (%x) from %04x to %04x", field.Length, field.Length, field.Offset, end) + warn
 	}
 
-	if group.Offset+group.Length > fileLayout.FileSize {
+	end = group.Offset + group.Length - 1
+	if end >= fileLayout.FileSize {
 		warn = " [PAST EOF-g](fg-red)"
 	}
-	return fmt.Sprintf("selected %d bytes (%x) from %04x", group.Length, group.Length, group.Offset) + warn
+
+	return fmt.Sprintf("selected %d bytes (%x) from %04x to %04x", group.Length, group.Length, group.Offset, end) + warn
 }

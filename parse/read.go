@@ -121,6 +121,11 @@ func ReadUnsignedInt(file *os.File, field *Layout) uint32 {
 	case Uint8:
 		val, _ := ReadUint8(file, field.Offset)
 		return uint32(val)
+
+	case Uint16le:
+		val, _ := ReadUint16le(file, field.Offset)
+		return uint32(val)
+
 	case Uint32le:
 		val, _ := ReadUint32le(file, field.Offset)
 		return val

@@ -96,7 +96,24 @@ func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 			{Offset: pos + 12, Length: 4, Info: "symbol table offset", Type: parse.Uint32le},
 			{Offset: pos + 16, Length: 4, Info: "symbol table entries", Type: parse.Uint32le},
 			{Offset: pos + 20, Length: 2, Info: "optional header size", Type: parse.Uint16le},
-			{Offset: pos + 22, Length: 2, Info: "characteristics", Type: parse.Uint16le},
+			{Offset: pos + 22, Length: 2, Info: "characteristics", Type: parse.Uint16le, Masks: []parse.Mask{
+				{Low: 0, Length: 1, Info: "relocs stripped", Spec: "IMAGE_FILE_RELOCS_STRIPPED"},
+				{Low: 1, Length: 1, Info: "executable", Spec: "IMAGE_FILE_EXECUTABLE_IMAGE"},
+				{Low: 2, Length: 1, Info: "line nums stripped", Spec: "IMAGE_FILE_LINE_NUMS_STRIPPED"},
+				{Low: 3, Length: 1, Info: "local syms stripped", Spec: "IMAGE_FILE_LOCAL_SYMS_STRIPPED"},
+				{Low: 4, Length: 1, Info: "aggressive ws trim", Spec: "IMAGE_FILE_AGGRESSIVE_WS_TRIM"},
+				{Low: 5, Length: 1, Info: "large address aware", Spec: "IMAGE_FILE_LARGE_ADDRESS_ AWARE"},
+				{Low: 6, Length: 1, Info: "reserved lo", Spec: ""},
+				{Low: 7, Length: 1, Info: "revered", Spec: "IMAGE_FILE_BYTES_REVERSED_LO"},
+				{Low: 8, Length: 1, Info: "32bit", Spec: "IMAGE_FILE_32BIT_MACHINE"},
+				{Low: 9, Length: 1, Info: "debug stripped", Spec: "IMAGE_FILE_DEBUG_STRIPPED"},
+				{Low: 10, Length: 1, Info: "removable run from swap", Spec: "IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP"},
+				{Low: 11, Length: 1, Info: "net run from swap", Spec: "IMAGE_FILE_NET_RUN_FROM_SWAP"},
+				{Low: 12, Length: 1, Info: "file system", Spec: "IMAGE_FILE_SYSTEM"},
+				{Low: 13, Length: 1, Info: "dll", Spec: "IMAGE_FILE_DLL"},
+				{Low: 14, Length: 1, Info: "uniprocessor", Spec: "IMAGE_FILE_UP_SYSTEM_ONLY"},
+				{Low: 15, Length: 1, Info: "reserved hi", Spec: "IMAGE_FILE_BYTES_REVERSED_HI"},
+			}},
 		}}}
 	pos += peHeaderLen
 

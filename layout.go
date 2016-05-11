@@ -33,6 +33,7 @@ var (
 		"ftcomp":         archive.FTCOMP,
 		"gzip":           archive.GZIP,
 		"iso":            archive.ISO,
+		"luks":           archive.LUKS,
 		"lzma":           archive.LZMA,
 		"rar":            archive.RAR,
 		"td2":            archive.TD2,

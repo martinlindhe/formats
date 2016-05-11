@@ -222,7 +222,7 @@ func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {
 			{Offset: pos + 40, Length: 4, Info: "os version", Type: parse.MajorMinor32le},
 			{Offset: pos + 44, Length: 4, Info: "image version", Type: parse.MajorMinor32le},
 			{Offset: pos + 48, Length: 4, Info: "subsystem version", Type: parse.MajorMinor32le},
-			{Offset: pos + 52, Length: 4, Info: "win32 version value", Type: parse.Uint32le},
+			{Offset: pos + 52, Length: 4, Info: "win32 version", Type: parse.MajorMinor32le},
 			{Offset: pos + 56, Length: 4, Info: "size of image", Type: parse.Uint32le},
 			{Offset: pos + 60, Length: 4, Info: "size of headers", Type: parse.Uint32le},
 			{Offset: pos + 64, Length: 4, Info: "checksum", Type: parse.Uint32le},

@@ -40,6 +40,7 @@ var (
 		"vdi":            archive.VDI,
 		"wim":            archive.WIM,
 		"winimg":         archive.WINIMG,
+		"xar":            archive.XAR,
 		"xz":             archive.XZ,
 		"zip":            archive.ZIP,
 		"zlib":           archive.ZLib,

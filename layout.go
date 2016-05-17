@@ -35,6 +35,7 @@ var (
 		"iso":            archive.ISO,
 		"luks":           archive.LUKS,
 		"lzma":           archive.LZMA,
+		"mozlz4":         archive.MozillaLZ4,
 		"rar":            archive.RAR,
 		"td2":            archive.TD2,
 		"vdi":            archive.VDI,

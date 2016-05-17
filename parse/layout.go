@@ -25,6 +25,7 @@ const (
 	// big endian
 	Uint16be
 	Uint32be
+	Uint64be
 
 	// version
 	MajorMinor8    // high nibble = major, low = minor
@@ -81,6 +82,7 @@ var (
 		Uint64le:         "uint64-le",
 		Uint16be:         "uint16-be",
 		Uint32be:         "uint32-be",
+		Uint64be:         "uint64-be",
 		MajorMinor8:      "major.minor-8",
 		MajorMinor16le:   "major.minor-16le",
 		MajorMinor16be:   "major.minor-16be",
@@ -167,7 +169,7 @@ func (e TextEncoding) String() string {
 
 	// NOTE: this should only be able to panic during dev (as in:
 	// adding a new datatype and forgetting to add it to the map)
-	panic(int(e))
+	panic("missing " + fmt.Sprintf("%d", e) + " from textEncodings")
 }
 
 func (dt DataType) String() string {
@@ -178,7 +180,7 @@ func (dt DataType) String() string {
 
 	// NOTE: this should only be able to panic during dev (as in:
 	// adding a new datatype and forgetting to add it to the map)
-	panic(int(dt))
+	panic("missing " + fmt.Sprintf("%d", dt) + " from dataTypes")
 }
 
 func (l *Layout) GetBitSize() int {

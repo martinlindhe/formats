@@ -114,6 +114,9 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	case Uint32be:
 		res += infoUint32be(f, field)
 
+	case Uint64be:
+		res += infoUint64be(f, field)
+
 	case MajorMinor16le:
 		res += infoMajorMinor16le(f, field)
 
@@ -246,6 +249,15 @@ func infoMajorMinor16le(f *os.File, field *Layout) string {
 func infoUint32be(f *os.File, field *Layout) string {
 
 	var i uint32
+	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint64be(f *os.File, field *Layout) string {
+
+	var i uint64
 	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
 	}

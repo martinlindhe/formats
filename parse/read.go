@@ -166,6 +166,14 @@ func ReadUint32be(file *os.File, pos int64) (uint32, error) {
 	return b, nil
 }
 
+func ReadUint64be(file *os.File, pos int64) (uint64, error) {
+
+	file.Seek(pos, os.SEEK_SET)
+	var b uint64
+	binary.Read(file, binary.BigEndian, &b)
+	return b, nil
+}
+
 func ReadUint32le(file *os.File, pos int64) (uint32, error) {
 
 	file.Seek(pos, os.SEEK_SET)

@@ -1,23 +1,27 @@
-## About
+# About
 
-formats is a command line file explorer / hex viewer, written in Golang.
-
+`formats` is a command line file explorer / hex viewer, written in Golang.
 
 Demo: https://asciinema.org/a/7uce44hzwvpi5dijxh0jpcc7g
 
 
-# Keyboard navigation
-* Left/Right arrow keys to navigate between top-level fields (turqouise)
+## Installation
+
+    go install github.com/martinlindhe/formats
+
+
+## Keyboard navigation
+* Left/Right arrow keys to navigate between top-level fields (turquoise)
 * Enter to select current top-level field
 * Left/Right arrow keys to navigate between sub-level fields (yellow)
 * Escape to leave sub-level navigation
 * Q to quit the program
 
 
-# Supported formats
+## Supported formats
 Please see the [status matrix](STATUS.md).
 
 
-# License
+## License
 
 Under [MIT](LICENSE)

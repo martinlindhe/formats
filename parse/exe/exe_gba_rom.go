@@ -1,6 +1,6 @@
 package exe
 
-// Gameboy Advance ROM image
+// Game Boy Advance ROM image
 
 // STATUS: 1%
 

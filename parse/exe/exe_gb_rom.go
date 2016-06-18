@@ -1,6 +1,6 @@
 package exe
 
-// Gameboy ROM image
+// Game Boy ROM image
 // http://gbdev.gg8.se/wiki/articles/The_Cartridge_Header
 
 // STATUS: 1%

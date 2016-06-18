@@ -1,5 +1,5 @@
-| What          | Status |
-| ------------- | ------:|
+| Format | Status |
+| ------ | ------:|
 | archive/arc_7z.go | 1% |
 | archive/arc_arj.go | borked
 | archive/arc_bzip2.go | 1% |

@@ -33,7 +33,7 @@ func parsePSType1(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 	fileType := getPS1Type(c.Header)
 	c.ParsedLayout.FileKind = parse.Font
 
-	if fileType == FontText {
+	if fileType == fontText {
 		c.ParsedLayout.FormatName = "type1 text"
 		layout = parse.Layout{
 			Offset: pos,
@@ -74,11 +74,11 @@ func getPS1Type(b []byte) ps1Type {
 	expected := "%!PS-AdobeFont-1."
 	s := string(b[0:len(expected)])
 	if s == expected {
-		return FontText
+		return fontText
 	}
 	s = string(b[6 : 6+len(expected)])
 	if s == expected {
-		return FontProgramData
+		return fontProgramData
 	}
 	return 0
 }
@@ -86,6 +86,6 @@ func getPS1Type(b []byte) ps1Type {
 type ps1Type int
 
 const (
-	FontText = 1 + iota
-	FontProgramData
+	fontText = 1 + iota
+	fontProgramData
 )

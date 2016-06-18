@@ -78,7 +78,7 @@ var (
 )
 
 // parses 32/64-bit Windows executables
-func parseMZ_PEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
+func parseMzPeHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	optHeaderSize, _ := parse.ReadUint16le(file, pos+20)
 	numberOfSections, _ := parse.ReadUint16le(file, pos+6)

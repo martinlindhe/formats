@@ -95,25 +95,25 @@ func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 		case "LX":
 			// OS/2 (32-bit)
 			c.ParsedLayout.FormatName = "mz-lx"
-			header, _ := parseMZ_LXHeader(c.File, pos)
+			header, _ := parseMzLxHeader(c.File, pos)
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		case "LE":
 			// Win, OS/2 (mixed 16/32-bit)
 			c.ParsedLayout.FormatName = "mz-le"
-			header, _ := parseMZ_LEHeader(c.File, pos)
+			header, _ := parseMzLeHeader(c.File, pos)
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		case "NE":
 			// Win16, OS/2
 			c.ParsedLayout.FormatName = "mz-ne"
-			header, _ := parseMZ_NEHeader(c.File, pos)
+			header, _ := parseMzNeHeader(c.File, pos)
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		case "PE":
 			// Win32, Win64
 			c.ParsedLayout.FormatName = "mz-pe"
-			header, _ := parseMZ_PEHeader(c.File, pos)
+			header, _ := parseMzPeHeader(c.File, pos)
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		default:

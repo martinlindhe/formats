@@ -32,7 +32,7 @@ var (
 	}
 )
 
-func parseMZ_LEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
+func parseMzLeHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	cpuType, _ := parse.ReadToMap(file, parse.Uint16le, pos+8, leCpuTypes)
 	targetOS, _ := parse.ReadToMap(file, parse.Uint16le, pos+10, leTargetOSes)

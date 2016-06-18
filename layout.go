@@ -193,7 +193,7 @@ func (mp *MatchingParsers) ChoseOne(file *os.File) (*parse.ParsedLayout, error) 
 	return nil, fmt.Errorf("selection not in list")
 }
 
-// returns all matching parsers
+// MatchAll returns all matching parsers
 func MatchAll(file *os.File) (MatchingParsers, error) {
 
 	fileSize, _ := fileSize(file)

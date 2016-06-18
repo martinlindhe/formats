@@ -15,18 +15,18 @@ import (
 )
 
 const (
-	MH_MAGIC    = 0xfeedface
-	MH_MAGIC_64 = 0xfeedfacf
-	MH_CIGAM    = 0xcefaedfe
-	MH_CIGAM_64 = 0xcffaedfe
+	mhMagic   = 0xfeedface
+	mhMagic64 = 0xfeedfacf
+	mhCigam   = 0xcefaedfe
+	mhCigam64 = 0xcffaedfe
 )
 
 var (
 	machoMagicTypes = map[uint32]string{
-		MH_MAGIC:    "MH_MAGIC",
-		MH_MAGIC_64: "MH_MAGIC_64",
-		MH_CIGAM:    "MH_CIGAM",
-		MH_CIGAM_64: "MH_CIGAM_64",
+		mhMagic:   "MH_MAGIC",
+		mhMagic64: "MH_MAGIC_64",
+		mhCigam:   "MH_CIGAM",
+		mhCigam64: "MH_CIGAM_64",
 	}
 	machoCpuTypes = map[uint32]string{
 		1:         "vax",
@@ -76,7 +76,7 @@ func MachO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
 func isMachO(b []byte) bool {
 
 	val := binary.LittleEndian.Uint32(b[:])
-	if val == MH_MAGIC || val == MH_MAGIC_64 || val == MH_CIGAM || val == MH_CIGAM_64 {
+	if val == mhMagic || val == mhMagic64 || val == mhCigam || val == mhCigam64 {
 		return true
 	}
 	return false

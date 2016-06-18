@@ -32,7 +32,7 @@ type HexViewState struct {
 	CurrentField int
 }
 
-// Next moves focus to the next group
+// NextGroup moves focus to the next group
 func (f *HexViewState) NextGroup(layout []Layout) {
 
 	max := len(layout)
@@ -61,7 +61,7 @@ func (f *HexViewState) PrevFieldInGroup() {
 	}
 }
 
-// Prev moves focus to the previous group
+// PrevGroup moves focus to the previous group
 func (f *HexViewState) PrevGroup() {
 	f.CurrentGroup--
 	f.CurrentField = 0

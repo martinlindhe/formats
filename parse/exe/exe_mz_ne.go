@@ -39,7 +39,7 @@ var (
 )
 
 // parses 16-bit Windows and OS/2 executables
-func parseMZ_NEHeader(file *os.File, pos int64) ([]parse.Layout, error) {
+func parseMzNeHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	res := []parse.Layout{}
 	targetOS, _ := parse.ReadToMap(file, parse.Uint8, pos+54, neTargetOS)

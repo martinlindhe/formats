@@ -11,7 +11,7 @@ import (
 )
 
 // parse OS/2 Linear eXecutable header
-func parseMZ_LXHeader(file *os.File, pos int64) ([]parse.Layout, error) {
+func parseMzLxHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
 	res := []parse.Layout{{
 		Offset: pos,

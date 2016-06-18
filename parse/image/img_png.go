@@ -2,8 +2,8 @@ package image
 
 // handles PNG, APNG and MNG images
 
-// STATUS: 80% PNG/APNG
-// STATUS: 20% MNG (XXX parsing gives up after first IEND, should continue...)
+// STATUS: 80%
+// TODO: MNG parsing gives up after first IEND, should continue
 
 import (
 	"fmt"

@@ -1,6 +1,6 @@
 package archive
 
-// STATUS 1%
+// STATUS: 1%
 
 // https://golang.org/src/compress/bzip2/bzip2.go
 

@@ -1,6 +1,6 @@
 package archive
 
-// STATUS borked
+// STATUS: borked
 
 import (
 	"encoding/binary"

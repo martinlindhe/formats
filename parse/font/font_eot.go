@@ -3,7 +3,7 @@ package font
 // Embedded OpenType
 // https://en.wikipedia.org/wiki/Embedded_OpenType
 
-// STATUS 1%
+// STATUS: 1%
 
 import (
 	"os"

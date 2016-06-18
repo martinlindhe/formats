@@ -2,7 +2,7 @@ package image
 
 // XXX some osx/ios icon collection ?
 
-// STATUS 1%
+// STATUS: 1%
 
 import (
 	"os"

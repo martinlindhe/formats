@@ -1,6 +1,6 @@
 package archive
 
-// STATUS 1%
+// STATUS: 1%
 
 import (
 	"os"

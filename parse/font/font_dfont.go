@@ -4,7 +4,7 @@ package font
 // Used on MacOS
 // https://en.wikipedia.org/wiki/Datafork_TrueType
 
-// STATUS 1%
+// STATUS: 1%
 
 import (
 	"os"

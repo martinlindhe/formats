@@ -4,9 +4,7 @@ package archive
 // http://stackoverflow.com/questions/9050260/what-does-a-zlib-header-look-like
 // https://tools.ietf.org/html/rfc1950
 
-// XXX not really a archive
-
-// STATUS 1%
+// STATUS: 1%
 
 import (
 	"os"

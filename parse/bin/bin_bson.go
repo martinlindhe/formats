@@ -174,7 +174,7 @@ private bool DecodeNext(Chunk parent)
         next.length = 1 + (uint)str.Length + 1 + len;
         parent.Nodes.Add(next);
 
-        // loop thru content and add to current node
+        // loop through content and add to current node
         while (BaseStream.Position < next.offset + next.length - 1) {
             //Console.WriteLine("pos = " + BaseStream.Position.ToString("x2") + ", max pos = " + (next.offset + next.length).ToString("x2"));
             var sub = DecodeNext(next);

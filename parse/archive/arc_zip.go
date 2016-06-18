@@ -87,7 +87,7 @@ private static string DecodeHostOs(byte b)
     if (b == 19)
         return "OS X (Darwin)";
 
-    // 20 thru 255 - unused
+    // 20 through 255 - unused
     return "Unknown " + b;
 }
 

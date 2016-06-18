@@ -124,7 +124,7 @@ private Chunk ParseAsfHeader()
         subHead.Nodes.Add(Data);
 
         if (HasSignature(guid.offset, asfObjectStreamProperties)) {
-            // TODO parse remaining of stream properites object
+            // TODO parse remaining of stream properties object
             var streamGuid = len.RelativeTo("Stream prop GUID", 16);
             subHead.Nodes.Add(streamGuid);
 

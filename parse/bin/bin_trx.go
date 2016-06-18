@@ -41,7 +41,7 @@ override public List<Chunk> GetFileStructure()
     var lengthValue = length.GetValue(BaseStream);
 
     if (lengthValue != filesize) {
-        Log("header Lenght value is wrong, it is " + lengthValue.ToString("x8") + " but should be " + filesize.ToString("x8"));
+        Log("header Length value is wrong, it is " + lengthValue.ToString("x8") + " but should be " + filesize.ToString("x8"));
     }
 
     header.Nodes.Add(length);

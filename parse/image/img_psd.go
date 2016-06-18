@@ -6,7 +6,7 @@ package image
 
 // NOTE about the mime-type:
 // vnd.adobe.photoshop was registered by Adobe: https://www.iana.org/assignments/media-types/image/vnd.adobe.photoshop
-// however, Adobe seems to be using a varity of mime types:
+// however, Adobe seems to be using a variety of mime types:
 // image/photoshop, image/x-photoshop, image/psd, application/photoshop, application/psd, application/x-photoshop
 
 // STATUS: 2%

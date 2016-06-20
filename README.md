@@ -7,7 +7,7 @@ Demo: https://asciinema.org/a/7uce44hzwvpi5dijxh0jpcc7g
 
 ## Installation
 
-    go install github.com/martinlindhe/formats
+    go get -v github.com/martinlindhe/formats/cmd/formats
 
 
 ## Keyboard navigation

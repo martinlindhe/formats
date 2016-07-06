@@ -1,5 +1,7 @@
 # About
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/martinlindhe/formats)](https://goreportcard.com/report/github.com/martinlindhe/formats)
+
 `formats` is a command line file explorer / hex viewer, written in Golang.
 
 Demo: https://asciinema.org/a/7uce44hzwvpi5dijxh0jpcc7g

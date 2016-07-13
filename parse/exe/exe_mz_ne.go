@@ -234,7 +234,7 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 							// unsigned short offset;
 				*/
 			default:
-				fmt.Println("  TODO segment index ", segNumber, ", entries", items)
+				fmt.Println("  TODO exe_mz_ne segment index ", segNumber, ", entries", items)
 				//NOTE: only sample i seen was empty here
 				// panic("xxx")
 			}

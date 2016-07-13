@@ -74,9 +74,6 @@ func TestParsedLayout(t *testing.T) {
 			*/
 		}
 
-		// XXX all t.Logf() below should be t.Fatalf, but
-		// workaround to keep test running while debugging other issues
-
 		for _, l := range layout.Layout {
 			if l.Type != parse.Group {
 				t.Fatalf("%s:%s in header %s: root level must be group", layout.FormatName, path, l.Info)
@@ -103,7 +100,7 @@ func TestParsedLayout(t *testing.T) {
 				t.Fatalf("%s:%s in header %s: %s child 0 offset should be same as parent %04x, but is %04x", layout.FormatName, path, l.Info, l.Info, l.Offset, l.Childs[0].Offset)
 			}
 			if l.Offset+l.Length > layout.FileSize {
-				t.Logf("%s:%s in header %s: %s data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, layout.FileSize-(l.Offset+l.Length))
+				t.Fatalf("%s:%s in header %s: %s data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, layout.FileSize-(l.Offset+l.Length))
 			}
 			sum := int64(0)
 			for _, child := range l.Childs {
@@ -112,7 +109,7 @@ func TestParsedLayout(t *testing.T) {
 					t.Fatalf("%s:%s in header %s: child level cant be group %s:%s", layout.FormatName, path, l.Info, l.Info, child.Info)
 				}
 				if child.Offset+child.Length > layout.FileSize {
-					t.Logf("%s:%s in header %s: %s:%s (child) data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
+					t.Fatalf("%s:%s in header %s: %s:%s (child) data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
 				}
 
 				if len(child.Masks) > 0 {
@@ -127,7 +124,7 @@ func TestParsedLayout(t *testing.T) {
 				}
 			}
 			if sum != l.Length {
-				t.Logf("%s:%s in header %s: child sum for %s is %d, but group length is %d", layout.FormatName, path, l.Info, l.Info, sum, l.Length)
+				t.Fatalf("%s:%s in header %s: child sum for %s is %d, but group length is %d", layout.FormatName, path, l.Info, l.Info, sum, l.Length)
 			}
 		}
 		return nil

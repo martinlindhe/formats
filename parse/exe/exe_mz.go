@@ -119,7 +119,7 @@ func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		default:
-			fmt.Println("mz-error: unknown newHeaderId: " + newHeaderID)
+			fmt.Println("mz-error: unknown newHeaderID: " + newHeaderID)
 		}
 
 		exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)

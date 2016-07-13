@@ -1,8 +1,7 @@
 package image
 
-// https://en.wikipedia.org/wiki/Truevision_TGA
-
 // STATUS: 1%
+// https://en.wikipedia.org/wiki/Truevision_TGA
 
 import (
 	"encoding/binary"
@@ -11,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-// TGA parses the Targa image format
+// TGA parses the Truevision Advanced Raster Graphics Adapter (TARGA) image format
 func TGA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTGA(c.Header) {
@@ -22,11 +21,27 @@ func TGA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 func isTGA(b []byte) bool {
 
-	/* XXX
-	   # at 2, byte ImgType must be 1, 2, 3, 9, 10 or 11
-	   # at 1, byte CoMapType must be 1 if ImgType is 1 or 9, 0 otherwise
-	   # at 3, leshort Index is 0 for povray, ppmtotga and xv outputs
-	*/
+	// XXX at 3, leshort Index is 0 for povray, ppmtotga and xv outputs
+
+	colorMapType := b[1]
+	imgType := b[2]
+
+	// colorMapType must be 1 if ImgType is 1 or 9, 0 otherwise
+	if imgType == 1 || imgType == 9 {
+		if colorMapType != 1 {
+			return false
+		}
+	} else {
+		if colorMapType != 0 {
+			return false
+		}
+	}
+
+	switch imgType {
+	case 1, 2, 3, 9, 10, 11:
+	default:
+		return false
+	}
 
 	val := binary.LittleEndian.Uint32(b)
 	chk := val & 0xfff7ffff

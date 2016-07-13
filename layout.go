@@ -75,7 +75,7 @@ var (
 		"pdf":            doc.PDF,
 		"rtf":            doc.RTF,
 		"wri":            doc.WRI,
-		"gb-rom":         exe.GameboyROM,
+		"gb-rom":         exe.GameBoyROM,
 		"gba-rom":        exe.GBAROM,
 		"n64-rom":        exe.N64ROM,
 		"dex":            exe.DEX,

@@ -79,7 +79,7 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 
 		for _, mask := range field.Masks {
 
-			val := CalcBitmask(&mask, b)
+			val := calcBitmask(&mask, b)
 			res += fmt.Sprintf("%d: %s:%d = ", mask.Low, mask.Info, mask.Length) +
 				fmt.Sprintf("%d", val) + "\n"
 		}

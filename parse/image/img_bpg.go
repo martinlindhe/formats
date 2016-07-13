@@ -11,7 +11,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-// BGP parses the Better Portable Graphics format
+// BPG parses the Better Portable Graphics format
 func BPG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isBPG(c.Header) {

@@ -331,7 +331,7 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 	}
 
 	b := ReadUnsignedInt(file, field)
-	val := CalcBitmask(mask, b)
+	val := calcBitmask(mask, b)
 	return val
 }
 

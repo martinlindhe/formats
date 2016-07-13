@@ -1,10 +1,7 @@
 package parse
 
 // STATUS: 60%
-
 // https://en.wikipedia.org/wiki/Byte_order_mark
-
-// XXX try to guess encoding (utf8 / ascii..)
 
 import (
 	"fmt"
@@ -12,6 +9,7 @@ import (
 	"strings"
 )
 
+// Text parses various text formats
 func Text(c *Checker) (*ParsedLayout, error) {
 
 	if !isText(c) {

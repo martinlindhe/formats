@@ -420,7 +420,7 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 			Length: 1,
 			Info:   "lzw block size",
 			Type:   parse.Uint8})
-		pos += 1
+		pos++
 
 		if follows == 0 {
 			break

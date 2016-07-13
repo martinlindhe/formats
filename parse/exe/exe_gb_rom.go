@@ -81,16 +81,16 @@ var (
 	}
 )
 
-// GameboyROM parses the Game Boy ROM image format
-func GameboyROM(c *parse.Checker) (*parse.ParsedLayout, error) {
+// GameBoyROM parses the Game Boy ROM image format
+func GameBoyROM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
-	if !isGameboyROM(c.Header) {
+	if !isGameBoyROM(c.Header) {
 		return nil, nil
 	}
-	return parseGameboyROM(c.File, c.ParsedLayout)
+	return parseGameBoyROM(c.File, c.ParsedLayout)
 }
 
-func isGameboyROM(b []byte) bool {
+func isGameBoyROM(b []byte) bool {
 
 	if !parse.HasSignatureInHeader(b, 0x104, gbLogo) {
 		return false
@@ -98,7 +98,7 @@ func isGameboyROM(b []byte) bool {
 	return true
 }
 
-func parseGameboyROM(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
+func parseGameBoyROM(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
 
 	pos := int64(0x100)
 	sgb, _ := parse.ReadToMap(file, parse.Uint8, pos+70, gbSgbModes)

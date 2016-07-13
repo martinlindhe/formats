@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PerlENC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PerlENC parses the perl encodings format
+func PerlENC(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPerlENC(c.Header) {
 		return nil, nil

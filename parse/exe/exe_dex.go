@@ -1,6 +1,5 @@
 package exe
 
-// Dalvik Executable (android java code)
 // Extensions: .dex
 // XXX .odex (optimized .dex), sample plz
 // https://en.wikipedia.org/wiki/Dalvik_%28software%29
@@ -8,11 +7,13 @@ package exe
 // STATUS: 1%
 
 import (
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
-func DEX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// DEX parses the Dalvik Executable format (android java code)
+func DEX(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isDEX(c.Header) {
 		return nil, nil

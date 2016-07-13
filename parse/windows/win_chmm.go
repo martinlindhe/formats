@@ -13,7 +13,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CHMM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CHMM parses the chmm format
+func CHMM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCHMM(c.Header) {
 		return nil, nil

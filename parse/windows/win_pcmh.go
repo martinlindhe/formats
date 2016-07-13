@@ -1,10 +1,8 @@
 package windows
 
-// ??? found on Windows 10, Windows/WinSxS/FileMaps/program_files_x86_common_files_microsoft_shared_dao_9d0cb78256d5a29d.cdf-ms
-
-// Extensions: .cdf-ms
-
 // STATUS: 1%
+// Extensions: .cdf-ms
+// found on Windows 10, Windows/WinSxS/FileMaps/program_files_x86_common_files_microsoft_shared_dao_9d0cb78256d5a29d.cdf-ms
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PCMH(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PCMH parses the pcmh format
+func PCMH(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPCMH(c.Header) {
 		return nil, nil

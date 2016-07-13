@@ -7,9 +7,10 @@ package image
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"io"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 const (
@@ -39,7 +40,8 @@ var (
 	}
 )
 
-func JPEG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// JPEG parses the jpeg format
+func JPEG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isJPEG(c.Header) {
 		return nil, nil

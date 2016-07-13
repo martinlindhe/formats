@@ -3,11 +3,13 @@ package archive
 // STATUS: 1%
 
 import (
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
-func GZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GZIP parses the gz format
+func GZIP(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGZIP(c.Header) {
 		return nil, nil

@@ -1,5 +1,6 @@
 package exe
 
+// https://en.wikipedia.org/wiki/.exe
 // STATUS: 60%
 
 import (
@@ -16,7 +17,8 @@ var (
 	subHeaderLen = int64(36) // XXX
 )
 
-func MZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MZ parses the mz executable format
+func MZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMZ(c.Header) {
 		return nil, nil
@@ -32,7 +34,7 @@ func isMZ(b []byte) bool {
 	return true
 }
 
-func parseMZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	c.ParsedLayout.FileKind = parse.Executable
 	pos := int64(0)

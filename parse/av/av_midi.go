@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MIDI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MIDI parses the midi format
+func MIDI(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMIDI(c.Header) {
 		return nil, nil

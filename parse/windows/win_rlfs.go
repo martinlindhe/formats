@@ -1,9 +1,8 @@
 package windows
 
-// ??? found on Windows 10, Windows/System32/LogFiles/WMI/RtBackup/EtwRTDiagLog.etl
-// Extensions: .etl
-
 // STATUS: 1%
+// Extensions: .etl
+// found on Windows 10, Windows/System32/LogFiles/WMI/RtBackup/EtwRTDiagLog.etl
 
 import (
 	"os"
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RLFS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RLFS parses the rlfs format
+func RLFS(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRLFS(c.Header) {
 		return nil, nil

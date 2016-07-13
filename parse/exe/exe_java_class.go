@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func JavaClass(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// JavaClass parses the Java class format
+func JavaClass(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isJavaClass(c.Header) {
 		return nil, nil

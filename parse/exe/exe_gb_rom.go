@@ -1,6 +1,5 @@
 package exe
 
-// Game Boy ROM image
 // http://gbdev.gg8.se/wiki/articles/The_Cartridge_Header
 
 // STATUS: 1%
@@ -82,7 +81,8 @@ var (
 	}
 )
 
-func GameboyROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GameboyROM parses the Game Boy ROM image format
+func GameboyROM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGameboyROM(c.Header) {
 		return nil, nil

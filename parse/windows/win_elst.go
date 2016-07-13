@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ELST(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ELST parses the elst format
+func ELST(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isELST(c.Header) {
 		return nil, nil

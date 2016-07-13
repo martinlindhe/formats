@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LUKS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// LUKS parse the luks format
+func LUKS(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isLUKS(c.Header) {
 		return nil, nil

@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PDF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PDF parses the pdf format
+func PDF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPDF(c.Header) {
 		return nil, nil

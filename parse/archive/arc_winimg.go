@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WINIMG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// WINIMG parses the Windows img format
+func WINIMG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isWINIMG(c.Header) {
 		return nil, nil

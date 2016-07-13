@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func STYL(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// STYL parses the styl format
+func STYL(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isSTYL(c.Header) {
 		return nil, nil

@@ -1,6 +1,5 @@
 package archive
 
-// Xar Archive
 // Extensions: .xar .pkg
 // https://en.wikipedia.org/wiki/Xar_%28archiver%29
 // https://github.com/mackyle/xar/wiki/xarformat
@@ -17,7 +16,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func XAR(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// XAR parses the xar format
+func XAR(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isXAR(c.Header) {
 		return nil, nil

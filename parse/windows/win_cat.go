@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CAT(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CAT parses the cat format
+func CAT(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCAT(c.Header) {
 		return nil, nil

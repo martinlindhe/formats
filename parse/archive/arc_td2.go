@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TD2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// TD2 parses the td2 format
+func TD2(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTD2(c.Header) {
 		return nil, nil

@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SWF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// SWF parses the swf format
+func SWF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isSWF(c.Header) {
 		return nil, nil

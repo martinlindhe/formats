@@ -1,8 +1,7 @@
 package windows
 
-// Windows Program Information File (PIF)
-
 // STATUS: 1%
+// Extensions: .pif
 
 import (
 	"github.com/martinlindhe/formats/parse"
@@ -12,7 +11,8 @@ var (
 	pifHeaderPos = int64(0x171)
 )
 
-func PIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PIF parses the Windows Program Information File format
+func PIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPIF(c.Header) {
 		return nil, nil
@@ -26,7 +26,7 @@ func isPIF(b []byte) bool {
 	return s == "MICROSOFT PIFEX"
 }
 
-func parsePIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parsePIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	pos := int64(pifHeaderPos)
 	c.ParsedLayout.FileKind = parse.WindowsResource

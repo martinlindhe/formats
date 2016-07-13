@@ -1,7 +1,5 @@
 package exe
 
-// Python bytecode
-
 // STATUS: 1%
 
 import (
@@ -34,7 +32,8 @@ var (
 	}
 )
 
-func PythonBytecode(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PythonBytecode parses the Python bytecode format
+func PythonBytecode(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPythonBytecode(c.Header) {
 		return nil, nil
@@ -48,7 +47,7 @@ func isPythonBytecode(b []byte) bool {
 	return ver != ""
 }
 
-func parsePythonBytecode(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parsePythonBytecode(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	version := getPythonBytecodeVersion(c.Header)
 

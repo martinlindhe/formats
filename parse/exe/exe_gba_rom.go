@@ -1,7 +1,5 @@
 package exe
 
-// Game Boy Advance ROM image
-
 // STATUS: 1%
 
 import (
@@ -27,7 +25,8 @@ var (
 		0xD6, 0x25, 0xE4, 0x8B, 0x38, 0x0A, 0xAC, 0x72, 0x21, 0xD4, 0xF8, 0x07}
 )
 
-func GBAROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GBAROM parses the Game Boy Advance ROM image format
+func GBAROM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGBAROM(c.Header) {
 		return nil, nil

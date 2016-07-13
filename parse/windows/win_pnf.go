@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Windows/INF/acpipmi.PNF
-// extensions: .pnf
-
 // STATUS: 1%
+// Extensions: .pnf
+// found on Windows 10 Windows/INF/acpipmi.PNF
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PNF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PNF parses the pnf format
+func PNF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPNF(c.Header) {
 		return nil, nil

@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RDB parses the rdb format
+func RDB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRDB(c.Header) {
 		return nil, nil

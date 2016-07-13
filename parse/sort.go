@@ -4,6 +4,7 @@ import (
 	"sort"
 )
 
+// ByLayout ...
 type ByLayout []Layout
 
 func (slice ByLayout) Len() int {
@@ -18,6 +19,7 @@ func (slice ByLayout) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
+// Sort sorts the parsed layout
 func (pl *ParsedLayout) Sort() {
 	sort.Sort(ByLayout(pl.Layout))
 }

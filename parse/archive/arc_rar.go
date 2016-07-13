@@ -6,7 +6,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RAR(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RAR parses the rar format
+func RAR(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRAR(c.Header) {
 		return nil, nil

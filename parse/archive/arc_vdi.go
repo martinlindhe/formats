@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func VDI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// VDI parses the vdi format
+func VDI(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isVDI(c.Header) {
 		return nil, nil

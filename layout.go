@@ -20,7 +20,8 @@ import (
 	"github.com/martinlindhe/formats/parse/windows"
 )
 
-type Parser func(*parse.ParseChecker) (*parse.ParsedLayout, error)
+// Parser is a specialized parser for a file format
+type Parser func(*parse.Checker) (*parse.ParsedLayout, error)
 
 var (
 	parsers = map[string]Parser{
@@ -154,8 +155,10 @@ var (
 	}
 )
 
+// MatchingParsers is a list parsed layouts with different Parser
 type MatchingParsers []parse.ParsedLayout
 
+// First returns the first matching Parser
 func (mp *MatchingParsers) First() *parse.ParsedLayout {
 
 	for _, parser := range *mp {
@@ -164,6 +167,7 @@ func (mp *MatchingParsers) First() *parse.ParsedLayout {
 	return nil
 }
 
+// ChoseOne asks the user to select one of the matching parsers
 func (mp *MatchingParsers) ChoseOne(file *os.File) (*parse.ParsedLayout, error) {
 
 	i := 1
@@ -200,7 +204,7 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 	layout := parse.ParsedLayout{
 		FileName: fileGetName(file),
 		FileSize: fileSize}
-	checker := parse.ParseChecker{
+	checker := parse.Checker{
 		File:         file,
 		ParsedLayout: layout}
 	var m MatchingParsers

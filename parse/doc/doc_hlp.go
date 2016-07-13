@@ -1,7 +1,5 @@
 package doc
 
-// HLP help file (Windows)
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func HLP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// HLP parses the Windows HLP help file
+func HLP(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isHLP(c.Header) {
 		return nil, nil

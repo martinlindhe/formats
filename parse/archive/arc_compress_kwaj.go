@@ -22,7 +22,8 @@ var (
 	}
 )
 
-func CompressKWAJ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CompressKWAJ parses the kwaj format
+func CompressKWAJ(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCompressKWAJ(c.Header) {
 		return nil, nil

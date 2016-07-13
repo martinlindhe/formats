@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func XZ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// XZ parses the xz format
+func XZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isXZ(c.Header) {
 		return nil, nil

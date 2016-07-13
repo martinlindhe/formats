@@ -1,7 +1,5 @@
 package exe
 
-// Nintendo 64 ROM image
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func N64ROM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// N64ROM parses the Nintendo 64 ROM image format
+func N64ROM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isN64ROM(c.Header) {
 		return nil, nil

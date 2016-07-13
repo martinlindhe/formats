@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 ProgramData/Microsoft/Diagnosis/events00.rbs
-// extensions: .rbs
-
 // STATUS: 1%
+// Extensions: .rbs
+// found on Windows 10 ProgramData/Microsoft/Diagnosis/events00.rbs
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RBS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RBS parses the rbs format
+func RBS(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRBS(c.Header) {
 		return nil, nil

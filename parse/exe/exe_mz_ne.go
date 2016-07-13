@@ -198,7 +198,7 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 				Length: 1,
 				Info:   "end marker",
 				Type:   parse.Uint16le})
-			pos += 1
+			pos++
 			break
 		}
 
@@ -387,7 +387,7 @@ func parseNENonResidentTable(file *os.File, pos int64, size uint16) *parse.Layou
 		if len == 0 {
 			res.Childs = append(res.Childs,
 				parse.Layout{Offset: pos, Length: 1, Info: "end marker", Type: parse.Uint8})
-			nonresidentLen += 1
+			nonresidentLen++
 		} else {
 			res.Childs = append(res.Childs, []parse.Layout{
 				{Offset: pos, Length: 1 + int64(len), Info: "name", Type: parse.ASCIIC},

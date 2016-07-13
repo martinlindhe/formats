@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RALE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RALE parses the rale format
+func RALE(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRALE(c.Header) {
 		return nil, nil

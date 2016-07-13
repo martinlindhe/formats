@@ -1,7 +1,5 @@
 package image
 
-// Windows Icon / Cursor image resources
-
 // TODO icon_embedded_png_001.ico has embedded PNG in image data
 // TODO decode non-png as "standard BMP image"...
 // TODO offer "save to file" for the "image data" (bytes type)
@@ -22,7 +20,8 @@ var (
 	}
 )
 
-func ICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ICO parses the Windows Icon / Cursor image resource format
+func ICO(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isICO(c.Header) {
 		return nil, nil
@@ -47,7 +46,7 @@ func isICO(b []byte) bool {
 	return true
 }
 
-func parseICO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parseICO(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	c.ParsedLayout.FileKind = parse.Image
 	c.ParsedLayout.MimeType = "image/x-ico"

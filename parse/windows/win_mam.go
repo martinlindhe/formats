@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Windows/Prefetch/SEARCHINDEXER.EXE-4A6353B9.pf
-// extensions: .pf
-
 // STATUS: 1%
+// Extensions: .pf
+// found on Windows 10 Windows/Prefetch/SEARCHINDEXER.EXE-4A6353B9.pf
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MAM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MAM parses the mam format
+func MAM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMAM(c.Header) {
 		return nil, nil

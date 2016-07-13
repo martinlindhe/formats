@@ -12,7 +12,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ZLib(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ZLib parses the zlib format
+func ZLib(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isZLib(c.Header) {
 		return nil, nil

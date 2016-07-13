@@ -80,7 +80,7 @@ func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (stri
 	return "?", nil
 }
 
-// return string, bytes read, error
+// ReadZeroTerminatedASCIIUntil returns string, bytes read, error
 func ReadZeroTerminatedASCIIUntil(file *os.File, pos int64, maxLen int) (string, int, error) {
 
 	file.Seek(pos, os.SEEK_SET)
@@ -114,7 +114,7 @@ func ReadBytesFrom(file *os.File, pos int64, size int64) []byte {
 	return b
 }
 
-// reads field value, as an uint32
+// ReadUnsignedInt reads field value, as an uint32
 func ReadUnsignedInt(file *os.File, field *Layout) uint32 {
 
 	switch field.Type {

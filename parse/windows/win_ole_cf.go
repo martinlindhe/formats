@@ -1,7 +1,5 @@
 package windows
 
-// OLE Compound File
-
 // Windows system format, used by:
 //   MS Word documents (.doc, .pps, .ppt, .xls)
 //   Thumbs.DB
@@ -17,7 +15,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OLECF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// OLECF parses the OLE Compound File format
+func OLECF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isOLECF(c.Header) {
 		return nil, nil

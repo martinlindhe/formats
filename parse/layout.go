@@ -48,6 +48,7 @@ const (
 	RGB
 )
 
+// kinds of files
 const (
 	Image FileKind = 1 + iota
 	Archive
@@ -60,9 +61,10 @@ const (
 	MacOSResource
 )
 
+// text encodings
 const (
 	None TextEncoding = iota
-	US_ASCII
+	ASCIIUS
 	UTF8
 	UTF16le
 	UTF16be
@@ -97,20 +99,20 @@ var (
 		RGB:              "RGB",
 	}
 	textEncodings = map[TextEncoding]string{
-		None:     "none",
-		US_ASCII: "us-ascii",
-		UTF8:     "utf8",
-		UTF16le:  "utf16le",
-		UTF32le:  "utf32le",
-		UTF16be:  "utf16be",
-		UTF32be:  "utf32be",
+		None:    "none",
+		ASCIIUS: "us-ascii",
+		UTF8:    "utf8",
+		UTF16le: "utf16le",
+		UTF32le: "utf32le",
+		UTF16be: "utf16be",
+		UTF32be: "utf32be",
 	}
 	dataTypeBitsizes = map[DataType]int{
 		Uint8:    8,
 		Uint16le: 16,
 		Uint32le: 32,
 	}
-	FileKinds = map[FileKind]string{
+	fileKinds = map[FileKind]string{
 		Image:           "image",
 		Archive:         "archive",
 		AudioVideo:      "a/v",
@@ -140,6 +142,7 @@ type ParsedLayout struct {
 	Layout       []Layout
 }
 
+// TextEncoding ...
 type TextEncoding int
 
 // Layout represents a parsed file structure
@@ -183,6 +186,7 @@ func (dt DataType) String() string {
 	panic("missing " + fmt.Sprintf("%d", dt) + " from dataTypes")
 }
 
+// GetBitSize returns the bit size of the data type for the layout
 func (l *Layout) GetBitSize() int {
 
 	if val, ok := dataTypeBitsizes[l.Type]; ok {
@@ -271,16 +275,17 @@ func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
 	return nil
 }
 
-// the output of cmd/prober --short
+// ShortPrint returns the output for cmd/prober --short
 func (pl *ParsedLayout) ShortPrint() string {
 
 	return pl.TypeSummary()
 }
 
+// TypeSummary returns a summary of the parsed layout
 func (pl *ParsedLayout) TypeSummary() string {
 
 	kindName := ""
-	if val, ok := FileKinds[pl.FileKind]; ok {
+	if val, ok := fileKinds[pl.FileKind]; ok {
 		kindName = val
 	}
 
@@ -291,7 +296,7 @@ func (pl *ParsedLayout) TypeSummary() string {
 	return s
 }
 
-// the output of cmd/prober
+// PrettyPrint returns the output for cmd/prober
 func (pl *ParsedLayout) PrettyPrint() string {
 
 	res := "Format: " + pl.FormatName + " (" + pl.FileName +
@@ -310,6 +315,7 @@ func (pl *ParsedLayout) PrettyPrint() string {
 	return res
 }
 
+// DecodeBitfieldFromInfo decodes a bitfield value
 func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint32 {
 
 	field := pl.findBitfieldLayout(info)
@@ -326,10 +332,10 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 
 	b := ReadUnsignedInt(file, field)
 	val := CalcBitmask(mask, b)
-
 	return val
 }
 
+// ReadUint32leFromInfo returns a little-endian 32-bit value
 func (pl *ParsedLayout) ReadUint32leFromInfo(file *os.File, info string) (uint32, error) {
 
 	layout := pl.findInfoField(info)

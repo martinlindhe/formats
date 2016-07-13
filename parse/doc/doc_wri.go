@@ -1,6 +1,5 @@
 package doc
 
-// WRI document (Win16)
 // STATUS: 1%
 
 import (
@@ -9,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WRI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// WRI parses the Windows wri document format
+func WRI(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isWRI(c.Header) {
 		return nil, nil

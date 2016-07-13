@@ -1,7 +1,5 @@
 package windows
 
-// Direct3D shader bytecode
-
 // http://timjones.tw/blog/archive/2015/09/02/parsing-direct3d-shader-bytecode
 
 // STATUS: 30%
@@ -13,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func DXBC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// DXBC parses the Direct3D shader bytecode format
+func DXBC(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isDXBC(c.Header) {
 		return nil, nil

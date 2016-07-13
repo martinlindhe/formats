@@ -1,7 +1,5 @@
 package bin
 
-// GnuPG key public ring
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GnuPG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GnuPG parses the gpg key public ring format
+func GnuPG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGPG(c.Header) {
 		return nil, nil

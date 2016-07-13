@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MP4(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MP4 parses the mp4 format
+func MP4(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMP4(c.Header) {
 		return nil, nil

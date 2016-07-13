@@ -1,6 +1,5 @@
 package image
 
-// Targa image
 // https://en.wikipedia.org/wiki/Truevision_TGA
 
 // STATUS: 1%
@@ -12,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TGA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// TGA parses the Targa image format
+func TGA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTGA(c.Header) {
 		return nil, nil

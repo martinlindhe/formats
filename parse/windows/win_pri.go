@@ -1,9 +1,8 @@
 package windows
 
+// STATUS: 1%
 // Windows Compiled Resources File
 // introduced by Microsoft for Windows 8 applications
-
-// STATUS: 1%
 
 import (
 	"os"
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PRI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PRI parses the pri format
+func PRI(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPRI(c.Header) {
 		return nil, nil

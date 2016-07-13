@@ -1,11 +1,10 @@
 package windows
 
-// Windows shortcut (.lnk)
+// STATUS: 1%
+// Extensions: .lnk
 // http://lifeinhex.com/analyzing-malicious-lnk-file/
 // https://github.com/libyal/liblnk/blob/master/documentation/Windows%20Shortcut%20File%20%28LNK%29%20format.asciidoc
 // https://en.wikipedia.org/wiki/File_shortcut#Microsoft_Windows
-
-// STATUS: 1%
 
 import (
 	"os"
@@ -13,7 +12,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LNK(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// LNK parses the Windows shortcut format
+func LNK(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isLNK(c.Header) {
 		return nil, nil

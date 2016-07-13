@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Program Files/WindowsApps/Microsoft.BingNews_4.3.193.0_x86__8wekyb3d8bbwe/_Resources/0.rsrc
-// extensions: .rsrc
-
 // STATUS: 1%
+// Extensions: .rsrc
+// found on Windows 10 Program Files/WindowsApps/Microsoft.BingNews_4.3.193.0_x86__8wekyb3d8bbwe/_Resources/0.rsrc
 
 import (
 	"encoding/binary"
@@ -13,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RSRC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RSRC parses the rsrc format
+func RSRC(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRSRC(c.Header) {
 		return nil, nil

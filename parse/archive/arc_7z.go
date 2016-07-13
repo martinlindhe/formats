@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SevenZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// SevenZIP parses the 7z format
+func SevenZIP(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isSevenZIP(c.Header) {
 		return nil, nil

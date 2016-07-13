@@ -1,6 +1,5 @@
 package av
 
-// Free Lossless Audio Codec
 // https://en.wikipedia.org/wiki/FLAC
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func FLAC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// FLAC parses the Free Lossless Audio Codec format
+func FLAC(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isFLAC(c.Header) {
 		return nil, nil

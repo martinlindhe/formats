@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func P7X(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// P7X parses the p7x format
+func P7X(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isP7X(c.Header) {
 		return nil, nil

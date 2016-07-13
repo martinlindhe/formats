@@ -1,6 +1,5 @@
 package macos
 
-// Binary plist
 // used by .nib (NeXT Interface Builder)
 // cant find any docs
 
@@ -12,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func BPLIST(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// BPLIST parses the Binary plist format
+func BPLIST(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isBPLIST(c.Header) {
 		return nil, nil

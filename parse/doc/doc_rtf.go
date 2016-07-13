@@ -1,7 +1,5 @@
 package doc
 
-// Rich Type File (RTF)
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RTF parses the Rich Type File format
+func RTF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRTF(c.Header) {
 		return nil, nil

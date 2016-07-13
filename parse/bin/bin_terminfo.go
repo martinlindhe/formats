@@ -1,6 +1,5 @@
 package bin
 
-// Compiled terminfo entry
 // /usr/share/file/magic/terminfo
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func Terminfo(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// Terminfo parses the Compiled terminfo entry format
+func Terminfo(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTerminfo(c.Header) {
 		return nil, nil

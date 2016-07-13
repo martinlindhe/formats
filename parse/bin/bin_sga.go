@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SGA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// SGA parses the sga format
+func SGA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isSGA(c.Header) {
 		return nil, nil

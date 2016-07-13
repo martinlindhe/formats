@@ -1,10 +1,9 @@
 package windows
 
+// STATUS: 1%
+// Extensions: .wve
 // ???, not the RIFF WAVE format
 // found on Windows 10 Windows/WinSxS/amd64_microsoft-windows-t..peech-en-gb-onecore_31bf3856ad364e35_10.0.10240.16384_none_e1ad0a33c01f1b40/M2057Sarah.voiceAssistant.WVE
-// extensions: .wve
-
-// STATUS: 1%
 
 import (
 	"os"
@@ -12,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WAVE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// WAVE parses the wve format
+func WAVE(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isWAVE(c.Header) {
 		return nil, nil

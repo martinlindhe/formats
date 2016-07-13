@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func VMAP4(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// VMAP4 parses the vmap4 format
+func VMAP4(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isVMAP4(c.Header) {
 		return nil, nil

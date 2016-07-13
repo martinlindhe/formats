@@ -1,8 +1,5 @@
 package windows
 
-// XAML Binary File
-// created by Visual Studio
-
 // STATUS: 1%
 
 import (
@@ -11,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func XBF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// XBF parses the Visual Studio XAML Binary File format
+func XBF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isXBF(c.Header) {
 		return nil, nil

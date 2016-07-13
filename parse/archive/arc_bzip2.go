@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func BZIP2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// BZIP2 parses the bz2 format
+func BZIP2(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isBZIP2(c.Header) {
 		return nil, nil

@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GnuDBM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GnuDBM parses the gdbm format
+func GnuDBM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGnuDBM(c.Header) {
 		return nil, nil

@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func FTCOMP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// FTCOMP parses the ftcomp format
+func FTCOMP(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isFTCOMP(c.Header) {
 		return nil, nil

@@ -1,6 +1,5 @@
 package bin
 
-// timezone data
 // /usr/share/file/magic/timezone
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func Timezone(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// Timezone parses the timezone data format
+func Timezone(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTimezone(c.Header) {
 		return nil, nil

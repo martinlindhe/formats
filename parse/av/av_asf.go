@@ -26,7 +26,8 @@ var (
 		0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B}
 )
 
-func ASF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ASF parses the asf format
+func ASF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isASF(c.Header) {
 		return nil, nil

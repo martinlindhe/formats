@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/alecthomas/kingpin.v2"
-
 	"github.com/martinlindhe/formats"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (

@@ -1,10 +1,8 @@
 package windows
 
-// ??? found on Windows 10, ProgramData/Microsoft/Windows NT/MSFax/Common Coverpages/en-GB/confident.cov
-
-// Extensions: .cov
-
 // STATUS: 1%
+// Extensions: .cov
+// ??? found on Windows 10, ProgramData/Microsoft/Windows NT/MSFax/Common Coverpages/en-GB/confident.cov
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func FAXC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// FAXC parses the faxc format
+func FAXC(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isFAXC(c.Header) {
 		return nil, nil

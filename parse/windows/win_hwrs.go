@@ -1,9 +1,8 @@
 package windows
 
+// STATUS: 1%
 // found on Windows 10 in Program Files/Common Files/microsoft shared/ink/{hwrcommonlm,hwrlatinlm}.dat
 // XXX also this string at 0x10: "Microsoft Common LM Resource File"
-
-// STATUS: 1%
 
 import (
 	"os"
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func HWRS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// HWRS parses the hwrs format
+func HWRS(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isHWRS(c.Header) {
 		return nil, nil

@@ -53,7 +53,8 @@ const (
 	imgDescriptorLen = 10
 )
 
-func GIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GIF parses the gif format
+func GIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGIF(c.Header) {
 		return nil, nil
@@ -72,7 +73,7 @@ func isGIF(b []byte) bool {
 	return true
 }
 
-func parseGIF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 	pl := c.ParsedLayout

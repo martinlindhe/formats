@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MP3(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MP3 parses the mp3 format
+func MP3(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMP3(c.Header) {
 		return nil, nil

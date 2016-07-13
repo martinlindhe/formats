@@ -6,7 +6,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MozillaLZ4(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MozillaLZ4 parses the Mozilla lz4 format
+func MozillaLZ4(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMozillaLZ4(c.Header) {
 		return nil, nil

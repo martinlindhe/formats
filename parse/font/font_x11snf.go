@@ -1,7 +1,5 @@
 package font
 
-// X11 font files in Server Natural Format (SNF)
-
 // STATUS: 1%
 
 import (
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func X11FontSNF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// X11FontSNF parses the X11 font files in Server Natural Format
+func X11FontSNF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isX11FontSNF(c.Header) {
 		return nil, nil

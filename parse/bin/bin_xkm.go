@@ -1,7 +1,5 @@
 package bin
 
-// Compiled XKB Keymap
-
 // XXX need a big-endian sample file
 
 // STATUS: 1%
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func XKM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// XKM parses the Compiled XKB Keymap format
+func XKM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isXKM(c.Header) {
 		return nil, nil

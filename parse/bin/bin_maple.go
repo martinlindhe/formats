@@ -1,6 +1,5 @@
 package bin
 
-// Maple help database
 // .hdb
 
 // STATUS: 1%
@@ -12,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MapleDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MapleDB parses the Maple help database format
+func MapleDB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMapleDB(c.Header) {
 		return nil, nil

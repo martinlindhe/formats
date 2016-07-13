@@ -1,13 +1,12 @@
 package parse
 
-// for unrecognized files
-
 import (
 	"encoding/binary"
 	"fmt"
 )
 
-func RAW(c *ParseChecker) (*ParsedLayout, error) {
+// RAW is used for unrecognized files
+func RAW(c *Checker) (*ParsedLayout, error) {
 
 	format := "raw"
 	if c.ParsedLayout.FileSize == 0 {

@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func EVTX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// EVTX parses the evtx format
+func EVTX(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isEVTX(c.Header) {
 		return nil, nil

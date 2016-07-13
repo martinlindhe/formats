@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ICNS(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ICNS parses the icns format
+func ICNS(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isICNS(c.Header) {
 		return nil, nil

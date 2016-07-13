@@ -1,7 +1,5 @@
 package windows
 
-// GRP
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GRP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GRP parses the grp format
+func GRP(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGRP(c.Header) {
 		return nil, nil

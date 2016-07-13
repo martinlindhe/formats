@@ -139,8 +139,8 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 	}
 
 	tlink1 := binary.LittleEndian.Uint16(b[pos:])
-	tlinkId := b[pos+2]
-	if tlink1 == 0x1 && tlinkId == 0xfb {
+	tlinkID := b[pos+2]
+	if tlink1 == 0x1 && tlinkID == 0xfb {
 		return []parse.Layout{{
 			Offset: pos,
 			Length: 6,

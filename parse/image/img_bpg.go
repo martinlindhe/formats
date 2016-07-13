@@ -1,6 +1,5 @@
 package image
 
-// Better Portable Graphics
 // https://en.wikipedia.org/wiki/Better_Portable_Graphics
 // Extensions: .bpg
 
@@ -12,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func BPG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// BGP parses the Better Portable Graphics format
+func BPG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isBPG(c.Header) {
 		return nil, nil

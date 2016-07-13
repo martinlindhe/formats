@@ -1,6 +1,5 @@
 package bin
 
-// Program Database (Visual Studio debug info)
 // https://en.wikipedia.org/wiki/Program_database
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PDB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PDB parses the Program Database format (Visual Studio debug info)
+func PDB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPDB(c.Header) {
 		return nil, nil

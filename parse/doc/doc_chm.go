@@ -1,7 +1,5 @@
 package doc
 
-// CHM help file (Windows)
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CHM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CHM parses the Windows CHM help file format
+func CHM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCHM(c.Header) {
 		return nil, nil

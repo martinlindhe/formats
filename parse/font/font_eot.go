@@ -1,8 +1,6 @@
 package font
 
-// Embedded OpenType
 // https://en.wikipedia.org/wiki/Embedded_OpenType
-
 // STATUS: 1%
 
 import (
@@ -11,7 +9,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func EOT(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// EOT parses the Embedded OpenType format
+func EOT(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isEOT(c.Header) {
 		return nil, nil

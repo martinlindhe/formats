@@ -1,6 +1,5 @@
 package font
 
-// PostScript Type 1 font
 // https://en.wikipedia.org/wiki/PostScript_fonts
 
 // STATUS: 1%
@@ -9,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func PSType1(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PSType1 parses the PostScript Type 1 font format
+func PSType1(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPSType1(c.Header) {
 		return nil, nil
@@ -26,7 +26,7 @@ func isPSType1(b []byte) bool {
 	return true
 }
 
-func parsePSType1(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parsePSType1(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 	layout := parse.Layout{}

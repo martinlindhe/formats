@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WOFF2(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// WOFF2 parses the woff2 format
+func WOFF2(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isWOFF2(c.Header) {
 		return nil, nil

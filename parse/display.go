@@ -9,13 +9,6 @@ import (
 	"strings"
 )
 
-type BrowseMode int
-
-const (
-	ByGroup BrowseMode = 1 + iota
-	ByFieldInGroup
-)
-
 // HexFormatting ...
 type HexFormatting struct {
 	BetweenSymbols string
@@ -32,11 +25,19 @@ type HexViewState struct {
 	CurrentField int
 }
 
+// BrowseMode ...
+type BrowseMode int
+
+// browse modes
+const (
+	ByGroup BrowseMode = 1 + iota
+	ByFieldInGroup
+)
+
 // NextGroup moves focus to the next group
 func (f *HexViewState) NextGroup(layout []Layout) {
 
 	max := len(layout)
-
 	f.CurrentGroup++
 	f.CurrentField = 0
 	if f.CurrentGroup >= max {
@@ -44,16 +45,17 @@ func (f *HexViewState) NextGroup(layout []Layout) {
 	}
 }
 
+// NextFieldInGroup moves to the next field in current group
 func (f *HexViewState) NextFieldInGroup(layout []Layout) {
 
 	max := len(layout[f.CurrentGroup].Childs)
-	fmt.Println("num", max)
 	f.CurrentField++
 	if f.CurrentField >= max {
 		f.CurrentField = max - 1
 	}
 }
 
+// PrevFieldInGroup moves to the previous field in current group
 func (f *HexViewState) PrevFieldInGroup() {
 	f.CurrentField--
 	if f.CurrentField < 0 {
@@ -70,6 +72,7 @@ func (f *HexViewState) PrevGroup() {
 	}
 }
 
+// PrettyASCIIView returns pretty ASCII of the currently visible area of the parsed layout
 func (pl *ParsedLayout) PrettyASCIIView(file *os.File, hexView HexViewState) string {
 
 	ascii := ""
@@ -95,7 +98,7 @@ func (pl *ParsedLayout) PrettyASCIIView(file *os.File, hexView HexViewState) str
 	return ascii
 }
 
-// PrettyOffsetView ...
+// PrettyOffsetView returns the offsets of the currently visible area of the parsed layout
 func (pl *ParsedLayout) PrettyOffsetView(file *os.File, hexView HexViewState) string {
 
 	ofsFmt := "%08x"
@@ -120,7 +123,7 @@ func (pl *ParsedLayout) PrettyOffsetView(file *os.File, hexView HexViewState) st
 	return res
 }
 
-// PrettyHexView ...
+// PrettyHexView returns the hex values of the currently visible area of the parsed layout
 func (pl *ParsedLayout) PrettyHexView(file *os.File, hexView HexViewState) string {
 
 	hex := ""
@@ -142,6 +145,7 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File, hexView HexViewState) strin
 	return hex
 }
 
+// GetASCII returns the ASCII values of the currently visible area of the parsed layout
 func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, error) {
 
 	if len(pl.Layout) == 0 {

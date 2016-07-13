@@ -1,6 +1,5 @@
 package exe
 
-// MacOS Mach-O executable
 // NOTE: on MacOS, there is C headers in /usr/include/mach-o
 // TODO: handle the CIGAM byte ordered files (ppc, need samples)
 // https://github.com/thetlk/Mach-O/tree/master/pymacho
@@ -65,7 +64,8 @@ var (
 	}
 )
 
-func MachO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MachO parses the MacOS Mach-O executable format
+func MachO(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMachO(c.Header) {
 		return nil, nil

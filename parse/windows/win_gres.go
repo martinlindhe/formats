@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Windows/WinSxS/amd64_microsoft-windows-mapcontrol_31bf3856ad364e35_10.0.10240.16384_none_1b558da4a5404873/resource.db
-// extensions: .db
-
 // STATUS: 1%
+// Extensions: .db
+// found on Windows 10 Windows/WinSxS/amd64_microsoft-windows-mapcontrol_31bf3856ad364e35_10.0.10240.16384_none_1b558da4a5404873/resource.db
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GRES(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GRES parses the gres format
+func GRES(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGRES(c.Header) {
 		return nil, nil

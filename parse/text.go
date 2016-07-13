@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func Text(c *ParseChecker) (*ParsedLayout, error) {
+func Text(c *Checker) (*ParsedLayout, error) {
 
 	if !isText(c) {
 		return nil, fmt.Errorf("no match")
@@ -21,13 +21,13 @@ func Text(c *ParseChecker) (*ParsedLayout, error) {
 	return parseText(c)
 }
 
-func isText(c *ParseChecker) bool {
+func isText(c *Checker) bool {
 
 	if hasRecognizedBOM(c.Header) {
 		return true
 	}
 
-	seemsLike := US_ASCII
+	seemsLike := ASCIIUS
 	checkLen := int64(30)
 	if c.ParsedLayout.FileSize < checkLen {
 		checkLen = c.ParsedLayout.FileSize
@@ -38,7 +38,7 @@ func isText(c *ParseChecker) bool {
 			break
 		}
 
-		if seemsLike == US_ASCII {
+		if seemsLike == ASCIIUS {
 			c := c.Header[pos]
 			if c < 32 {
 				if c != '\n' && c != '\r' && c != '\t' {
@@ -50,7 +50,7 @@ func isText(c *ParseChecker) bool {
 	return true
 }
 
-func parseText(c *ParseChecker) (*ParsedLayout, error) {
+func parseText(c *Checker) (*ParsedLayout, error) {
 
 	c.ParsedLayout.FormatName = "text"
 	c.ParsedLayout.MimeType = "text/plain"

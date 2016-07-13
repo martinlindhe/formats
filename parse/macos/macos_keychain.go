@@ -1,8 +1,7 @@
 package macos
 
-//  Mac OS X .keychain
-
 // STATUS: 1%
+// Extensions: .keychain
 
 import (
 	"os"
@@ -10,7 +9,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func Keychain(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// Keychain parses the Mac OS X keychain format
+func Keychain(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isKeychain(c.Header) {
 		return nil, nil

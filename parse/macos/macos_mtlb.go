@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MTLB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MTLB parses the metallib format
+func MTLB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMTLB(c.Header) {
 		return nil, nil

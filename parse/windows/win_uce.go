@@ -1,8 +1,7 @@
 package windows
 
-// ???, found in win10-os/Windows/System32/bopomofo.uce
-
 // STATUS: 1%
+// found in win10-os/Windows/System32/bopomofo.uce
 
 import (
 	"os"
@@ -10,7 +9,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func UCE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// UCE parses the uce format
+func UCE(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isUCE(c.Header) {
 		return nil, nil

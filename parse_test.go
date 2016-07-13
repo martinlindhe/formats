@@ -16,7 +16,6 @@ import (
 func TestParsedLayout(t *testing.T) {
 
 	searchDir := "./samples/exe"
-	//searchDir := "/usr/local"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -32,7 +31,6 @@ func TestParsedLayout(t *testing.T) {
 			return nil
 		}
 
-		// t.Log("OPEN", path)
 		f, err := os.Open(path)
 		defer f.Close()
 		if err != nil {
@@ -76,7 +74,7 @@ func TestParsedLayout(t *testing.T) {
 			*/
 		}
 
-		// XXX NOTE all t.Logf() below should be t.Fatalf, but
+		// XXX all t.Logf() below should be t.Fatalf, but
 		// workaround to keep test running while debugging other issues
 
 		for _, l := range layout.Layout {

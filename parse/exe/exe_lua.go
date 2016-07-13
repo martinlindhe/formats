@@ -1,7 +1,5 @@
 package exe
 
-// Lua bytecode
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LUA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// LUA parses the Lua bytecode format
+func LUA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isLUA(c.Header) {
 		return nil, nil

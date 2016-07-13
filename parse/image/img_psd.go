@@ -1,6 +1,5 @@
 package image
 
-// Adobe Photoshop Document
 // https://en.wikipedia.org/wiki/Adobe_Photoshop#File_format
 // Extensions: .psd
 
@@ -31,7 +30,8 @@ var (
 	}
 )
 
-func PSD(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PSD parses the Adobe Photoshop Document format
+func PSD(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPSD(c.Header) {
 		return nil, nil

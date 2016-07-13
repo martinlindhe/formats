@@ -1,10 +1,8 @@
 package windows
 
-// ??? found on Windows 10, Windows/WinSxS/amd64_windows-media-faceanalysis_31bf3856ad364e35_10.0.10240.16384_none_8cb86b56f21902dd/FaceAnalysisColor.mdl
-
-// Extensions: .mdl
-
 // STATUS: 1%
+// Extensions: .mdl
+// ??? found on Windows 10, Windows/WinSxS/amd64_windows-media-faceanalysis_31bf3856ad364e35_10.0.10240.16384_none_8cb86b56f21902dd/FaceAnalysisColor.mdl
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LDMF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// LDMF parses the ldmf format
+func LDMF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isLDMF(c.Header) {
 		return nil, nil

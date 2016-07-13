@@ -21,7 +21,8 @@ const (
 	pngMNG
 )
 
-func PNG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PNG parses the png, apng and mng formats
+func PNG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPNG(c.Header) {
 		return nil, nil
@@ -48,7 +49,7 @@ func isPNG(b []byte) bool {
 	return t != pngNone
 }
 
-func parsePNG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parsePNG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	pos := int64(0)
 	c.ParsedLayout.FileKind = parse.Image

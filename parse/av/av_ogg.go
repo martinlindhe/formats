@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func OGG(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// OGG parses the ogg format
+func OGG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isOGG(c.Header) {
 		return nil, nil

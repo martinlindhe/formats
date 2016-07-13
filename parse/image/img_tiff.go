@@ -1,6 +1,5 @@
 package image
 
-// TIFF image
 // TODO understand byte order in the magic bytes
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// TIFF parses the TIFF image format
+func TIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTIFF(c.Header) {
 		return nil, nil

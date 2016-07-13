@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Users/vm/AppData/Local/Packages/Microsoft.AAD.BrokerPlugin_cw5n1h2txyewy/Settings/settings.dat
-// extensions: .dat
-
 // STATUS: 1%
+// Extensions: .dat
+// found on Windows 10 Users/vm/AppData/Local/Packages/Microsoft.AAD.BrokerPlugin_cw5n1h2txyewy/Settings/settings.dat
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func REGF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// REGF parses the regf format
+func REGF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isREGF(c.Header) {
 		return nil, nil

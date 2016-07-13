@@ -6,7 +6,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LZMA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// LZMA parse the lzma format
+func LZMA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isLZMA(c.Header) {
 		return nil, nil

@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Users/vm/AppData/Local/Microsoft/Windows/Explorer/iconcache_idx.db
-// extensions: .db
-
 // STATUS: 1%
+// Extensions: .db
+// found on Windows 10 Users/vm/AppData/Local/Microsoft/Windows/Explorer/iconcache_idx.db
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func IMMM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// IMMM parses the immm format
+func IMMM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isIMMM(c.Header) {
 		return nil, nil

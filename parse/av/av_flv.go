@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func FLV(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// FLV parses the flv format
+func FLV(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isFLV(c.Header) {
 		return nil, nil

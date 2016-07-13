@@ -10,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func DEB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// DEB parses the deb format
+func DEB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isDEB(c.Header) {
 		return nil, nil

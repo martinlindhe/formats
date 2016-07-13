@@ -1,7 +1,5 @@
 package exe
 
-// LLVM Bit code
-
 // STATUS: 1%
 
 import (
@@ -11,7 +9,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func LLVMBitcode(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// LLVMBitcode parses the LLVM Bit code format
+func LLVMBitcode(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isLLVMBitcode(c.Header) {
 		return nil, nil

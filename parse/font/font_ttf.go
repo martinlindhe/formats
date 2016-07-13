@@ -1,7 +1,5 @@
 package font
 
-// TrueType font
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TTF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// TTF parses the TrueType font format
+func TTF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTTF(c.Header) {
 		return nil, nil

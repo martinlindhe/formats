@@ -1,6 +1,5 @@
 package av
 
-// Core Audio Format (CAF)
 // Modern audio format container by Apple, commonly used in OSX
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CAF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CAF parses the Core Audio Format
+func CAF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCAF(c.Header) {
 		return nil, nil

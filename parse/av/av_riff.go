@@ -16,7 +16,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RIFF parses the riff format
+func RIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRIFF(c.Header) {
 		return nil, nil
@@ -47,7 +48,7 @@ var (
 	}
 )
 
-func parseRIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+func parseRIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	idTag := string(c.Header[8 : 8+4])
 

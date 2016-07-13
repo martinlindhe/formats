@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func TTC(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// TTC parses the ttc format
+func TTC(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isTTC(c.Header) {
 		return nil, nil

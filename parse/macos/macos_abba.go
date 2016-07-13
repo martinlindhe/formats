@@ -12,7 +12,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ABBA(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ABBA parses the abba format
+func ABBA(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isABBA(c.Header) {
 		return nil, nil

@@ -12,7 +12,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ARI8(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ARI8 parses the ari8 format
+func ARI8(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isARI8(c.Header) {
 		return nil, nil

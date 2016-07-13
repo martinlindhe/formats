@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CodeSignature(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CodeSignature parses the code signature format
+func CodeSignature(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCodeSignature(c.Header) {
 		return nil, nil

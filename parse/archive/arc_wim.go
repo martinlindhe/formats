@@ -1,7 +1,5 @@
 package archive
 
-// Windows Imaging format
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func WIM(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// WIM parses the Windows Imaging format
+func WIM(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isWIM(c.Header) {
 		return nil, nil

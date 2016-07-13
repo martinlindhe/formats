@@ -1,6 +1,5 @@
 package exe
 
-// Ruby bytecode ???
 // STATUS: 1%
 
 import (
@@ -9,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func Ruby(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// Ruby parses the Ruby bytecode format
+func Ruby(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRuby(c.Header) {
 		return nil, nil

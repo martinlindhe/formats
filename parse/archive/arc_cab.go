@@ -18,7 +18,8 @@ var (
 	}
 )
 
-func CAB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CAB parses the cab format
+func CAB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCAB(c.Header) {
 		return nil, nil

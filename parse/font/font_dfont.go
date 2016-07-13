@@ -1,6 +1,5 @@
 package font
 
-// Datafork TrueType
 // Used on MacOS
 // https://en.wikipedia.org/wiki/Datafork_TrueType
 
@@ -12,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func DFont(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// DFont parses the Datafork TrueType format
+func DFont(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isDFont(c.Header) {
 		return nil, nil

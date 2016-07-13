@@ -12,7 +12,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func DSStore(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// DSStore parses the ds store format
+func DSStore(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isDSSTORE(c.Header) {
 		return nil, nil

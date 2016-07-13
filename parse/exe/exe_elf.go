@@ -1,14 +1,14 @@
 package exe
 
-// Executable and Linkable Format
 // https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
 
 // STATUS: 70%
 
 import (
 	"fmt"
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -95,7 +95,8 @@ var (
 	}
 )
 
-func ELF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ELF parses the Executable and Linkable Format
+func ELF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isELF(c.Header) {
 		return nil, nil

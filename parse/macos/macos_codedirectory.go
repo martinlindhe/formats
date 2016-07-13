@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func CodeDirectory(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// CodeDirectory parses the codedirectory format
+func CodeDirectory(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isCodeDirectory(c.Header) {
 		return nil, nil

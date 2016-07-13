@@ -13,7 +13,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func GnuMO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// GnuMO parses the GNU mo format
+func GnuMO(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isGnuMO(c.Header) {
 		return nil, nil

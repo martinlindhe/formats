@@ -1,6 +1,5 @@
 package av
 
-// Audio Interchange File Format (AIFF)
 // Developed by Apple, popular on Mac OS in the 90's
 
 // STATUS: 1%
@@ -11,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func AIFF(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// AIFF parses the Audio Interchange File Format
+func AIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isAIFF(c.Header) {
 		return nil, nil

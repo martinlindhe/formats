@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func AU(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// AU parses the au format
+func AU(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isAU(c.Header) {
 		return nil, nil

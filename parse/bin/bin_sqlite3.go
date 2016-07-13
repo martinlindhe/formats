@@ -5,8 +5,9 @@ package bin
 // STATUS: 1%
 
 import (
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
 var (
@@ -17,7 +18,8 @@ var (
 	}
 )
 
-func SQLITE3(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// SQLITE3 parses the sqlite3 format
+func SQLITE3(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isSQLITE3(c.Header) {
 		return nil, nil

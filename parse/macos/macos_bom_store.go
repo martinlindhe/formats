@@ -1,7 +1,5 @@
 package macos
 
-//  Mac OS X bill of materials (BOM) file
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func BOMStore(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// BOMStore parses the Mac OS X bill of materials file format
+func BOMStore(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isBOMStore(c.Header) {
 		return nil, nil

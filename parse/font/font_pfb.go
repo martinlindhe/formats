@@ -1,15 +1,16 @@
 package font
 
-// Adobe Printer Font Binary (used in the '90s)
-
 // STATUS: 1%
+// used in the '90s
 
 import (
-	"github.com/martinlindhe/formats/parse"
 	"os"
+
+	"github.com/martinlindhe/formats/parse"
 )
 
-func PFB(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PFB parses the Adobe Printer Font Binary format
+func PFB(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPFB(c.Header) {
 		return nil, nil

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	leCpuTypes = map[uint16]string{
+	leCPUTypes = map[uint16]string{
 		1:    "intel 80286+",
 		2:    "intel 80386+",
 		3:    "intel 80486+",
@@ -34,7 +34,7 @@ var (
 
 func parseMzLeHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 
-	cpuType, _ := parse.ReadToMap(file, parse.Uint16le, pos+8, leCpuTypes)
+	cpuType, _ := parse.ReadToMap(file, parse.Uint16le, pos+8, leCPUTypes)
 	targetOS, _ := parse.ReadToMap(file, parse.Uint16le, pos+10, leTargetOSes)
 
 	res := []parse.Layout{{

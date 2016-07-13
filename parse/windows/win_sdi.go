@@ -1,10 +1,8 @@
 package windows
 
-// ???
-// found on Windows 10 Windows/SysWOW64/boot.sdi
-// extensions: .sdi
-
 // STATUS: 1%
+// Extensions: .sdi
+// found on Windows 10 Windows/SysWOW64/boot.sdi
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func SDI(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// SDI parses the sdi format
+func SDI(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isSDI(c.Header) {
 		return nil, nil

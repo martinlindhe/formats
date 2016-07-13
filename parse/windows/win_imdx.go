@@ -1,10 +1,8 @@
 package windows
 
-// ??? found on Windows 10, Windows/InputMethod/CHS/ChsPinyinDM10.lex
-
-// Extensions: .lex
-
 // STATUS: 1%
+// Extensions: .lex
+// ??? found on Windows 10, Windows/InputMethod/CHS/ChsPinyinDM10.lex
 
 import (
 	"os"
@@ -12,7 +10,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func IMDX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// IMDX parses the imdx format
+func IMDX(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isIMDX(c.Header) {
 		return nil, nil

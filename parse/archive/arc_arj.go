@@ -24,7 +24,8 @@ const (
 	arjCrcMask       = 0xffffffff
 )
 
-func ARJ(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ARJ parses the arj format
+func ARJ(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isARJ(c.Header) {
 		return nil, nil

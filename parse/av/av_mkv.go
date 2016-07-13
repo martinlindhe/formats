@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func MKV(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// MKV parses the mkv format
+func MKV(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isMKV(c.Header) {
 		return nil, nil

@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ZIP(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ZIP parses the zip format
+func ZIP(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isZIP(c.Header) {
 		return nil, nil

@@ -8,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func ISO(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// ISO parses the iso format
+func ISO(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isISO(c.Header) {
 		return nil, nil

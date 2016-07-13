@@ -11,7 +11,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func RIFX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// RIFX parses the rifx format
+func RIFX(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isRIFX(c.Header) {
 		return nil, nil

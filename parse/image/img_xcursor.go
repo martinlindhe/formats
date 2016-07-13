@@ -1,7 +1,5 @@
 package image
 
-// X11 mouse cursor image
-
 // STATUS: 1%
 
 import (
@@ -10,7 +8,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func XCursor(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// XCursor parses the X11 mouse cursor image format
+func XCursor(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isXCursor(c.Header) {
 		return nil, nil

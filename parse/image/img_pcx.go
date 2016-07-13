@@ -21,7 +21,8 @@ var (
 	}
 )
 
-func PCX(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// PCX parses the pcx format
+func PCX(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isPCX(c.Header) {
 		return nil, nil

@@ -1,7 +1,5 @@
 package exe
 
-// VBScript Encoded Script File
-
 // http://lifeinhex.com/tag/vbe/
 // https://en.wikipedia.org/wiki/VBScript
 // http://fileformats.archiveteam.org/wiki/VBScript
@@ -14,7 +12,8 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-func VBE(c *parse.ParseChecker) (*parse.ParsedLayout, error) {
+// VBE parses the VBScript Encoded Script format
+func VBE(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isVBE(c.Header) {
 		return nil, nil

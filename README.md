@@ -1,5 +1,8 @@
 # About
 
+[![Travis-CI](https://api.travis-ci.org/martinlindhe/formats.svg)](https://travis-ci.org/martinlindhe/formats)
+[![codecov.io](https://codecov.io/github/martinlindhe/formats/coverage.svg?branch=master)](https://codecov.io/github/martinlindhe/formats?branch=master)
+[![GoDoc](https://godoc.org/github.com/martinlindhe/formats?status.svg)](https://godoc.org/github.com/martinlindhe/formats)
 [![Go Report Card](https://goreportcard.com/badge/github.com/martinlindhe/formats)](https://goreportcard.com/report/github.com/martinlindhe/formats)
 
 `formats` is a command line file explorer / hex viewer, written in Golang.

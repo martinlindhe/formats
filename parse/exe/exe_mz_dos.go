@@ -153,7 +153,7 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 			}}}
 	}
 
-	// EXEPACK
+	// Microsoft EXEPACK
 	// http://www.shikadi.net/moddingwiki/Microsoft_EXEPACK
 	exePackOffset := (int64(headerSizeInParagraphs) * 16)
 	exePackSize := int64(cs)*16 + int64(ip)
@@ -169,12 +169,13 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 				Info:   "EXEPACK packed exe",
 				Type:   parse.Group,
 				Childs: []parse.Layout{
-					{Offset: pos, Length: exePackSize, Info: "packed exe", Type: parse.Bytes},
+					{Offset: pos, Length: exePackSize - 18, Info: "packed exe", Type: parse.Bytes},
 				}},
 			{
 				Offset: pos + exePackSize - 18,
 				Length: 18 + 0x105 + 7 + 0x16,
 				Info:   "EXEPACK vars",
+				Type:   parse.Group,
 				Childs: []parse.Layout{
 					{Offset: pos + exePackSize - 18, Length: 2, Info: "real IP", Type: parse.Uint16le},
 					{Offset: pos + exePackSize - 18 + 2, Length: 2, Info: "real CS", Type: parse.Uint16le},

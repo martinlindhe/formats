@@ -3,18 +3,7 @@ package formats
 import (
 	"os"
 	"path/filepath"
-
-	"github.com/davecgh/go-spew/spew"
 )
-
-func d(params ...interface{}) {
-	spew.Dump(params)
-}
-
-func dd(params ...interface{}) {
-	d(params)
-	os.Exit(1)
-}
 
 // exists reports whether the named file or directory exists.
 func exists(name string) bool {

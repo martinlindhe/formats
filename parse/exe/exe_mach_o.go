@@ -27,7 +27,7 @@ var (
 		mhCigam:   "MH_CIGAM",
 		mhCigam64: "MH_CIGAM_64",
 	}
-	machoCpuTypes = map[uint32]string{
+	machoCPUTypes = map[uint32]string{
 		1:         "vax",
 		2:         "romp",
 		4:         "ns32032",
@@ -86,7 +86,7 @@ func parseMachO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, erro
 
 	pos := int64(0)
 	mhName, _ := parse.ReadToMap(file, parse.Uint32le, pos, machoMagicTypes)
-	cpuTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+4, machoCpuTypes)
+	cpuTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+4, machoCPUTypes)
 	fileTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+12, machoFileTypes)
 	pl.FormatName = "mach-o " + cpuTypeName
 	pl.FileKind = parse.Executable

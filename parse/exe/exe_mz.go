@@ -91,9 +91,9 @@ func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 			}})
 
 		pos = int64(newHeaderPos)
-		newHeaderId, _, _ := parse.ReadZeroTerminatedASCIIUntil(c.File, pos, 2)
+		newHeaderID, _, _ := parse.ReadZeroTerminatedASCIIUntil(c.File, pos, 2)
 
-		switch newHeaderId {
+		switch newHeaderID {
 		case "LX":
 			// OS/2 (32-bit)
 			c.ParsedLayout.FormatName = "mz-lx"
@@ -119,7 +119,7 @@ func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		default:
-			fmt.Println("mz-error: unknown newHeaderId: " + newHeaderId)
+			fmt.Println("mz-error: unknown newHeaderId: " + newHeaderID)
 		}
 
 		exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)

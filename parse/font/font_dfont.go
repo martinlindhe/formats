@@ -1,9 +1,8 @@
 package font
 
-// Used on MacOS
-// https://en.wikipedia.org/wiki/Datafork_TrueType
-
 // STATUS: 1%
+// https://en.wikipedia.org/wiki/Datafork_TrueType
+// XXX: dfont is mis-identified as Windows ico files
 
 import (
 	"os"
@@ -11,7 +10,7 @@ import (
 	"github.com/martinlindhe/formats/parse"
 )
 
-// DFont parses the Datafork TrueType format
+// DFont parses the macOS Datafork TrueType format
 func DFont(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if !isDFont(c.Header) {

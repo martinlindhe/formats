@@ -1,10 +1,10 @@
 package image
 
+// STATUS: 85%
+// https://en.wikipedia.org/wiki/ICO_(file_format)
+
 // TODO icon_embedded_png_001.ico has embedded PNG in image data
 // TODO decode non-png as "standard BMP image"...
-// TODO offer "save to file" for the "image data" (bytes type)
-
-// STATUS: 80%
 
 import (
 	"encoding/binary"
@@ -39,11 +39,28 @@ func isICO(b []byte) bool {
 		// 1 = icon, 2 = cursor
 		return false
 	}
+
+	// NOTE: arbitrary check to get less false matches
 	if h[2] > 500 {
-		// NOTE: an arbitrary check to get less false matches
 		return false
 	}
+
+	// NOTE: check to get less false matches, this value "should be 0"
+	reserved := b[9]
+	if reserved != 0 {
+		return false
+	}
+
 	return true
+}
+
+func readIconHeader(b []byte) [3]uint16 {
+
+	var h [3]uint16
+	h[0] = binary.LittleEndian.Uint16(b)
+	h[1] = binary.LittleEndian.Uint16(b[2:])
+	h[2] = binary.LittleEndian.Uint16(b[4:])
+	return h
 }
 
 func parseICO(c *parse.Checker) (*parse.ParsedLayout, error) {
@@ -120,13 +137,4 @@ func parseICO(c *parse.Checker) (*parse.ParsedLayout, error) {
 	}
 
 	return &c.ParsedLayout, nil
-}
-
-func readIconHeader(b []byte) [3]uint16 {
-
-	var h [3]uint16
-	h[0] = binary.LittleEndian.Uint16(b)
-	h[1] = binary.LittleEndian.Uint16(b[2:])
-	h[2] = binary.LittleEndian.Uint16(b[4:])
-	return h
 }

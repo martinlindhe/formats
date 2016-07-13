@@ -15,7 +15,7 @@ import (
 // some tests to see that parsed files look ok
 func TestParsedLayout(t *testing.T) {
 
-	searchDir := "./samples/exe"
+	searchDir := "./samples/font"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
 
@@ -134,7 +134,7 @@ func TestParsedLayout(t *testing.T) {
 
 func TestParseGIFBitFields(t *testing.T) {
 
-	file, err := os.Open("samples/images/gif/gif_89a_004_fish.gif")
+	file, err := os.Open("samples/image/gif/gif_89a_004_fish.gif")
 	defer file.Close()
 	if err != nil {
 		t.Fatalf("got error %v", err)
@@ -158,7 +158,7 @@ func TestParseGIFBitFields(t *testing.T) {
 
 func TestParseGIF87a(t *testing.T) {
 
-	file, err := os.Open("samples/images/gif/gif_87a_001.gif")
+	file, err := os.Open("samples/image/gif/gif_87a_001.gif")
 	defer file.Close()
 	if err != nil {
 		t.Fatalf("got error %v", err)
@@ -203,7 +203,7 @@ trailer (0029), group
 
 func TestParseGIF89a(t *testing.T) {
 
-	file, err := os.Open("samples/images/gif/gif_89a_001.gif")
+	file, err := os.Open("samples/image/gif/gif_89a_001.gif")
 	defer file.Close()
 	if err != nil {
 		t.Fatalf("got error %v", err)
@@ -261,7 +261,7 @@ trailer (0044), group
 /*
 func TestParseARJ(t *testing.T) {
 
-	file, err := os.Open("samples/archives/arj/arj_001_tiny.arj")
+	file, err := os.Open("samples/archive/arj/arj_001_tiny.arj")
 	defer file.Close()
 	if err != nil {
 		t.Fatalf("got error %v", err)
@@ -302,7 +302,7 @@ main header (0024), group
 
 func TestParseBMP(t *testing.T) {
 
-	file, err := os.Open("samples/images/bmp/bmp_v3-001.bmp")
+	file, err := os.Open("samples/image/bmp/bmp_v3-001.bmp")
 	defer file.Close()
 	if err != nil {
 		t.Fatalf("got error %v", err)

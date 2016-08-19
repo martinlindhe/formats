@@ -196,7 +196,7 @@ func (pl *ParsedLayout) GetASCII(file *os.File, hexView HexViewState) (string, e
 		}
 
 		tok := "."
-		if b > 31 && b < 128 && b != '[' && b != ']' {
+		if b > 31 && b < 127 && b != '[' && b != ']' {
 			// [] is used by termui, so we cant display them + colors :P
 			tok = fmt.Sprintf("%c", b)
 		}

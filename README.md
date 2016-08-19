@@ -12,7 +12,7 @@ Demo: https://asciinema.org/a/7uce44hzwvpi5dijxh0jpcc7g
 
 ## Installation
 
-    go get -v github.com/martinlindhe/formats/cmd/formats
+    go get -u github.com/martinlindhe/formats/cmd/formats
 
 
 ## Keyboard navigation

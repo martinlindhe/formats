@@ -6,6 +6,7 @@ package parse
 import (
 	"fmt"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -84,7 +85,7 @@ func parseText(c *Checker) (*ParsedLayout, error) {
 		_, len, err := ReadBytesUntilNewline(c.File, pos)
 		if err != nil {
 			if err != io.EOF {
-				fmt.Println("err!", err)
+				log.Println("error:", err)
 			}
 			break
 		}
@@ -102,7 +103,7 @@ func parseText(c *Checker) (*ParsedLayout, error) {
 			break
 		}
 		if line >= maxLines {
-			// fmt.Println("text: only mapping the first", maxLines, "lines")
+			// log.Println("text: only mapping the first", maxLines, "lines")
 			break
 		}
 	}

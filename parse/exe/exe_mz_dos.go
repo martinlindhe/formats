@@ -2,7 +2,7 @@ package exe
 
 import (
 	"encoding/binary"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -125,7 +125,7 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 	u32tok := binary.LittleEndian.Uint32(b[pos:])
 	if u32tok == 0x018a0001 {
 
-		fmt.Println("info: exe-dos TOPSPEED compressed sample plz!")
+		log.Println("info: exe-dos TOPSPEED compressed sample plz!")
 
 		return []parse.Layout{{
 			Offset: pos,

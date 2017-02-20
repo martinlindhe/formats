@@ -4,7 +4,7 @@ package font
 
 import (
 	"encoding/binary"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -12,7 +12,6 @@ import (
 
 // X11FontSNF parses the X11 font files in Server Natural Format
 func X11FontSNF(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	if !isX11FontSNF(c.Header) {
 		return nil, nil
 	}
@@ -20,20 +19,18 @@ func X11FontSNF(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isX11FontSNF(b []byte) bool {
-
 	val := binary.LittleEndian.Uint32(b)
 	if val == 4 {
 		return true // le
 	}
 	if val == 0x04000000 {
-		fmt.Println("sample please! x11 snf font big-endian")
+		log.Println("sample please! x11 snf font big-endian")
 		return true // be
 	}
 	return false
 }
 
 func parseX11FontSNF(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
-
 	pos := int64(0)
 	pl.FileKind = parse.Font
 	pl.Layout = []parse.Layout{{

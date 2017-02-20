@@ -9,8 +9,9 @@ package archive
 import (
 	//"bytes"
 	//"compress/zlib"
-	"fmt"
+
 	//"io"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -67,7 +68,7 @@ func parseXAR(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		}}}
 
 	if hdrLen != 28 {
-		fmt.Println("warning: xar header len. expected 28, found", hdrLen)
+		log.Println("warning: header len. expected 28, found", hdrLen)
 	}
 
 	pos += int64(hdrLen)

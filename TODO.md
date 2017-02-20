@@ -1,7 +1,6 @@
 # TODO cmd/formats
 
 * improve LNK parser, see http://lifeinhex.com/analyzing-malicious-lnk-file/
-* FIX ARJ (parser broken)
 * FIX TTF detection (magic ids ??? - or just parse struct?)
 * improve MP4 / MOV parser
 * basic detection of the following formats:

@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -119,7 +120,7 @@ func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 			c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, header...)
 
 		default:
-			fmt.Println("mz-error: unknown newHeaderID: " + newHeaderID)
+			log.Println("error: unknown newHeaderID: " + newHeaderID)
 		}
 
 		exeStart := int64(((hdrSizeInParagraphs + cs) * 16) + ip)
@@ -158,7 +159,7 @@ func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 					return nil, err
 				}
 				// XXX abs offset seems wrong
-				// fmt.Println("x = ", hdrSizeInParagraphs+cs-b[1])
+				// log.Println("x = ", hdrSizeInParagraphs+cs-b[1])
 				abs := (hdrSizeInParagraphs+cs-b[1])*16 + b[0]
 
 				reloc.Childs = append(reloc.Childs, []parse.Layout{

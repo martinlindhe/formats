@@ -6,6 +6,7 @@ package exe
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -110,7 +111,7 @@ func isELF(b []byte) bool {
 		return false
 	}
 	if b[5] == 2 {
-		fmt.Println("TODO: handle big-endian ELF")
+		log.Println("TODO: handle big-endian ELF")
 		return false
 	}
 	if b[0] != 0x7f || b[1] != 'E' || b[2] != 'L' || b[3] != 'F' {
@@ -215,7 +216,7 @@ func parseElfPhEntries(file *os.File, pos int64, phEntrySize uint16, phCount uin
 	res := []parse.Layout{}
 
 	if int64(phEntrySize) != phHeaderSize {
-		fmt.Println("warning: ph entry size - expected", phHeaderSize, ", saw", int64(phEntrySize))
+		log.Println("warning: ph entry size - expected", phHeaderSize, ", saw", int64(phEntrySize))
 	}
 
 	for i := 1; i <= int(phCount); i++ {
@@ -267,7 +268,7 @@ func parseElfShEntries(file *os.File, pos int64, shEntrySize uint16, shCount uin
 	res := []parse.Layout{}
 
 	if int64(shEntrySize) != shHeaderSize {
-		fmt.Println("warning: unexpected sh entry size. expected", shHeaderSize, ", saw", int64(shEntrySize))
+		log.Println("warning: unexpected sh entry size. expected", shHeaderSize, ", saw", int64(shEntrySize))
 	}
 
 	strtabOffset := elfStrtabOffset(file, pos, shCount)

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -67,7 +68,7 @@ func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (stri
 			return val, nil
 		}
 	default:
-		fmt.Println("UNHNANdlNED:", dataType.String())
+		log.Println("Unhandled type:", dataType.String())
 	}
 	return "?", nil
 }

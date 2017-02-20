@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -99,19 +100,19 @@ func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 	for {
 		_, err := c.File.Seek(pos, os.SEEK_SET)
 		if err != nil {
-			fmt.Println("seek err", err)
+			log.Println("seek err", err)
 		}
 
 		var b byte
 		if err := binary.Read(c.File, binary.LittleEndian, &b); err != nil {
 			if err == io.EOF {
-				fmt.Println("warning: did not find gif trailer")
+				log.Println("warning: did not find gif trailer")
 				return &pl, nil
 			}
 			return nil, err
 		}
 
-		// fmt.Printf("section %02x at %04x\n", b, pos)
+		// log.Printf("section %02x at %04x\n", b, pos)
 		switch b {
 		case sExtension:
 			gfxExt, err := gifExtension(c.File, pos)
@@ -342,7 +343,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 			}
 			typeSpecific = append(typeSpecific, subBlocks...)
 			for _, b := range subBlocks {
-				// fmt.Println("sub block ", b.Info, " of len ", b.Length)
+				// log.Println("sub block ", b.Info, " of len ", b.Length)
 				size += b.Length
 			}
 		} else {
@@ -355,7 +356,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		}
 
 	default:
-		fmt.Printf("gif: unknown extension 0x%.2x\n", extType)
+		log.Printf("unknown extension 0x%.2x\n", extType)
 	}
 
 	res.Length += size
@@ -405,12 +406,12 @@ func gifSubBlocks(file *os.File, pos int64) ([]parse.Layout, error) {
 
 		if err := binary.Read(file, binary.LittleEndian, &follows); err != nil {
 			if err == io.EOF {
-				fmt.Println("error: sub blocks unexpected EOF")
+				log.Println("error: sub blocks unexpected EOF")
 				break
 			}
 			return nil, err
 		}
-		// fmt.Printf("read follows byte %02x from %04x\n", follows, pos)
+		// log.Printf("read follows byte %02x from %04x\n", follows, pos)
 
 		childs = append(childs, parse.Layout{
 			Offset: pos,

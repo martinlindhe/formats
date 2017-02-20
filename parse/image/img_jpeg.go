@@ -6,8 +6,8 @@ package image
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -68,7 +68,7 @@ func parseJPEG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 		marker, _ := parse.ReadUint8(file, pos+1)
 
 		if magic != 0xff {
-			fmt.Printf("jpeg parse error at %04x. expected ff, found %02x\n", pos, magic)
+			log.Printf("jpeg parse error at %04x. expected ff, found %02x\n", pos, magic)
 			break
 		}
 
@@ -153,7 +153,7 @@ func findJPEGImageData(file *os.File, pos int64) parse.Layout {
 		var b uint16
 		err := binary.Read(file, binary.BigEndian, &b)
 		if err == io.EOF {
-			fmt.Printf("error: jpeg EOF at pos %04x\n", pos)
+			log.Printf("error: jpeg EOF at pos %04x\n", pos)
 			break
 		}
 

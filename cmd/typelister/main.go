@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -35,12 +36,12 @@ func main() {
 
 		layout, err := formats.ParseLayout(file)
 		if err != nil {
-			fmt.Println("error:", err)
+			log.Println("error: ", err)
 			os.Exit(1)
 		}
 
 		if layout == nil {
-			fmt.Println("ERR: layout is nil")
+			log.Println("error: layout is nil")
 			os.Exit(1)
 		}
 
@@ -49,7 +50,7 @@ func main() {
 		return nil
 	})
 	if err != nil {
-		fmt.Println("ERR: ", err)
+		log.Println("error: ", err)
 		os.Exit(1)
 	}
 }

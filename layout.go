@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -212,7 +213,7 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 	var err error
 	checker.Header, err = readHeaderChunk(file)
 	if err != nil {
-		fmt.Println("warning: MatchAll failed reading header chunk")
+		log.Println("warning: MatchAll failed reading header chunk")
 		return nil, err
 	}
 
@@ -220,7 +221,7 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 
 		pl, err2 := parser(&checker)
 		if err2 != nil {
-			fmt.Println("warning: parser", name, "failed: ", err2)
+			log.Println("warning: parser", name, "failed: ", err2)
 			continue
 		}
 		if pl == nil {
@@ -275,7 +276,7 @@ func readHeaderChunk(file *os.File) ([]byte, error) {
 
 	file.Seek(0, os.SEEK_SET)
 	if err := binary.Read(file, binary.LittleEndian, &b); err != nil {
-		fmt.Println("error: failed to read header!", err)
+		log.Println("error: failed to read header!", err)
 		return nil, err
 	}
 

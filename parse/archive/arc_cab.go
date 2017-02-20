@@ -4,6 +4,7 @@ package archive
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -64,7 +65,7 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		}}}
 
 	if flags&4 > 0 {
-		fmt.Println("flags&4 SAMPLE PLZ")
+		log.Println("flags&4 SAMPLE PLZ")
 		/*
 			ushort cbCFHeader;      // (optional) size of per-cabinet reserved area
 			ubyte  cbCFFolder;      // (optional) size of per-folder reserved area
@@ -76,14 +77,14 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	}
 	if flags&1 > 0 {
-		fmt.Println("flags&1 SAMPLE PLZ")
+		log.Println("flags&1 SAMPLE PLZ")
 		/*
 			char    szCabinetPrev[];// (optional) name of previous cabinet file
 			char    szDiskPrev[];   // (optional) name of previous disk
 		*/
 	}
 	if flags&2 > 0 {
-		fmt.Println("flags&2 SAMPLE PLZ")
+		log.Println("flags&2 SAMPLE PLZ")
 		/*
 			char    szCabinetNext[];    // (optional) name of next cabinet file
 			char    szDiskNext[];       // (optional) name of next disk
@@ -121,7 +122,7 @@ func parseCAB(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	cffOffset, _ := pl.ReadUint32leFromInfo(file, "offset to CFFILE")
 	if pos != int64(cffOffset) {
-		fmt.Printf("cab: unexpected, offset = %x, cffOffset = %x\n", pos, cffOffset)
+		log.Printf("unexpected, offset = %x, cffOffset = %x\n", pos, cffOffset)
 		pos = int64(cffOffset)
 	}
 

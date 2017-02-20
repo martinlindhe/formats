@@ -11,14 +11,13 @@ package av
 // STATUS: 2%
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/martinlindhe/formats/parse"
 )
 
 // RIFF parses the riff format
 func RIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	if !isRIFF(c.Header) {
 		return nil, nil
 	}
@@ -26,7 +25,6 @@ func RIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isRIFF(b []byte) bool {
-
 	if b[0] != 'R' || b[1] != 'I' || b[2] != 'F' || b[3] != 'F' {
 		return false
 	}
@@ -59,7 +57,7 @@ func parseRIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 	if val, ok := riffFormatNames[idTag]; ok {
 		c.ParsedLayout.FormatName = val
 	} else {
-		fmt.Println("error: unknown riff id tag:", idTag)
+		log.Println("error: unknown riff id tag:", idTag)
 	}
 
 	pos := int64(0)

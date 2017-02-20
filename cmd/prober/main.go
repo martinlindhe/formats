@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats"
@@ -22,13 +23,13 @@ func main() {
 	f, err := os.Open(*inFile)
 	defer f.Close()
 	if err != nil {
-		fmt.Printf("error reading file: %s\n", err)
+		log.Printf("error reading file: %s\n", err)
 		os.Exit(1)
 	}
 
 	layout, err := formats.ParseLayout(f)
 	if err != nil {
-		fmt.Println(err)
+		log.Println("error: ", err)
 		os.Exit(1)
 	}
 

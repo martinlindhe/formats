@@ -7,6 +7,7 @@ package exe
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -234,9 +235,8 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 							// unsigned short offset;
 				*/
 			default:
-				fmt.Println("  TODO exe_mz_ne segment index ", segNumber, ", entries", items)
+				log.Println("TODO exe_mz_ne segment index ", segNumber, ", entries", items)
 				//NOTE: only sample i seen was empty here
-				// panic("xxx")
 			}
 		}
 	}
@@ -401,7 +401,7 @@ func parseNENonResidentTable(file *os.File, pos int64, size uint16) *parse.Layou
 		pos += 1 + int64(len) + 2
 	}
 	if int64(size) != nonresidentLen {
-		fmt.Println("warning: NE nonresident table length expected ", int64(size), ", found", nonresidentLen)
+		log.Println("warning: NE nonresident table length expected ", int64(size), ", found", nonresidentLen)
 	}
 	res.Length = nonresidentLen
 	return &res

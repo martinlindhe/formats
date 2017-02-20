@@ -11,7 +11,7 @@ package image
 // STATUS: 2%
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -32,7 +32,6 @@ var (
 
 // PSD parses the Adobe Photoshop Document format
 func PSD(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	if !isPSD(c.Header) {
 		return nil, nil
 	}
@@ -40,7 +39,6 @@ func PSD(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isPSD(b []byte) bool {
-
 	if b[0] != '8' || b[1] != 'B' || b[2] != 'P' || b[3] != 'S' {
 		return false
 	}
@@ -48,16 +46,14 @@ func isPSD(b []byte) bool {
 	// version: uint16be
 	if b[4] != 0 || b[5] != 1 {
 		if b[5] == 2 {
-			fmt.Println("TODO: psd version 2 file = 'big' file")
+			log.Println("TODO: psd version 2 file = 'big' file")
 		}
 		return false
 	}
-
 	return true
 }
 
 func parsePSD(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
-
 	pos := int64(0)
 	colorMode, _ := parse.ReadToMap(file, parse.Uint16be, pos+24, psdColorModes)
 	pl.FileKind = parse.Image

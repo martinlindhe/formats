@@ -6,8 +6,8 @@ package image
 // TODO: MNG parsing gives up after first IEND, should continue
 
 import (
-	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/martinlindhe/formats/parse"
@@ -105,7 +105,7 @@ func parsePNG(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 		if typeCode == "IHDR" {
 			if chunkLength != 13 {
-				fmt.Println("warning: IHDR size must be 13")
+				log.Println("warning: IHDR size must be 13")
 			}
 			l.Childs = append(l.Childs, []parse.Layout{
 				{Offset: pos, Length: 4, Info: "width", Type: parse.Uint32be},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gizak/termui"
@@ -34,14 +35,14 @@ func main() {
 
 	file, err := os.Open(*inFile)
 	if err != nil {
-		fmt.Println("error:", err)
+		log.Println("error:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
 
 	parsers, err := formats.MatchAll(file)
 	if err != nil {
-		fmt.Println("error:", err)
+		log.Println("error:", err)
 		os.Exit(1)
 	}
 
@@ -59,7 +60,7 @@ func main() {
 
 		chosenParser, err = parsers.ChoseOne(file)
 		if err != nil {
-			fmt.Println("error:", err)
+			log.Println("error:", err)
 			os.Exit(1)
 		}
 	}
@@ -77,7 +78,7 @@ func uiLoop(file *os.File) {
 	err := termui.Init()
 	defer termui.Close()
 	if err != nil {
-		fmt.Println("termui error:", err)
+		log.Println("termui error:", err)
 		return
 	}
 

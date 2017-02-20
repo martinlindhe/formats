@@ -94,7 +94,7 @@ func findARJHeader(file *os.File) (int64, error) {
 	for ; pos < lastpos; pos++ {
 		pos2, _ := file.Seek(pos, os.SEEK_SET)
 		if pos != pos2 {
-			fmt.Printf("warning: expected %d, got %d\n", pos, pos2)
+			log.Printf("warning: expected %d, got %d\n", pos, pos2)
 		}
 
 		var c byte
@@ -238,8 +238,10 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 	res := []parse.Layout{}
 	pos, _ := f.Seek(0, os.SEEK_CUR)
+	entry := 0
 
 	for {
+		entry++
 		magic, _ := parse.ReadUint16le(f, pos)
 		if magic != 0xEA60 {
 			log.Fatalf("Unexpected magic %04x at %04x", magic, pos)
@@ -250,7 +252,7 @@ func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 			Offset: pos,
 			Length: 4,
 			Type:   parse.Group,
-			Info:   "local file header",
+			Info:   "local file header " + fmt.Sprintf("%d", entry),
 			Childs: []parse.Layout{
 				{Offset: pos, Length: 2, Type: parse.Uint16le, Info: "magic"},
 				{Offset: pos + 2, Length: 2, Type: parse.Uint16le, Info: "header size"},

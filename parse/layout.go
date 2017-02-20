@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -324,13 +325,13 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 
 	field := pl.findBitfieldLayout(info)
 	if field == nil {
-		fmt.Println("ERROR: field", info, "not found")
+		log.Println("ERROR: field", info, "not found")
 		return 0
 	}
 
 	mask := pl.findBitfieldMask(info)
 	if mask == nil {
-		fmt.Println("ERROR: mask", info, "not found")
+		log.Println("ERROR: mask", info, "not found")
 		return 0
 	}
 

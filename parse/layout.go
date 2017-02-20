@@ -95,7 +95,7 @@ var (
 		MajorMinor32le:   "major.minor-32le",
 		MinorMajor16le:   "minor.major-16le",
 		DOSDateTime:      "datetime-dos-32le",
-		ArjDateTime:      "borked-datetime-arj-32le",
+		ArjDateTime:      "datetime-arj-32le",
 		DOSOffsetSegment: "offset.segment-dos-16le",
 		Bytes:            "bytes",
 		ASCII:            "ASCII",

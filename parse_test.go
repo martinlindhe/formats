@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/martinlindhe/formats/parse"
@@ -18,19 +17,15 @@ func TestParsedLayout(t *testing.T) {
 	searchDir := "./samples"
 
 	err := filepath.Walk(searchDir, func(path string, fi os.FileInfo, err error) error {
-
 		if fi == nil {
 			t.Fatalf("invalid path " + searchDir)
 		}
-
 		if fi.IsDir() {
 			return nil
 		}
-
 		if fi.Size() == 0 {
 			return nil
 		}
-
 		f, err := os.Open(path)
 		defer f.Close()
 		if err != nil {
@@ -39,7 +34,7 @@ func TestParsedLayout(t *testing.T) {
 
 		layout, err := ParseLayout(f)
 		if err != nil {
-			t.Fatalf("got error %v", err)
+			t.Errorf("ParseLayout error %s", err)
 		}
 
 		assert.Equal(t, true, layout != nil)
@@ -54,62 +49,59 @@ func TestParsedLayout(t *testing.T) {
 		// make sure all parsed layouts got FileKind set
 		assert.Equal(t, false, layout.FileKind == 0)
 
-		if layout.MimeType == "" {
-			/*
+		/*
+			if layout.MimeType == "" {
 				// ask "file" about mime type
-				filemagicMime, _ := runCommandReturnStdout("file --mime-type " + path)
+				filemagicMime, _ := runCommandReturnStdout("file", "--mime-type", path)
 				filemagicMime = strings.TrimSpace(filemagicMime)
 				res := strings.Split(filemagicMime, " ")
-				mime := ""
+				mime := filemagicMime
 				if len(res) > 1 {
 					mime = res[1]
-				} else {
-					mime = filemagicMime
 				}
 				if filemagicMime != "" {
 					t.Log("warning:", layout.FormatName, "has no mime. file suggests", mime)
 				} else {
 					t.Log("warning:", layout.FormatName, "has no mime")
 				}
-			*/
-		}
-
+			}
+		*/
 		for _, l := range layout.Layout {
 			if l.Type != parse.Group {
-				t.Fatalf("%s:%s in header %s: root level must be group", layout.FormatName, path, l.Info)
+				t.Errorf("%s:%s in header %s: root level must be group", layout.FormatName, path, l.Info)
 			}
 			if len(l.Masks) > 0 {
-				t.Fatalf("%s:%s in header %s: can not have masks on root level group %v", layout.FormatName, path, l.Info, l)
+				t.Errorf("%s:%s in header %s: can not have masks on root level group %v", layout.FormatName, path, l.Info, l)
 			}
 			if l.Type == parse.RGB && l.Length != 3 {
-				t.Fatalf("%s:%s in header %s: RGB field must be %d bytes, was %d", layout.FormatName, path, l.Info, 3, l.Length)
+				t.Errorf("%s:%s in header %s: RGB field must be %d bytes, was %d", layout.FormatName, path, l.Info, 3, l.Length)
 			}
 			if l.Type == parse.Uint8 && l.Length != 1 {
-				t.Fatalf("%s:%s in header %s: Uint8 field must be %d bytes, was %d", layout.FormatName, path, l.Info, 1, l.Length)
+				t.Errorf("%s:%s in header %s: Uint8 field must be %d bytes, was %d", layout.FormatName, path, l.Info, 1, l.Length)
 			}
 			if l.Type == parse.Bytes && l.Length == 1 {
-				t.Fatalf("%s:%s in header %s: Bytes field should never be used for single-byte fields", layout.FormatName, path, l.Info)
+				t.Errorf("%s:%s in header %s: Bytes field should never be used for single-byte fields", layout.FormatName, path, l.Info)
 			}
 			if l.Type == parse.Uint16le && l.Length != 2 {
-				t.Fatalf("%s:%s in header %s: Uint16le field must be %d bytes, was %d", layout.FormatName, path, l.Info, 2, l.Length)
+				t.Errorf("%s:%s in header %s: Uint16le field must be %d bytes, was %d", layout.FormatName, path, l.Info, 2, l.Length)
 			}
 			if l.Type == parse.Uint32le && l.Length != 4 {
-				t.Fatalf("%s:%s in header %s: Uint16le field must be %d bytes, was %d", layout.FormatName, path, l.Info, 4, l.Length)
+				t.Errorf("%s:%s in header %s: Uint16le field must be %d bytes, was %d", layout.FormatName, path, l.Info, 4, l.Length)
 			}
 			if len(l.Childs) > 0 && l.Childs[0].Offset != l.Offset {
-				t.Fatalf("%s:%s in header %s: %s child 0 offset should be same as parent %04x, but is %04x", layout.FormatName, path, l.Info, l.Info, l.Offset, l.Childs[0].Offset)
+				t.Errorf("%s:%s in header %s: %s child 0 offset should be same as parent %04x, but is %04x", layout.FormatName, path, l.Info, l.Info, l.Offset, l.Childs[0].Offset)
 			}
 			if l.Offset+l.Length > layout.FileSize {
-				t.Fatalf("%s:%s in header %s: %s data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, layout.FileSize-(l.Offset+l.Length))
+				t.Errorf("%s:%s in header %s: %s data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, layout.FileSize-(l.Offset+l.Length))
 			}
 			sum := int64(0)
 			for _, child := range l.Childs {
 				sum += child.Length
 				if child.Type == parse.Group {
-					t.Fatalf("%s:%s in header %s: child level cant be group %s:%s", layout.FormatName, path, l.Info, l.Info, child.Info)
+					t.Errorf("%s:%s in header %s: child level cant be group %s:%s", layout.FormatName, path, l.Info, l.Info, child.Info)
 				}
 				if child.Offset+child.Length > layout.FileSize {
-					t.Fatalf("%s:%s in header %s: %s:%s (child) data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
+					t.Errorf("%s:%s in header %s: %s:%s (child) data extends above end of file with %d bytes", layout.FormatName, path, l.Info, l.Info, child.Info, layout.FileSize-(l.Offset+l.Length))
 				}
 
 				if len(child.Masks) > 0 {
@@ -119,12 +111,12 @@ func TestParsedLayout(t *testing.T) {
 						tot += mask.Length
 					}
 					if tot != expectedTot {
-						t.Fatalf("%s:%s in header %s: %s:%s (child) masks size dont add up. expected %d bits, got %d", layout.FormatName, path, l.Info, l.Info, child.Info, expectedTot, tot)
+						t.Errorf("%s:%s in header %s: %s:%s (child) masks size dont add up. expected %d bits, got %d", layout.FormatName, path, l.Info, l.Info, child.Info, expectedTot, tot)
 					}
 				}
 			}
 			if sum != l.Length {
-				t.Fatalf("%s:%s in header %s: child sum for %s is %d, but group length is %d", layout.FormatName, path, l.Info, l.Info, sum, l.Length)
+				t.Errorf("%s:%s in header %s: child sum for %s is %d, but group length is %d", layout.FormatName, path, l.Info, l.Info, sum, l.Length)
 			}
 		}
 		return nil
@@ -258,48 +250,6 @@ trailer (0044), group
 	assert.Equal(t, uint32(0), layout.DecodeBitfieldFromInfo(file, "local color table flag"))
 }
 
-/*
-func TestParseARJ(t *testing.T) {
-
-	file, err := os.Open("samples/archive/arj/arj_001_tiny.arj")
-	defer file.Close()
-	if err != nil {
-		t.Fatalf("got error %v", err)
-	}
-
-
-	layout, err := ParseLayout(file)
-	if err != nil {
-		t.Fatalf("got error %v", err)
-	}
-	assert.Equal(t, `Format: arj (arj_001_tiny.arj, 121 bytes)
-
-main header (0024), group
-  magic (0024), uint16-le
-  basic header size (0026), uint16-le
-  size up to and including 'extra data' (0028), uint8
-  archiver version number (0029), uint8
-  minimum archiver version to extract (002a), uint8
-  host OS (002b), uint8
-  arj flags (002c), uint8
-  security version (002d), uint8
-  file type (002e), uint8
-  created time (002f), uint32-le
-  modified time (0033), uint32-le
-  archive size for secured archive (0037), uint32-le
-  security envelope file position (003b), uint32-le
-  filespec position in filename (003f), uint32-le
-  length in bytes of security envelope data (0043), uint16-le
-  encryption version (0045), uint8
-  last chapter (0046), uint8
-  archive name (0047), ASCIIZ
-  comment (0048), ASCIIZ
-  crc32 (0049), uint32-le
-  ext header size (004d), uint32-le
-`, layout.PrettyPrint())
-}
-*/
-
 func TestParseBMP(t *testing.T) {
 
 	file, err := os.Open("samples/image/bmp/bmp_v3-001.bmp")
@@ -337,13 +287,11 @@ image data (0036), group
 `, layout.PrettyPrint())
 }
 
-func runCommandReturnStdout(step string) (string, error) {
-
-	parts := strings.Split(step, " ")
-	cmd := exec.Command(parts[0], parts[1:]...)
+func runCommandReturnStdout(cmd string, step ...string) (string, error) {
+	c := exec.Command(cmd, step...)
 	res := ""
 
-	stdOutReader, err := cmd.StdoutPipe()
+	stdOutReader, err := c.StdoutPipe()
 	if err != nil {
 		return res, err
 	}
@@ -354,10 +302,10 @@ func runCommandReturnStdout(step string) (string, error) {
 		}
 	}()
 
-	if err := cmd.Start(); err != nil {
+	if err := c.Start(); err != nil {
 		return res, err
 	}
-	if err := cmd.Wait(); err != nil {
+	if err := c.Wait(); err != nil {
 		return res, err
 	}
 	return res, nil

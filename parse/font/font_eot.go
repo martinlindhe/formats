@@ -30,6 +30,7 @@ func parseEOT(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0)
 	pl.FileKind = parse.Font
+	pl.MimeType = "application/vnd.ms-fontobject"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 80, // XXX

@@ -58,6 +58,7 @@ func parsePCX(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 	}
 
 	pl.FileKind = parse.Image
+	pl.MimeType = "image/x-pcx"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 128, // XXX

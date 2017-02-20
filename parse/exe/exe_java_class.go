@@ -31,6 +31,7 @@ func parseJavaClass(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, 
 
 	pos := int64(0)
 	pl.FileKind = parse.Executable
+	pl.MimeType = "application/x-java-applet"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 4, // XXX

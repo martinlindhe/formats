@@ -30,6 +30,7 @@ func parseISO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 
 	pos := int64(0x8000)
 	pl.FileKind = parse.Archive
+	pl.MimeType = "application/x-iso9660-image"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 3,

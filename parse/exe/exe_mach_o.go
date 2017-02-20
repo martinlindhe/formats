@@ -90,6 +90,7 @@ func parseMachO(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, erro
 	fileTypeName, _ := parse.ReadToMap(file, parse.Uint32le, pos+12, machoFileTypes)
 	pl.FormatName = "mach-o " + cpuTypeName
 	pl.FileKind = parse.Executable
+	pl.MimeType = "application/x-mach-binary"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 28, // XXX

@@ -29,6 +29,7 @@ func parseWOFF2(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, erro
 
 	pos := int64(0)
 	pl.FileKind = parse.Font
+	pl.MimeType = "application/font-woff2"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 4, // XXX

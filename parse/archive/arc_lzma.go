@@ -31,6 +31,7 @@ func parseLZMA(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error
 	pos := int64(0)
 
 	pl.FileKind = parse.Archive
+	pl.MimeType = "application/x-lzma"
 	pl.Layout = []parse.Layout{{
 		Offset: pos,
 		Length: 13, // XXX

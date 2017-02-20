@@ -38,6 +38,7 @@ func isMZ(b []byte) bool {
 func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	c.ParsedLayout.FileKind = parse.Executable
+	c.ParsedLayout.MimeType = "application/x-dosexec"
 	pos := int64(0)
 	mz := parse.Layout{
 		Offset: pos,

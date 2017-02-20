@@ -48,21 +48,15 @@ func isARJ(b []byte) bool {
 
 // finds arj header and leaves file position at it
 func findARJHeader(file *os.File) (int64, error) {
-
 	reader := io.Reader(file)
-
-	file.Seek(0, os.SEEK_SET)
-
-	pos, _ := file.Seek(0, os.SEEK_CUR)
+	pos := int64(0)
 	lastpos, _ := file.Seek(0, os.SEEK_END)
 	lastpos -= 2
-
 	if lastpos > arjMaxSFX {
 		lastpos = arjMaxSFX
 	}
-	// log.Println("starting", pos, lastpos)
+
 	for ; pos < lastpos; pos++ {
-		// log.Printf("setting pos to %04x\n", pos)
 		pos2, _ := file.Seek(pos, os.SEEK_SET)
 		if pos != pos2 {
 			fmt.Printf("warning: expected %d, got %d\n", pos, pos2)
@@ -143,14 +137,12 @@ var (
 )
 
 func parseARJ(f *os.File) ([]parse.Layout, error) {
-
 	pos, err := findARJHeader(f)
 	if err != nil {
 		return nil, err
 	}
 
 	hostOSName, _ := parse.ReadToMap(f, parse.Uint8, pos+7, arjHostOS)
-
 	mainHeaderLen := int64(34)
 
 	chunk := parse.Layout{
@@ -221,10 +213,24 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 		{Offset: pos, Length: 4, Type: parse.Uint32le, Info: "crc32"},
 		{Offset: pos + 4, Length: 2, Type: parse.Uint16le, Info: "ext header size"},
 	}...)
-	pos += 6
+
+	f.Seek(pos+6, os.SEEK_SET)
 	// NOTE: if ext header size > 0, it should follow here. currently unused in file format
 
 	res := []parse.Layout{chunk}
+
+	files, err := parseARJLocalFiles(f)
+	if err != nil {
+		return nil, err
+	}
+	res = append(res, files...)
+
+	return res, nil
+}
+
+func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
+	res := []parse.Layout{}
+	pos, _ := f.Seek(0, os.SEEK_CUR)
 
 	// parse local file headers until one has size=0 == EOF
 	for {
@@ -324,12 +330,9 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 			local.Length += int64(dataLength)
 		}
 		res = append(res, local)
-
 		if length == 0 {
-			// log.Println("FOUND LAST ONE!!!")
 			break
 		}
 	}
-
 	return res, nil
 }

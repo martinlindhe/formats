@@ -42,7 +42,6 @@ var (
 
 // JPEG parses the jpeg format
 func JPEG(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	if !isJPEG(c.Header) {
 		return nil, nil
 	}
@@ -50,7 +49,6 @@ func JPEG(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isJPEG(b []byte) bool {
-
 	if b[0] != 0xff || b[1] != 0xd8 {
 		return false
 	}
@@ -61,7 +59,6 @@ func isJPEG(b []byte) bool {
 }
 
 func parseJPEG(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
-
 	pos := int64(0)
 	pl.FileKind = parse.Image
 	pl.MimeType = "image/jpeg"

@@ -72,15 +72,13 @@ func ReadToMap(file *os.File, dataType DataType, pos int64, i interface{}) (stri
 	return "?", nil
 }
 
-// ReadZeroTerminatedASCIIUntil returns string, bytes read, error
-func ReadZeroTerminatedASCIIUntil(file *os.File, pos int64, maxLen int) (string, int, error) {
-
+// ReadZeroTerminatedASCIIUntil returns ascii-string, bytes read, error
+func ReadZeroTerminatedASCIIUntil(file *os.File, pos int64, maxLen int64) (string, int64, error) {
+	c := byte(0)
+	s := ""
+	readCnt := int64(0)
 	file.Seek(pos, os.SEEK_SET)
 
-	var c byte
-	s := ""
-
-	readCnt := 0
 	for {
 		if err := binary.Read(file, binary.LittleEndian, &c); err != nil {
 			return s, 0, err
@@ -90,7 +88,7 @@ func ReadZeroTerminatedASCIIUntil(file *os.File, pos int64, maxLen int) (string,
 			break
 		}
 		s += string(c)
-		if readCnt == maxLen {
+		if readCnt >= maxLen {
 			break
 		}
 	}

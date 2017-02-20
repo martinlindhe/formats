@@ -1,7 +1,7 @@
 | Format | Status |
 | ------ | ------:|
 | archive/arc_7z.go | 1% |
-| archive/arc_arj.go | borked
+| archive/arc_arj.go | 20% |
 | archive/arc_bzip2.go | 1% |
 | archive/arc_cab.go | 80% |
 | archive/arc_compress_kwaj.go | 1% |
@@ -10,6 +10,10 @@
 | archive/arc_gzip.go | 1% |
 | archive/arc_iso.go | 1% |
 | archive/arc_luks.go | 1% |
+| archive/arc_lzma.go | 1% |
+| archive/arc_mozlz4.go | 1% |
+| archive/arc_rar.go | 1% |
+| archive/arc_tar.go | borked
 | archive/arc_td2.go | 1% |
 | archive/arc_vdi.go | 1% |
 | archive/arc_wim.go | 1% |
@@ -80,7 +84,7 @@
 | image/img_bpg.go | 1% |
 | image/img_gif.go | 90% |
 | image/img_icns.go | 1% |
-| image/img_ico.go | 80% |
+| image/img_ico.go | 85% |
 | image/img_jpeg.go | 80% |
 | image/img_pcx.go | 10% |
 | image/img_png.go | 80% |

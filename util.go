@@ -1,9 +1,14 @@
 package formats
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 // exists reports whether the named file or directory exists.
 func exists(name string) bool {

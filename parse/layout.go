@@ -35,10 +35,11 @@ const (
 	MinorMajor16le // first byte = minor, last = major
 
 	// timestamps
-	DOSDateTime
+	DOSDateTime // 4 bytes
+	ArjDateTime // 4 bytes
 
 	// positions
-	DOSOffsetSegment // ip:cs
+	DOSOffsetSegment // ip:cs, 4 bytes
 
 	// groups of bytes
 	Bytes
@@ -91,6 +92,7 @@ var (
 		MajorMinor32le:   "major.minor-32le",
 		MinorMajor16le:   "minor.major-16le",
 		DOSDateTime:      "datetime-dos-32le",
+		ArjDateTime:      "borked-datetime-arj-32le",
 		DOSOffsetSegment: "offset.segment-dos-16le",
 		Bytes:            "bytes",
 		ASCII:            "ASCII",

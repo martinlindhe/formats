@@ -220,7 +220,7 @@ func MatchAll(file *os.File) (MatchingParsers, error) {
 
 		pl, err2 := parser(&checker)
 		if err2 != nil {
-			fmt.Println("warning: parser", name, "failed with", err2)
+			fmt.Println("warning: parser", name, "failed: ", err2)
 			continue
 		}
 		if pl == nil {

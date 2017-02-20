@@ -1,5 +1,7 @@
 package archive
 
+// STATUS: borked
+
 /*
 public TarReader(FileStream fs) : base(fs)
 {

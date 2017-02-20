@@ -132,6 +132,9 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	case DOSDateTime:
 		res += infoDOSDateTime(f, field)
 
+	case ArjDateTime:
+		res += infoArjDateTime(f, field)
+
 	case DOSOffsetSegment:
 		res += infoDOSOffsetSegment(f, field)
 
@@ -196,6 +199,26 @@ func infoDOSDateTime(f *os.File, field *Layout) string {
 	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
 	}
+	t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
+	return fmt.Sprintf("%v", t)
+}
+
+/*
+ 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16
+|<---- year-1980 --->|<- month ->|<--- day ---->|
+
+ 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+|<--- hour --->|<---- minute --->|<- second/2 ->|
+*/
+func infoArjDateTime(f *os.File, field *Layout) string {
+
+	var b uint32
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+
+	// XXX not correctly decoded
+
 	t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
 	return fmt.Sprintf("%v", t)
 }

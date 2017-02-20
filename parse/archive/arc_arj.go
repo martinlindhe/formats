@@ -1,6 +1,6 @@
 package archive
 
-// STATUS: 60%
+// STATUS: 70%
 
 import (
 	"encoding/binary"
@@ -13,16 +13,44 @@ import (
 )
 
 const (
-	arjBlockSizeMin  = 30
-	arjBlockSizeMax  = 2600
 	arjMaxSFX        = 500000 // size of self-extracting prefix
-	arjHeaderIDHi    = 0xea
-	arjHeaderIDLo    = 0x60
 	arjFirstHdrSize  = 0x1e
 	arjCommentMax    = 2048
 	arjFileNameMax   = 512
 	arjHeaderSizeMax = (arjFirstHdrSize + 10 + arjFileNameMax + arjCommentMax)
-	arjCrcMask       = 0xffffffff
+)
+
+var (
+	arjHostOS = map[byte]string{
+		0:  "MSDOS",
+		1:  "PRIMOS",
+		2:  "UNIX",
+		3:  "AMIGA",
+		4:  "MAC-OS",
+		5:  "OS/2",
+		6:  "APPLE GS",
+		7:  "ATARI ST",
+		8:  "NEXT",
+		9:  "VAX VMS",
+		10: "WIN95",
+		11: "WIN32",
+	}
+	arjMethod = map[byte]string{
+		0: "stored",
+		1: "compressed most",
+		2: "compressed 2",
+		3: "compressed 3",
+		4: "compressed fastest",
+		8: "no data, no CRC",
+		9: "no data",
+	}
+	arjFileType = map[byte]string{
+		0: "binary",
+		1: "7-bit text",
+		3: "directory",
+		4: "volume label",
+		5: "chapter label",
+	}
 )
 
 // ARJ parses the arj format
@@ -68,7 +96,8 @@ func findARJHeader(file *os.File) (int64, error) {
 		}
 
 		for pos < lastpos {
-			if c != arjHeaderIDLo { // low order first
+			if c != 0x60 {
+				// low order first
 				if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
 					return 0, err
 				}
@@ -76,65 +105,25 @@ func findARJHeader(file *os.File) (int64, error) {
 				if err := binary.Read(reader, binary.LittleEndian, &c); err != nil {
 					return 0, err
 				}
-				if c == arjHeaderIDHi {
-					// log.Println("yes 1")
+				if c == 0xEA {
 					break
 				}
 			}
 			pos++
 		}
 		if pos >= lastpos {
-			// log.Println("yes 2")
 			break
 		}
-
 		var headerSize uint16
 		if err := binary.Read(reader, binary.LittleEndian, &headerSize); err != nil {
-			// log.Println("read err", err)
 			return 0, err
 		}
-
-		// log.Printf("header size %02x\n", headerSize)
 		if headerSize <= arjHeaderSizeMax {
 			return pos, nil
 		}
 	}
-
-	return 0, fmt.Errorf("could not find arj header in %s", file.Name())
+	return 0, fmt.Errorf("could not find arj header in " + file.Name())
 }
-
-var (
-	arjHostOS = map[byte]string{
-		0:  "MSDOS",
-		1:  "PRIMOS",
-		2:  "UNIX",
-		3:  "AMIGA",
-		4:  "MAC-OS",
-		5:  "OS/2",
-		6:  "APPLE GS",
-		7:  "ATARI ST",
-		8:  "NEXT",
-		9:  "VAX VMS",
-		10: "WIN95",
-		11: "WIN32",
-	}
-	arjMethod = map[byte]string{
-		0: "stored",
-		1: "compressed most",
-		2: "compressed 2",
-		3: "compressed 3",
-		4: "compressed fastest",
-		8: "no data, no CRC",
-		9: "no data",
-	}
-	arjFileType = map[byte]string{
-		0: "binary",
-		1: "7-bit text",
-		3: "directory",
-		4: "volume label",
-		5: "chapter label",
-	}
-)
 
 func parseARJ(f *os.File) ([]parse.Layout, error) {
 	pos, err := findARJHeader(f)
@@ -185,12 +174,12 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 		log.Fatalf("sample please. ext data = %02x", withExtData)
 	}
 
-	_, archiveNameLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos+mainHeaderLen, 255)
+	_, archiveNameLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos+mainHeaderLen, arjFileNameMax)
 	if err != nil {
 		return nil, err
 	}
 
-	_, commentLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos+mainHeaderLen+archiveNameLen, 4096)
+	_, commentLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos+mainHeaderLen+archiveNameLen, arjCommentMax)
 	if err != nil {
 		return nil, err
 	}
@@ -228,11 +217,11 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 	return res, nil
 }
 
+// parse local file headers until one has size=0 == EOF
 func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 	res := []parse.Layout{}
 	pos, _ := f.Seek(0, os.SEEK_CUR)
 
-	// parse local file headers until one has size=0 == EOF
 	for {
 		magic, _ := parse.ReadUint16le(f, pos)
 		if magic != 0xEA60 {
@@ -291,9 +280,9 @@ func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 				log.Fatalf("sample please. local file ext data = %02x", withExtData)
 			}
 
-			pos += int64(length)
+			pos += local.Length
 
-			_, fileNameLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos, 255)
+			_, fileNameLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos, arjFileNameMax)
 			if err != nil {
 				return nil, err
 			}
@@ -303,7 +292,7 @@ func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 			pos += fileNameLen
 			local.Length += fileNameLen
 
-			_, commentLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos, 4096)
+			_, commentLen, err := parse.ReadZeroTerminatedASCIIUntil(f, pos, arjCommentMax)
 			if err != nil {
 				return nil, err
 			}

@@ -1,6 +1,6 @@
 package archive
 
-// STATUS: 70%
+// STATUS: 80%
 
 import (
 	"encoding/binary"
@@ -35,12 +35,19 @@ var (
 		10: "WIN95",
 		11: "WIN32",
 	}
+	arjEncryptionVersion = map[byte]string{
+		0: "old",
+		1: "old",
+		2: "new",
+		3: "reserved",
+		4: "40 bit key GOST",
+	}
 	arjMethod = map[byte]string{
 		0: "stored",
-		1: "compressed most",
-		2: "compressed 2",
-		3: "compressed 3",
-		4: "compressed fastest",
+		1: "compressed 1a (best)",
+		2: "compressed 1b",
+		3: "compressed 1c",
+		4: "compressed 2 (fastest)",
 		8: "no data, no CRC",
 		9: "no data",
 	}
@@ -132,6 +139,7 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 	}
 
 	hostOSName, _ := parse.ReadToMap(f, parse.Uint8, pos+7, arjHostOS)
+	encryptionName, _ := parse.ReadToMap(f, parse.Uint8, pos+32, arjEncryptionVersion)
 	mainHeaderLen := int64(34)
 
 	chunk := parse.Layout{
@@ -140,14 +148,23 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 		Info:   "main header",
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 2, Type: parse.Uint16le, Info: "magic"},
-			{Offset: pos + 2, Length: 2, Type: parse.Uint16le, Info: "basic header size"}, // excl. Magic+HdrSize
+			{Offset: pos + 2, Length: 2, Type: parse.Uint16le, Info: "header size"},
 			{Offset: pos + 4, Length: 1, Type: parse.Uint8, Info: "size up to and including 'extra data'"},
-			{Offset: pos + 5, Length: 1, Type: parse.Uint8, Info: "archiver version number"},
-			{Offset: pos + 6, Length: 1, Type: parse.Uint8, Info: "minimum archiver version to extract"},
+			{Offset: pos + 5, Length: 1, Type: parse.MinorMajor8Five, Info: "archiver version"},
+			{Offset: pos + 6, Length: 1, Type: parse.MinorMajor8Five, Info: "minimum archiver version to extract"},
 			{Offset: pos + 7, Length: 1, Type: parse.Uint8, Info: "host OS = " + hostOSName},
-			{Offset: pos + 8, Length: 1, Type: parse.Uint8, Info: "arj flags"}, // XXX show bitfield
+			{Offset: pos + 8, Length: 1, Type: parse.Uint8, Info: "flags", Masks: []parse.Mask{
+				{Low: 0, Length: 1, Info: "garbled"},
+				{Low: 1, Length: 1, Info: "ansipage"}, // aka "OLD_SECURED_FLAG"
+				{Low: 2, Length: 1, Info: "volume"},
+				{Low: 3, Length: 1, Info: "arjprot"},
+				{Low: 4, Length: 1, Info: "pathsym"},
+				{Low: 5, Length: 1, Info: "backup"},
+				{Low: 6, Length: 1, Info: "secured"},
+				{Low: 7, Length: 1, Info: "altname"},
+			}},
 			{Offset: pos + 9, Length: 1, Type: parse.Uint8, Info: "security version"},
-			{Offset: pos + 10, Length: 1, Type: parse.Uint8, Info: "file type"},
+			{Offset: pos + 10, Length: 1, Type: parse.Uint8, Info: "file type"}, // must equal 2
 			{Offset: pos + 11, Length: 1, Type: parse.Uint8, Info: "reserved"},
 			{Offset: pos + 12, Length: 4, Type: parse.ArjDateTime, Info: "created time"},
 			{Offset: pos + 16, Length: 4, Type: parse.ArjDateTime, Info: "modified time"},
@@ -155,7 +172,7 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 			{Offset: pos + 24, Length: 4, Type: parse.Uint32le, Info: "security envelope file position"},
 			{Offset: pos + 28, Length: 2, Type: parse.Uint16le, Info: "filespec position in filename"},
 			{Offset: pos + 30, Length: 2, Type: parse.Uint16le, Info: "length in bytes of security envelope data"},
-			{Offset: pos + 32, Length: 1, Type: parse.Uint8, Info: "encryption version"},
+			{Offset: pos + 32, Length: 1, Type: parse.Uint8, Info: "encryption version = " + encryptionName},
 			{Offset: pos + 33, Length: 1, Type: parse.Uint8, Info: "last chapter"},
 		},
 	}
@@ -217,7 +234,7 @@ func parseARJ(f *os.File) ([]parse.Layout, error) {
 	return res, nil
 }
 
-// parse local file headers until one has size=0 == EOF
+// parse local file headers until we reach eof
 func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 	res := []parse.Layout{}
 	pos, _ := f.Seek(0, os.SEEK_CUR)
@@ -236,20 +253,30 @@ func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 			Info:   "local file header",
 			Childs: []parse.Layout{
 				{Offset: pos, Length: 2, Type: parse.Uint16le, Info: "magic"},
-				{Offset: pos + 2, Length: 2, Type: parse.Uint16le, Info: "basic header size"},
+				{Offset: pos + 2, Length: 2, Type: parse.Uint16le, Info: "header size"},
 			},
 		}
-		if length > 0 {
+		if length == 0 {
+			local.Info = "eof marker"
+		} else {
 			localHostOSName, _ := parse.ReadToMap(f, parse.Uint8, pos+7, arjHostOS)
 			methodName, _ := parse.ReadToMap(f, parse.Uint8, pos+9, arjMethod)
 			fileTypeName, _ := parse.ReadToMap(f, parse.Uint8, pos+10, arjFileType)
 			dataLength, _ := parse.ReadUint32le(f, pos+16)
 			local.Childs = append(local.Childs, []parse.Layout{
 				{Offset: pos + 4, Length: 1, Type: parse.Uint8, Info: "size up to and including 'extra data'"},
-				{Offset: pos + 5, Length: 1, Type: parse.Uint8, Info: "archiver version number"},
-				{Offset: pos + 6, Length: 1, Type: parse.Uint8, Info: "minimum archiver version to extract"},
+				{Offset: pos + 5, Length: 1, Type: parse.MinorMajor8Five, Info: "archiver version"},
+				{Offset: pos + 6, Length: 1, Type: parse.MinorMajor8Five, Info: "minimum archiver version to extract"},
 				{Offset: pos + 7, Length: 1, Type: parse.Uint8, Info: "host OS = " + localHostOSName},
-				{Offset: pos + 8, Length: 1, Type: parse.Uint8, Info: "arj flags"}, // XXX show bitfield
+				{Offset: pos + 8, Length: 1, Type: parse.Uint8, Info: "flags", Masks: []parse.Mask{
+					{Low: 0, Length: 1, Info: "garbled"},
+					{Low: 1, Length: 1, Info: "reserved"},
+					{Low: 2, Length: 1, Info: "volume"},
+					{Low: 3, Length: 1, Info: "extfile"},
+					{Low: 4, Length: 1, Info: "pathsym"},
+					{Low: 5, Length: 1, Info: "backup"},
+					{Low: 6, Length: 2, Info: "reserved2"},
+				}},
 				{Offset: pos + 9, Length: 1, Type: parse.Uint8, Info: "method = " + methodName},
 				{Offset: pos + 10, Length: 1, Type: parse.Uint8, Info: "file type = " + fileTypeName},
 				{Offset: pos + 11, Length: 1, Type: parse.Uint8, Info: "reserved"},
@@ -311,7 +338,6 @@ func parseARJLocalFiles(f *os.File) ([]parse.Layout, error) {
 			local.Length += 6
 			// NOTE: if ext header size > 0, it should follow here. currently unused in file format
 
-			// XXX now follows compressed data
 			local.Childs = append(local.Childs, []parse.Layout{
 				{Offset: pos, Length: int64(dataLength), Type: parse.Bytes, Info: "compressed data"},
 			}...)

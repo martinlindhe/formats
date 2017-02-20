@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 )
@@ -29,7 +30,7 @@ var (
 func (state *HexViewState) CurrentFieldInfo(f *os.File, pl ParsedLayout) string {
 
 	if len(pl.Layout) == 0 {
-		fmt.Println("CurrentFieldInfo: pl.Layout is empty")
+		log.Println("CurrentFieldInfo: pl.Layout is empty")
 		return ""
 	}
 
@@ -117,6 +118,12 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	case Uint64be:
 		res += infoUint64be(f, field)
 
+	case MajorMinor8:
+		res += infoMajorMinor8(f, field)
+
+	case MinorMajor8Five:
+		res += infoMinorMajor8Five(f, field)
+
 	case MajorMinor16le:
 		res += infoMajorMinor16le(f, field)
 
@@ -159,12 +166,10 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 
 // len (byte) + ASCII
 func infoASCIIC(f *os.File, field *Layout) string {
-
 	var len byte
 	if err := binary.Read(f, binary.LittleEndian, &len); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
 	}
-
 	buf := make([]byte, len)
 	_, err := f.Read(buf)
 	if err != nil && err != io.EOF {
@@ -174,7 +179,6 @@ func infoASCIIC(f *os.File, field *Layout) string {
 }
 
 func infoRGB(f *os.File, field *Layout) string {
-
 	buf := make([]byte, field.Length)
 	_, err := f.Read(buf)
 	if err != nil && err != io.EOF {
@@ -184,7 +188,6 @@ func infoRGB(f *os.File, field *Layout) string {
 }
 
 func infoASCIIZ(f *os.File, field *Layout) string {
-
 	buf := make([]byte, field.Length)
 	_, err := f.Read(buf)
 	if err != nil && err != io.EOF {
@@ -194,7 +197,6 @@ func infoASCIIZ(f *os.File, field *Layout) string {
 }
 
 func infoDOSDateTime(f *os.File, field *Layout) string {
-
 	var b uint32
 	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -203,28 +205,33 @@ func infoDOSDateTime(f *os.File, field *Layout) string {
 	return fmt.Sprintf("%v", t)
 }
 
-/*
- 31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16
-|<---- year-1980 --->|<- month ->|<--- day ---->|
-
- 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
-|<--- hour --->|<---- minute --->|<- second/2 ->|
-*/
 func infoArjDateTime(f *os.File, field *Layout) string {
-
 	var b uint32
 	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
 	}
 
-	// XXX not correctly decoded
+	// NOTE: ARJ32 3.10 and unarj 2.65 decodes timestamps differently,
+	// this is the older (unarj 2.65) encoding:
+	//
+	//  31 30 29 28 27 26 25 24 23 22 21 20 19 18 17 16
+	// |<---- year-1980 --->|<- month ->|<--- day ---->|
+	//
+	//  15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+	// |<--- hour --->|<---- minute --->|<- second/2 ->|
 
-	t := time.Date(1970, time.January, 1, 1, 0, int(b), 0, time.UTC)
+	yr := b >> 25
+	mn := (b >> 21) & 0xf
+	dy := (b >> 16) & 0x1f
+	hh := (b >> 11) & 0x1f
+	mm := (b >> 5) & 0x3f
+	ss := (b & 0x1f) * 2
+
+	t := time.Date(1980+int(yr), time.Month(mn), int(dy), int(hh), int(mm), int(ss), 0, time.UTC)
 	return fmt.Sprintf("%v", t)
 }
 
 func infoDOSOffsetSegment(f *os.File, field *Layout) string {
-
 	var b [2]uint16
 	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -233,8 +240,27 @@ func infoDOSOffsetSegment(f *os.File, field *Layout) string {
 	return fmt.Sprintf("%04x:%04x = %04x", b[1], b[0], abs)
 }
 
-func infoMajorMinor32le(f *os.File, field *Layout) string {
+func infoMajorMinor8(f *os.File, field *Layout) string {
+	var b uint8
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	minor := b & 0xf
+	major := (b >> 4) & 0xf
+	return fmt.Sprintf("%d.%d", major, minor)
+}
 
+func infoMinorMajor8Five(f *os.File, field *Layout) string {
+	var b uint8
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	minor := (b >> 3) & 0x1f
+	major := b & 0x7
+	return fmt.Sprintf("%d.%d", major, minor)
+}
+
+func infoMajorMinor32le(f *os.File, field *Layout) string {
 	var b [2]uint16
 	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -243,7 +269,6 @@ func infoMajorMinor32le(f *os.File, field *Layout) string {
 }
 
 func infoMinorMajor16le(f *os.File, field *Layout) string {
-
 	var b [2]uint8
 	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -252,7 +277,6 @@ func infoMinorMajor16le(f *os.File, field *Layout) string {
 }
 
 func infoMajorMinor16be(f *os.File, field *Layout) string {
-
 	var b [2]uint8
 	if err := binary.Read(f, binary.BigEndian, &b); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -270,7 +294,6 @@ func infoMajorMinor16le(f *os.File, field *Layout) string {
 }
 
 func infoUint32be(f *os.File, field *Layout) string {
-
 	var i uint32
 	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -279,7 +302,6 @@ func infoUint32be(f *os.File, field *Layout) string {
 }
 
 func infoUint64be(f *os.File, field *Layout) string {
-
 	var i uint64
 	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -288,7 +310,6 @@ func infoUint64be(f *os.File, field *Layout) string {
 }
 
 func infoUint16be(f *os.File, field *Layout) string {
-
 	var i uint16
 	if err := binary.Read(f, binary.BigEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -297,7 +318,6 @@ func infoUint16be(f *os.File, field *Layout) string {
 }
 
 func infoUint64le(f *os.File, field *Layout) string {
-
 	var i uint64
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -306,7 +326,6 @@ func infoUint64le(f *os.File, field *Layout) string {
 }
 
 func infoUint32le(f *os.File, field *Layout) string {
-
 	var i uint32
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -315,7 +334,6 @@ func infoUint32le(f *os.File, field *Layout) string {
 }
 
 func infoInt32le(f *os.File, field *Layout) string {
-
 	var i int32
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -324,7 +342,6 @@ func infoInt32le(f *os.File, field *Layout) string {
 }
 
 func infoUint16le(f *os.File, field *Layout) string {
-
 	var i uint16
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -333,7 +350,6 @@ func infoUint16le(f *os.File, field *Layout) string {
 }
 
 func infoInt16le(f *os.File, field *Layout) string {
-
 	var i int16
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -342,7 +358,6 @@ func infoInt16le(f *os.File, field *Layout) string {
 }
 
 func infoUint8(f *os.File, field *Layout) string {
-
 	var i uint8
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -351,7 +366,6 @@ func infoUint8(f *os.File, field *Layout) string {
 }
 
 func infoInt8(f *os.File, field *Layout) string {
-
 	var i int8
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
@@ -360,6 +374,5 @@ func infoInt8(f *os.File, field *Layout) string {
 }
 
 func infoBytes(f *os.File, field *Layout) string {
-
 	return "chunk of bytes"
 }

@@ -133,6 +133,9 @@ func (pl *ParsedLayout) PrettyHexView(file *os.File, hexView HexViewState) strin
 	for i := base; i < ceil; i += int64(hexView.RowWidth) {
 
 		ofs, err := file.Seek(i, os.SEEK_SET)
+		if err != nil {
+			log.Fatalf("Error: %s", err)
+		}
 		if i != ofs {
 			log.Fatalf("err-2: unexpected offset %04x, expected %04x\n", ofs, i)
 		}

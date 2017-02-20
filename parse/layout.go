@@ -28,11 +28,12 @@ const (
 	Uint64be
 
 	// version
-	MajorMinor8    // high nibble = major, low = minor
-	MajorMinor16le // first byte = major, last = minor
-	MajorMinor16be // first byte = major, last = minor
-	MajorMinor32le // first word = major, last = minor
-	MinorMajor16le // first byte = minor, last = major
+	MajorMinor8     // high nibble = major, low = minor
+	MinorMajor8Five // high 5 bits = minor, low 3 = major
+	MajorMinor16le  // first byte = major, last = minor
+	MajorMinor16be  // first byte = major, last = minor
+	MajorMinor32le  // first word = major, last = minor
+	MinorMajor16le  // first byte = minor, last = major
 
 	// timestamps
 	DOSDateTime // 4 bytes
@@ -87,6 +88,7 @@ var (
 		Uint32be:         "uint32-be",
 		Uint64be:         "uint64-be",
 		MajorMinor8:      "major.minor-8",
+		MinorMajor8Five:  "minor.major-8five",
 		MajorMinor16le:   "major.minor-16le",
 		MajorMinor16be:   "major.minor-16be",
 		MajorMinor32le:   "major.minor-32le",

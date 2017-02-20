@@ -26,7 +26,7 @@ var (
 		7: 256 * 3,
 	}
 	gifExtensions = map[byte]string{
-		1:    "text",
+		0x01: "text",
 		0xf9: "graphic control",
 		0xfe: "comment",
 		0xff: "application",
@@ -55,7 +55,6 @@ const (
 
 // GIF parses the gif format
 func GIF(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	if !isGIF(c.Header) {
 		return nil, nil
 	}
@@ -63,7 +62,6 @@ func GIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isGIF(b []byte) bool {
-
 	if b[0] != 'G' || b[1] != 'I' || b[2] != 'F' || b[3] != '8' {
 		return false
 	}
@@ -74,7 +72,6 @@ func isGIF(b []byte) bool {
 }
 
 func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	pos := int64(0)
 	pl := c.ParsedLayout
 	pl.FileKind = parse.Image

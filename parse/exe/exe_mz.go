@@ -67,6 +67,7 @@ func parseMZ(c *parse.Checker) (*parse.ParsedLayout, error) {
 	custom := findCustomDOSHeaders(c.File, c.Header)
 	if custom != nil {
 		c.ParsedLayout.Layout = append(c.ParsedLayout.Layout, custom...)
+		return &c.ParsedLayout, nil
 	}
 
 	hdrSizeInParagraphs, _ := parse.ReadUint16le(c.File, pos+8)

@@ -66,11 +66,10 @@ func findCustomDOSHeaders(file *os.File, b []byte) []parse.Layout {
 
 	pos = 0x1c
 	tok := string(b[pos+2 : pos+9])
-	if tok == "PKLITE Co" {
-
+	if tok == "PKLITE " {
 		return []parse.Layout{{
 			Offset: pos,
-			Length: 2 + 52, // XXX
+			Length: 2 + 52, // XXX is identifier always 52 bytes?
 			Info:   "PKLITE header",
 			Type:   parse.Group,
 			Childs: []parse.Layout{

@@ -110,8 +110,7 @@ func parseMzNeHeader(file *os.File, pos int64) ([]parse.Layout, error) {
 	}
 
 	entryTableOffset, _ := parse.ReadUint16le(file, pos+4)
-	entryTableLength, _ := parse.ReadUint16le(file, pos+6)
-	res = append(res, *parseNEEntryTable(file, pos+int64(entryTableOffset), entryTableLength))
+	res = append(res, *parseNEEntryTable(file, pos+int64(entryTableOffset)))
 
 	segmentTableOffset, _ := parse.ReadUint16le(file, pos+34)
 	segmentTableEntries, _ := parse.ReadUint16le(file, pos+28)
@@ -170,13 +169,12 @@ func parseNEModuleReferenceTable(pos int64, count uint16) *parse.Layout {
 	return &res
 }
 
-func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
+func parseNEEntryTable(file *os.File, pos int64) *parse.Layout {
 
 	res := parse.Layout{
 		Offset: pos,
-		// Length: int64(length),
-		Info: "NE entry table",
-		Type: parse.Group}
+		Info:   "NE entry table",
+		Type:   parse.Group}
 
 	// The entry-table data is organized by bundle, each of which begins with
 	// a 2-byte header. The first byte of the header specifies the number of
@@ -188,7 +186,6 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 	// value in this byte is neither 0FFh nor 0FEh, it is a segment index.
 
 	for {
-
 		items, _ := parse.ReadUint8(file, pos)
 		segNumber, _ := parse.ReadUint8(file, pos+1)
 
@@ -196,9 +193,9 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 			// NOTE: tagging the empty "items" block as end marker
 			res.Childs = append(res.Childs, parse.Layout{
 				Offset: pos,
-				Length: 2,
+				Length: 1,
 				Info:   "end marker",
-				Type:   parse.Uint16le})
+				Type:   parse.Uint8})
 			pos++
 			break
 		}
@@ -210,10 +207,9 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 		pos += 2
 
 		for i := 1; i <= int(items); i++ {
-
 			switch segNumber {
 			case 0xff:
-
+				// movable bundle
 				id := fmt.Sprintf("%d", i)
 				res.Childs = append(res.Childs, []parse.Layout{
 					{Offset: pos, Length: 1, Info: "movable " + id + " flags", Type: parse.Uint8, Masks: []parse.Mask{
@@ -228,20 +224,34 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 				}...)
 				pos += 6
 
-				/*			case 0xfe:
-							// panic("  TODO   refer to constant defined within module")
-							// struct entry_tab_fixed_s
-							// unsigned char flags;
-							// unsigned short offset;
-				*/
+			case 0xfe:
+				// entry refers to a constant defined within the module
+				log.Fatal("TODO refer to constant defined within module. sample please")
+				// unsigned char flags:
+				//    0       If this bit is set, the entry is exported.
+				//    1       If  this bit  is set,  the entry  uses a  global (shared)  data
+				//            segment. (This may be set only for SINGLEDATA library modules.)
+				//    3-7     If  the  executable  file  contains  code  that  performs  ring
+				//            transitions,  these  bits  specify  the  number  of  words that
+				//            compose the  stack. At the  time of the  ring transition, these
+				//            words must be copied from one ring to the other.
+				// unsigned short offset;
 			default:
-				log.Println("TODO exe_mz_ne segment index ", segNumber, ", entries", items)
-				//NOTE: only sample i seen was empty here
+				// segNumber is a index
+				// log.Printf("TODO exe_mz_ne segment number 0x%02x, %d entries. offset 0x%04x", segNumber, items, pos)
+
+				id := fmt.Sprintf("%d", i)
+				res.Childs = append(res.Childs, []parse.Layout{
+					// XXX not sure
+					{Offset: pos, Length: 2, Info: "offset " + id, Type: parse.Uint16le},
+					{Offset: pos + 2, Length: 1, Info: "unknown " + id, Type: parse.Uint8}, // seen values 0 and 1
+				}...)
+				pos += 3
 			}
 		}
 	}
 
-	res.Length = int64(length)
+	res.CalcLength()
 	return &res
 }
 

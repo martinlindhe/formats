@@ -20,6 +20,7 @@ const (
 	Int16le
 	Int32le
 	Uint16le
+	Uint24le
 	Uint32le
 	Uint64le
 
@@ -83,6 +84,7 @@ var (
 		Int16le:          "int16-le",
 		Uint16le:         "uint16-le",
 		Int32le:          "int32-le",
+		Uint24le:         "uint24-le",
 		Uint32le:         "uint32-le",
 		Uint64le:         "uint64-le",
 		Uint16be:         "uint16-be",
@@ -199,6 +201,15 @@ func (l *Layout) GetBitSize() int {
 	}
 
 	panic("GetBitSize: dont know size of " + l.Type.String())
+}
+
+// CalcLength calculates the .Length property from childs
+func (l *Layout) CalcLength() {
+	length := int64(0)
+	for _, c := range l.Childs {
+		length += c.Length
+	}
+	l.Length = length
 }
 
 func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error) {

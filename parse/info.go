@@ -100,6 +100,9 @@ func (field *Layout) fieldInfoByType(f *os.File) string {
 	case Uint16le:
 		res += infoUint16le(f, field)
 
+	case Uint24le:
+		res += infoUint24le(f, field)
+
 	case Int32le:
 		res += infoInt32le(f, field)
 
@@ -346,6 +349,15 @@ func infoUint16le(f *os.File, field *Layout) string {
 	if err := binary.Read(f, binary.LittleEndian, &i); err != nil && err != io.EOF {
 		return fmt.Sprintf("%v", err)
 	}
+	return field.prettyDecimalAndHex(int64(i))
+}
+
+func infoUint24le(f *os.File, field *Layout) string {
+	var b [3]byte
+	if err := binary.Read(f, binary.LittleEndian, &b); err != nil && err != io.EOF {
+		return fmt.Sprintf("%v", err)
+	}
+	i := int64(b[2])<<16 | int64(b[1])<<8 | int64(b[0])
 	return field.prettyDecimalAndHex(int64(i))
 }
 

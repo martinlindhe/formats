@@ -114,11 +114,16 @@ func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 		switch b {
 		case sExtension:
 			gfxExt, err := gifExtension(c.File, pos)
-			if err != nil {
-				return nil, err
+			if err == nil {
+				pl.Layout = append(pl.Layout, *gfxExt)
+				pos += gfxExt.Length
+			} else {
+				// error on unknown extension. treat as unknown data
+				log.Println(err)
+				undefData := gifUndefinedData(c.File, pos)
+				pl.Layout = append(pl.Layout, *undefData)
+				pos += undefData.Length
 			}
-			pl.Layout = append(pl.Layout, *gfxExt)
-			pos += gfxExt.Length
 
 		case sImageDescriptor:
 			imgDescriptor := gifImageDescriptor(c.File, pos)
@@ -147,7 +152,6 @@ func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 			return &pl, nil
 
 		default:
-			log.Printf("undefined data (section id %04x) at 0x%04x", b, pos)
 			undefData := gifUndefinedData(c.File, pos)
 			pl.Layout = append(pl.Layout, *undefData)
 			pos += undefData.Length
@@ -263,21 +267,46 @@ func gifLocalColorTable(file *os.File, pos int64, byteLen int64) parse.Layout {
 }
 
 func gifUndefinedData(file *os.File, pos int64) *parse.Layout {
-
-	size, _ := parse.ReadUint8(file, pos+2)
-
-	return &parse.Layout{
+	res := parse.Layout{
 		Offset: pos,
-		Length: 3 + int64(size) + 1,
+		Length: 3,
 		Info:   "undefined data",
 		Type:   parse.Group,
 		Childs: []parse.Layout{
 			{Offset: pos, Length: 1, Info: "block id (undefined)", Type: parse.Uint8},
 			{Offset: pos + 1, Length: 1, Info: "label", Type: parse.Uint8},
-			{Offset: pos + 2, Length: 1, Info: "size", Type: parse.Uint8},
-			{Offset: pos + 3, Length: int64(size), Info: "data", Type: parse.Bytes},
-			{Offset: pos + 3 + int64(size), Length: 1, Info: "block terminator", Type: parse.Uint8},
 		}}
+	pos += 2
+
+	blockID := 0
+	for {
+		blockID++
+		blockTag := fmt.Sprintf("%d", blockID)
+
+		size, _ := parse.ReadUint8(file, pos)
+
+		if size > 0 {
+			res.Childs = append(res.Childs, []parse.Layout{
+				{Offset: pos, Length: 1, Info: "size " + blockTag, Type: parse.Uint8},
+				{Offset: pos + 1, Length: int64(size), Info: "data " + blockTag, Type: parse.Bytes},
+			}...)
+			pos += 1 + int64(size)
+		} else {
+			res.Childs = append(res.Childs, []parse.Layout{
+				{Offset: pos, Length: 1, Info: "block terminator", Type: parse.Uint8},
+			}...)
+			pos++
+			break
+		}
+
+		if blockID > 1000 {
+			log.Println("parse error, breaking")
+			break
+		}
+	}
+	res.CalcLength()
+
+	return &res
 }
 
 func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
@@ -300,7 +329,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 	switch extType {
 	case eText:
 		size = 12 // XXX
-		panic("text extension sample plz")
+		log.Fatal("text extension sample plz")
 
 	case eGraphicControl:
 		size = 6
@@ -315,9 +344,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 	case eComment:
 		// nothing to do but read the data.
 		lenByte, _ := parse.ReadUint8(file, pos)
-
 		size = 1 + int64(lenByte) + 1
-
 		typeSpecific = []parse.Layout{
 			{Offset: pos, Length: 1, Info: "byte size", Type: parse.Uint8},
 			{Offset: pos + 1, Length: int64(lenByte), Info: "data", Type: parse.ASCIIZ},
@@ -355,7 +382,7 @@ func gifExtension(file *os.File, pos int64) (*parse.Layout, error) {
 		}
 
 	default:
-		log.Printf("unknown extension 0x%.2x\n", extType)
+		return nil, fmt.Errorf("unknown extension 0x%02x at 0x%04x\n", extType, pos)
 	}
 
 	res.Length += size

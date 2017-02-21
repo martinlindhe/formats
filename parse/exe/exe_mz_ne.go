@@ -196,7 +196,7 @@ func parseNEEntryTable(file *os.File, pos int64, length uint16) *parse.Layout {
 			// NOTE: tagging the empty "items" block as end marker
 			res.Childs = append(res.Childs, parse.Layout{
 				Offset: pos,
-				Length: 1,
+				Length: 2,
 				Info:   "end marker",
 				Type:   parse.Uint16le})
 			pos++

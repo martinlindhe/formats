@@ -36,13 +36,15 @@ var (
 		"WEBP": "riff-webp",
 		"WAVE": "riff-wav",
 		"AVI ": "riff-avi",
+		"ACON": "riff-animated-cursor",
+		"RMID": "riff-midi",
 	}
 	riffMimeTypes = map[string]string{
 		"WEBP": "image/webp",
 		"WAVE": "audio/x-wav",
 		"AVI ": "video/avi",
-		"ACON": "riff-ani",
-		"RMID": "riff-midi",
+		"ACON": "application/octet-stream",
+		"RMID": "audio/mid",
 	}
 )
 
@@ -52,12 +54,14 @@ func parseRIFF(c *parse.Checker) (*parse.ParsedLayout, error) {
 
 	if val, ok := riffMimeTypes[idTag]; ok {
 		c.ParsedLayout.MimeType = val
+	} else {
+		log.Println("TODO: unknown mime for riff id tag:", idTag)
 	}
 
 	if val, ok := riffFormatNames[idTag]; ok {
 		c.ParsedLayout.FormatName = val
 	} else {
-		log.Println("error: unknown riff id tag:", idTag)
+		log.Println("TODO: unknown riff id tag:", idTag)
 	}
 
 	pos := int64(0)

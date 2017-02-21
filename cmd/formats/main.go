@@ -47,7 +47,7 @@ func main() {
 	}
 
 	if len(parsers) == 0 {
-		panic("no parsers returned, should not happen")
+		log.Fatal("no parsers returned, should not happen")
 	}
 
 	var chosenParser *parse.ParsedLayout

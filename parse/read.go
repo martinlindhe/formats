@@ -98,9 +98,7 @@ func ReadZeroTerminatedASCIIUntil(file *os.File, pos int64, maxLen int64) (strin
 
 // ReadBytesFrom reads `size` bytes from `file`
 func ReadBytesFrom(file *os.File, pos int64, size int64) []byte {
-
 	file.Seek(pos, os.SEEK_SET)
-
 	b := make([]byte, size)
 	binary.Read(file, binary.LittleEndian, &b)
 	return b
@@ -108,7 +106,6 @@ func ReadBytesFrom(file *os.File, pos int64, size int64) []byte {
 
 // ReadUnsignedInt reads field value, as an uint32
 func ReadUnsignedInt(file *os.File, field *Layout) uint32 {
-
 	switch field.Type {
 	case Uint8:
 		val, _ := ReadUint8(file, field.Offset)
@@ -122,13 +119,12 @@ func ReadUnsignedInt(file *os.File, field *Layout) uint32 {
 		val, _ := ReadUint32le(file, field.Offset)
 		return val
 	}
-
-	panic("ReadUnsignedInt: unhandled type " + field.Type.String())
+	log.Fatal("ReadUnsignedInt: unhandled type " + field.Type.String())
+	return 0
 }
 
 // ReadUint8 reads Uint8 from `file`
 func ReadUint8(file *os.File, pos int64) (uint8, error) {
-
 	file.Seek(pos, os.SEEK_SET)
 	var b uint8
 	binary.Read(file, binary.LittleEndian, &b)
@@ -137,7 +133,6 @@ func ReadUint8(file *os.File, pos int64) (uint8, error) {
 
 // ReadUint16be reads big endian Uint16 from `file`
 func ReadUint16be(file *os.File, pos int64) (uint16, error) {
-
 	file.Seek(pos, os.SEEK_SET)
 	var b uint16
 	binary.Read(file, binary.BigEndian, &b)
@@ -146,7 +141,6 @@ func ReadUint16be(file *os.File, pos int64) (uint16, error) {
 
 // ReadUint16le reads little endian Uint16 from `file`
 func ReadUint16le(file *os.File, pos int64) (uint16, error) {
-
 	file.Seek(pos, os.SEEK_SET)
 	var b uint16
 	binary.Read(file, binary.LittleEndian, &b)
@@ -155,7 +149,6 @@ func ReadUint16le(file *os.File, pos int64) (uint16, error) {
 
 // ReadUint32be reads big endian Uint32 from `file`
 func ReadUint32be(file *os.File, pos int64) (uint32, error) {
-
 	file.Seek(pos, os.SEEK_SET)
 	var b uint32
 	binary.Read(file, binary.BigEndian, &b)
@@ -164,7 +157,6 @@ func ReadUint32be(file *os.File, pos int64) (uint32, error) {
 
 // ReadUint64be reads big endian Uint64 from `file`
 func ReadUint64be(file *os.File, pos int64) (uint64, error) {
-
 	file.Seek(pos, os.SEEK_SET)
 	var b uint64
 	binary.Read(file, binary.BigEndian, &b)
@@ -173,7 +165,6 @@ func ReadUint64be(file *os.File, pos int64) (uint64, error) {
 
 // ReadUint32le reads little endian Uint32 from `file`
 func ReadUint32le(file *os.File, pos int64) (uint32, error) {
-
 	file.Seek(pos, os.SEEK_SET)
 	var b uint32
 	binary.Read(file, binary.LittleEndian, &b)
@@ -182,11 +173,9 @@ func ReadUint32le(file *os.File, pos int64) (uint32, error) {
 
 // ReadBytesUntilNewline is used to process text
 func ReadBytesUntilNewline(file *os.File, pos int64) ([]byte, int64, error) {
-
 	var c byte
 	var b []byte
 	readCnt := int64(0)
-
 	lineEnding := Lf
 	for {
 		file.Seek(pos, os.SEEK_SET)
@@ -213,7 +202,6 @@ func ReadBytesUntilNewline(file *os.File, pos int64) ([]byte, int64, error) {
 					lineEnding = Crlf
 				}
 			}
-
 			if lineEnding == Crlf {
 				pos++
 				readCnt++
@@ -222,7 +210,6 @@ func ReadBytesUntilNewline(file *os.File, pos int64) ([]byte, int64, error) {
 			}
 			break
 		}
-
 		if c == '\n' || c == '\r' {
 			break
 		}
@@ -247,14 +234,11 @@ func appendByte(slice []byte, data ...byte) []byte {
 }
 
 func calcBitmask(mask *Mask, b uint32) uint32 {
-
 	if bitmask, ok := bitmaskMap[mask.Length]; ok {
-
 		tmp := bitmask << uint32(mask.Low)
 		val := (b & tmp) >> uint32(mask.Low)
-
 		return val
 	}
-
-	panic("add mask for length " + fmt.Sprintf("%d", mask.Length))
+	log.Fatal("mask missing for length " + fmt.Sprintf("%d", mask.Length))
+	return 0
 }

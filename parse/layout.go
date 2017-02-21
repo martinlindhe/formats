@@ -172,35 +172,28 @@ type Mask struct {
 }
 
 func (e TextEncoding) String() string {
-
 	if val, ok := textEncodings[e]; ok {
 		return val
 	}
-
-	// NOTE: this should only be able to panic during dev (as in:
-	// adding a new datatype and forgetting to add it to the map)
-	panic("missing " + fmt.Sprintf("%d", e) + " from textEncodings")
+	log.Fatal("missing " + fmt.Sprintf("%d", e) + " from textEncodings")
+	return ""
 }
 
 func (dt DataType) String() string {
-
 	if val, ok := dataTypes[dt]; ok {
 		return val
 	}
-
-	// NOTE: this should only be able to panic during dev (as in:
-	// adding a new datatype and forgetting to add it to the map)
-	panic("missing " + fmt.Sprintf("%d", dt) + " from dataTypes")
+	log.Fatal("missing " + fmt.Sprintf("%d", dt) + " from dataTypes")
+	return ""
 }
 
 // GetBitSize returns the bit size of the data type for the layout
 func (l *Layout) GetBitSize() int {
-
 	if val, ok := dataTypeBitsizes[l.Type]; ok {
 		return val
 	}
-
-	panic("GetBitSize: dont know size of " + l.Type.String())
+	log.Fatal("GetBitSize: dont know size of " + l.Type.String())
+	return 0
 }
 
 // CalcLength calculates the .Length property from childs
@@ -213,14 +206,12 @@ func (l *Layout) CalcLength() {
 }
 
 func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error) {
-
 	buf := make([]byte, expectedLen)
 
 	readLen, err := reader.Read(buf)
 	if err != nil {
 		return nil, err
 	}
-
 	if int64(readLen) != expectedLen {
 		return nil, fmt.Errorf("Expected %d bytes, got %d", expectedLen, readLen)
 	}
@@ -228,7 +219,6 @@ func (l *Layout) parseByteN(reader io.Reader, expectedLen int64) ([]byte, error)
 }
 
 func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
-
 	for _, layout := range pl.Layout {
 		if ofs >= layout.Offset && ofs < layout.Offset+int64(layout.Length) {
 			return true
@@ -239,7 +229,6 @@ func (pl *ParsedLayout) isOffsetKnown(ofs int64) bool {
 
 // returns a layout field with .Info quals `info`
 func (pl *ParsedLayout) findInfoField(info string) *Layout {
-
 	for _, layout := range pl.Layout {
 		if layout.Info == info {
 			return &layout
@@ -254,7 +243,6 @@ func (pl *ParsedLayout) findInfoField(info string) *Layout {
 }
 
 func (pl *ParsedLayout) findBitfieldLayout(info string) *Layout {
-
 	for _, layout := range pl.Layout {
 		for _, mask := range layout.Masks {
 			if mask.Info == info {
@@ -273,7 +261,6 @@ func (pl *ParsedLayout) findBitfieldLayout(info string) *Layout {
 }
 
 func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
-
 	for _, layout := range pl.Layout {
 		for _, mask := range layout.Masks {
 			if mask.Info == info {
@@ -293,13 +280,11 @@ func (pl *ParsedLayout) findBitfieldMask(info string) *Mask {
 
 // ShortPrint returns the output for cmd/prober --short
 func (pl *ParsedLayout) ShortPrint() string {
-
 	return pl.TypeSummary()
 }
 
 // TypeSummary returns a summary of the parsed layout
 func (pl *ParsedLayout) TypeSummary() string {
-
 	kindName := ""
 	if val, ok := fileKinds[pl.FileKind]; ok {
 		kindName = val
@@ -314,7 +299,6 @@ func (pl *ParsedLayout) TypeSummary() string {
 
 // PrettyPrint returns the output for cmd/prober
 func (pl *ParsedLayout) PrettyPrint() string {
-
 	res := "Format: " + pl.FormatName + " (" + pl.FileName +
 		", " + fmt.Sprintf("%d", pl.FileSize) + " bytes)\n\n"
 
@@ -327,13 +311,11 @@ func (pl *ParsedLayout) PrettyPrint() string {
 				", " + child.Type.String() + "\n"
 		}
 	}
-
 	return res
 }
 
 // DecodeBitfieldFromInfo decodes a bitfield value
 func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint32 {
-
 	field := pl.findBitfieldLayout(info)
 	if field == nil {
 		log.Println("ERROR: field", info, "not found")
@@ -353,7 +335,6 @@ func (pl *ParsedLayout) DecodeBitfieldFromInfo(file *os.File, info string) uint3
 
 // ReadUint32leFromInfo returns a little-endian 32-bit value
 func (pl *ParsedLayout) ReadUint32leFromInfo(file *os.File, info string) (uint32, error) {
-
 	layout := pl.findInfoField(info)
 	if layout == nil {
 		return 0, fmt.Errorf("ERROR didnt find field %v", info)
@@ -367,7 +348,6 @@ func (pl *ParsedLayout) ReadUint32leFromInfo(file *os.File, info string) (uint32
 }
 
 func (pl *ParsedLayout) readBytesFromInfo(file *os.File, info string) ([]byte, error) {
-
 	layout := pl.findInfoField(info)
 	if layout == nil {
 		return nil, fmt.Errorf("ERROR didnt find field %v", info)

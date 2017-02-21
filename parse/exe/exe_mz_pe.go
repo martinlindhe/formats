@@ -9,6 +9,7 @@ package exe
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/martinlindhe/formats/parse"
@@ -241,7 +242,7 @@ func parsePEOptHeader(file *os.File, pos int64, size uint16) parse.Layout {
 	if optHeader.Length != int64(size) {
 
 		if optHeader.Length > int64(size) {
-			panic("wut")
+			log.Fatalf("optHeader is too big, got 0x%04x, expected at most 0x%04x", optHeader.Length, size)
 		}
 		padLength := int64(size) - optHeader.Length
 

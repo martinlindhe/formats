@@ -7,10 +7,6 @@ package archive
 // STATUS: 5%
 
 import (
-	//"bytes"
-	//"compress/zlib"
-
-	//"io"
 	"log"
 	"os"
 
@@ -19,7 +15,6 @@ import (
 
 // XAR parses the xar format
 func XAR(c *parse.Checker) (*parse.ParsedLayout, error) {
-
 	if !isXAR(c.Header) {
 		return nil, nil
 	}
@@ -27,7 +22,6 @@ func XAR(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isXAR(b []byte) bool {
-
 	if b[0] != 'x' || b[1] != 'a' || b[2] != 'r' || b[3] != '!' {
 		return false
 	}
@@ -44,12 +38,9 @@ var (
 )
 
 func parseXAR(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {
-
 	pos := int64(0)
-
 	hdrLen, _ := parse.ReadUint16be(file, pos+4)
 	tocLen, _ := parse.ReadUint64be(file, pos+8)
-
 	chksumAlgo, _ := parse.ReadToMap(file, parse.Uint32be, pos+24, checksumAlgos)
 
 	pl.FileKind = parse.Archive
@@ -91,7 +82,7 @@ func parseXAR(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error)
 		b := bytes.NewReader(toc)
 		r, err := zlib.NewReader(b)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		io.Copy(os.Stdout, r)
 		r.Close()

@@ -2,8 +2,7 @@ package image
 
 // STATUS: 90%
 
-// XXX problems parsing samples/images/gif/gif_89a_macos_letter_bg.gif
-// XXX problems parsing samples/images/gif/gif_89a_005_with_application.gif
+// XXX problems parsing samples/image/gif/gif_89a_005_with_application.gif
 
 import (
 	"encoding/binary"
@@ -112,7 +111,6 @@ func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 			return nil, err
 		}
 
-		// log.Printf("section %02x at %04x\n", b, pos)
 		switch b {
 		case sExtension:
 			gfxExt, err := gifExtension(c.File, pos)
@@ -149,6 +147,7 @@ func parseGIF(c *parse.Checker) (*parse.ParsedLayout, error) {
 			return &pl, nil
 
 		default:
+			log.Printf("undefined data (section id %04x) at 0x%04x", b, pos)
 			undefData := gifUndefinedData(c.File, pos)
 			pl.Layout = append(pl.Layout, *undefData)
 			pos += undefData.Length

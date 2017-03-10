@@ -36,6 +36,7 @@ var (
 		"gzip":           archive.GZIP,
 		"iso":            archive.ISO,
 		"luks":           archive.LUKS,
+		"lzh":            archive.LZH,
 		"lzma":           archive.LZMA,
 		"mozlz4":         archive.MozillaLZ4,
 		"rar":            archive.RAR,

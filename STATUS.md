@@ -10,6 +10,7 @@
 | archive/arc_gzip.go | 1% |
 | archive/arc_iso.go | 1% |
 | archive/arc_luks.go | 1% |
+| archive/arc_lzh.go | 1% |
 | archive/arc_lzma.go | 1% |
 | archive/arc_mozlz4.go | 1% |
 | archive/arc_rar.go | 1% |

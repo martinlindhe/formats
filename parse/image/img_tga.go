@@ -20,54 +20,18 @@ func TGA(c *parse.Checker) (*parse.ParsedLayout, error) {
 }
 
 func isTGA(b []byte) bool {
-
-	// XXX at 3, leshort Index is 0 for povray, ppmtotga and xv outputs
-
-	colorMapType := b[1]
-	imgType := b[2]
-
-	// colorMapType must be 1 if ImgType is 1 or 9, 0 otherwise
-	if imgType == 1 || imgType == 9 {
-		if colorMapType != 1 {
-			return false
-		}
-	} else {
-		if colorMapType != 0 {
-			return false
-		}
-	}
-
-	switch imgType {
-	case 1, 2, 3, 9, 10, 11:
+	id := binary.LittleEndian.Uint32(b)
+	kind := id & 0xfff7ffff
+	switch kind {
+	case 0x01010000: // Targa image data - Map
+		return true
+	case 0x00020000: // Targa image data - RGB
+		return true
+	case 0x00030000: // Targa image data - Mono
+		return true
 	default:
 		return false
 	}
-
-	val := binary.LittleEndian.Uint32(b)
-	chk := val & 0xfff7ffff
-
-	if chk == 0x01010000 {
-		// Targa image data - Map
-		// >2	byte&8			8		- RLE
-		// >12	leshort			>0		%hd x
-		// >14	leshort			>0		%hd
-		return true
-	}
-	if chk == 0x00020000 {
-		// Targa image data - RGB
-		// >2	byte&8			8		- RLE
-		// >12	leshort			>0		%hd x
-		// >14	leshort			>0		%hd
-		return true
-	}
-	if chk == 0x00030000 {
-		// Targa image data - Mono
-		// >2	byte&8			8		- RLE
-		// >12	leshort			>0		%hd x
-		// >14	leshort			>0		%hd
-		return true
-	}
-	return false
 }
 
 func parseTGA(file *os.File, pl parse.ParsedLayout) (*parse.ParsedLayout, error) {

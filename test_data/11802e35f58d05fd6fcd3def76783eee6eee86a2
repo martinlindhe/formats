@@ -1,0 +1,8 @@
+png (Image) image/png, png_003.png
+
+000000: header (8 bytes)
+000008: chunk IHDR (25 bytes)
+000021: chunk sRGB (13 bytes)
+00002e: chunk pHYs (21 bytes)
+000043: chunk IDAT (34 bytes)
+000065: chunk IEND (12 bytes)

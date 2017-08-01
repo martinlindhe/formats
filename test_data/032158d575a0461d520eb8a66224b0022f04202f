@@ -1,0 +1,3 @@
+elf (Executable) application/x-executable, go-relocation-test-gcc482-ppc64le.obj
+
+000000: header (52 bytes)

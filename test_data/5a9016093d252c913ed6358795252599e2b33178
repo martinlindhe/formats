@@ -1,0 +1,4 @@
+xar (Archive) , xar_one_file.xar
+
+000000: header (28 bytes)
+00001c: toc (483 bytes)

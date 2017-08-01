@@ -1,0 +1,5 @@
+bmp (Image) image/x-ms-bmp, bmp_v3-004_win95_black_thatch.bmp
+
+000000: file header (14 bytes)
+00000e: info header V3 (40 bytes)
+000036: image data (128 bytes)

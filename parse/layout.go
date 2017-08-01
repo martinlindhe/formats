@@ -52,6 +52,8 @@ const (
 	RGB
 )
 
+//go:generate stringer -type=FileKind
+
 // kinds of files
 const (
 	Image FileKind = 1 + iota

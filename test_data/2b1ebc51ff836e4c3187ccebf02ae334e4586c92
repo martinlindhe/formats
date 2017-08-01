@@ -1,0 +1,6 @@
+arj (Archive) application/x-arj, arj_005_ref_test2.arj
+
+000000: main header (54 bytes)
+000036: local file header 1 (68 bytes)
+00007a: local file header 2 (51 bytes)
+0000ad: eof marker (4 bytes)

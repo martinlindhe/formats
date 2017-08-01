@@ -1,0 +1,7 @@
+ico (Image) image/x-ico, icon_002_two_resources.ico
+
+000000: header (6 bytes)
+000006: resource 1 header (16 bytes)
+000016: resource 2 header (16 bytes)
+000026: resource 1 data (296 bytes)
+00014e: resource 2 data (744 bytes)

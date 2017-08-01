@@ -1,0 +1,14 @@
+mz-ne (Executable) application/x-dosexec, ne-win16_exe_001_mrmind.exe
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000210: dos stub (496 bytes)
+000400: external header = NE (64 bytes)
+000440: NE segment table (16 bytes)
+000450: NE resource table (128 bytes)
+0004d0: NE resident names table (10 bytes)
+0004da: NE module reference table (8 bytes)
+0004e2: NE imported names table (28 bytes)
+0004fc: NE entry table (45 bytes)
+00052a: NE nonresident names table (137 bytes)
+0005e0: fast-load area (1070 bytes)

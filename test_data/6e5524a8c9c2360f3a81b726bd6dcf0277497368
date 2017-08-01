@@ -1,0 +1,7 @@
+cab (Archive) application/vnd.ms-cab-compressed, cab_002_3_files.cab
+
+000000: header (36 bytes)
+000024: CFFOLDER 1 (8 bytes)
+00002c: CFFILE 1 (21 bytes)
+000041: CFFILE 2 (21 bytes)
+000056: CFDATA 1 (24 bytes)

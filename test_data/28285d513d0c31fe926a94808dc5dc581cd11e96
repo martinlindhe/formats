@@ -1,0 +1,15 @@
+mz-pe (Executable) application/x-dosexec, pe+-win10-64bit-HxComm.Ipc.Proxies.dll
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (192 bytes)
+000100: external header = PE (24 bytes)
+000118: PE optional header (240 bytes)
+000208: section header (280 bytes)
+000400: section .orpc (1024 bytes)
+000800: section .text (3584 bytes)
+001600: section .rdata (5632 bytes)
+002c00: section .data (1024 bytes)
+003000: section .pdata (512 bytes)
+003200: section .rsrc (1536 bytes)
+003800: section .reloc (512 bytes)

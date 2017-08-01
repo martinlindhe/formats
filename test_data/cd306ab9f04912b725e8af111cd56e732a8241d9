@@ -1,0 +1,6 @@
+mz-le (Executable) application/x-dosexec, le-win_001_win311_ios.386
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (64 bytes)
+000080: external header = LE (176 bytes)

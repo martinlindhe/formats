@@ -1,0 +1,15 @@
+jpeg (Image) image/jpeg, jpeg_002.jpg
+
+000000: start of image (SOI) (2 bytes)
+000002: APP0 (18 bytes)
+000014: APP1 (24 bytes)
+00002c: quantization table (DQT) (69 bytes)
+000071: quantization table (DQT) (69 bytes)
+0000b6: baseline DCT (SOF0) (19 bytes)
+0000c9: huffman table (DHT) (30 bytes)
+0000e7: huffman table (DHT) (50 bytes)
+000119: huffman table (DHT) (22 bytes)
+00012f: huffman table (DHT) (22 bytes)
+000145: start of scan (SOS) (11 bytes)
+000150: image data (1577 bytes)
+000779: end of image (EOI) (2 bytes)

@@ -1,0 +1,5 @@
+mz (Executable) application/x-dosexec, mz-dos_001_exepack_packed.exe
+
+000000: header (28 bytes)
+000200: EXEPACK packed exe (5918 bytes)
+00191e: EXEPACK vars (308 bytes)

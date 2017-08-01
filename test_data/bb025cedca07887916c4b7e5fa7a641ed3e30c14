@@ -1,0 +1,3 @@
+sdi (WindowsResource) , win10-efi-boot.sdi
+
+000000: header (8 bytes)

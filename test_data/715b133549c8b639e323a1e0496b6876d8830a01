@@ -1,0 +1,3 @@
+pri (WindowsResource) , resources.pri
+
+000000: header (8 bytes)

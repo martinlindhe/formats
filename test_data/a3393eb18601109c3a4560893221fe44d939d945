@@ -1,0 +1,5 @@
+mz (Executable) application/x-dosexec, w3-win_001_win311_win386.exe
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+0012ef: dos stub (22801 bytes)

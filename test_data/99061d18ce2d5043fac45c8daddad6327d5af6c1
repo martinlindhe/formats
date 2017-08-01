@@ -1,0 +1,12 @@
+mz-pe (Executable) application/x-dosexec, osx_efi_boot.efi
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (64 bytes)
+000080: external header = PE (24 bytes)
+000098: PE optional header (240 bytes)
+000188: section header (160 bytes)
+001000: section .text (573440 bytes)
+08d000: section .data (12288 bytes)
+093000: section .reloc (1536 bytes)
+093600: section .debug (512 bytes)

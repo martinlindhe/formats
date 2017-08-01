@@ -1,0 +1,5 @@
+arj (Archive) application/x-arj, arj_002_phrack1.arj
+
+000000: main header (1258 bytes)
+0004ea: local file header 1 (10444 bytes)
+002db6: eof marker (4 bytes)

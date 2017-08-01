@@ -1,0 +1,7 @@
+png (Image) image/png, png_001.png
+
+000000: header (8 bytes)
+000008: chunk IHDR (25 bytes)
+000021: chunk sBIT (16 bytes)
+000031: chunk IDAT (3323 bytes)
+000d2c: chunk IEND (12 bytes)

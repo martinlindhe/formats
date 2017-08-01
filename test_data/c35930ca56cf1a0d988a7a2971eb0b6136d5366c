@@ -1,0 +1,14 @@
+gif (Image) image/gif, gif_89a_005_with_application.gif
+
+000000: header (6 bytes)
+000006: logical screen descriptor (7 bytes)
+00000d: global color table (96 bytes)
+00006d: graphic control extension (8 bytes)
+000075: application extension (15 bytes)
+000084: undefined data (44 bytes)
+0000b0: undefined data (3 bytes)
+0000b3: undefined data (189 bytes)
+000170: undefined data (1061 bytes)
+000595: undefined data (521 bytes)
+00079e: undefined data (21190 bytes)
+005a64: trailer (1 bytes)

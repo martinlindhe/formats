@@ -1,0 +1,9 @@
+gif (Image) image/gif, gif_89a_004_fish.gif
+
+000000: header (6 bytes)
+000006: logical screen descriptor (7 bytes)
+00000d: global color table (24 bytes)
+000025: graphic control extension (8 bytes)
+00002d: image descriptor (10 bytes)
+000037: image data (251 bytes)
+000132: trailer (1 bytes)

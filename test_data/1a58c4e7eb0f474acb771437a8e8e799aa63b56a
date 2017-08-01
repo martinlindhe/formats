@@ -1,0 +1,4 @@
+mz (Executable) application/x-dosexec, mz-dos_002_pklite_packed.exe
+
+000000: header (28 bytes)
+00001c: PKLITE header (54 bytes)

@@ -1,0 +1,4 @@
+mz (Executable) application/x-dosexec, mz-dos_lzexe_002_packed.exe
+
+000000: header (28 bytes)
+00144e: program (4 bytes)

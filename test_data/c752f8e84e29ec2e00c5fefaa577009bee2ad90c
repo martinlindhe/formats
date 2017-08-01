@@ -1,0 +1,4 @@
+mz (Executable) application/x-dosexec, mz-dos_005_borland_header.exe
+
+000000: header (28 bytes)
+00001c: borland TLINK header (6 bytes)

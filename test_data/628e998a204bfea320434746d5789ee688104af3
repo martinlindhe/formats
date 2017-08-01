@@ -1,0 +1,5 @@
+bmp (Image) image/x-ms-bmp, bmp_v2-001.bmp
+
+000000: file header (14 bytes)
+00000e: info header V2 (64 bytes)
+00004e: image data (8006 bytes)

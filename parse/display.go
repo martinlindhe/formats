@@ -72,6 +72,15 @@ func (f *HexViewState) PrevGroup() {
 	}
 }
 
+// FullListing lists the parsed layout
+func (pl *ParsedLayout) FullListing() string {
+	s := fmt.Sprintf("%s (%s) %s, %s\n\n", pl.FormatName, pl.FileKind.String(), pl.MimeType, pl.FileName)
+	for _, x := range pl.Layout {
+		s += fmt.Sprintf("%06x: %s (%d bytes)\n", x.Offset, x.Info, x.Length)
+	}
+	return s
+}
+
 // PrettyASCIIView returns pretty ASCII of the currently visible area of the parsed layout
 func (pl *ParsedLayout) PrettyASCIIView(file *os.File, hexView HexViewState) string {
 

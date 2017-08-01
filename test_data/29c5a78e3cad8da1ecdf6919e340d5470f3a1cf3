@@ -1,0 +1,14 @@
+mz-pe (Executable) application/x-dosexec, pe+-win10-64bit_seqchk10imm.dll
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (200 bytes)
+000108: external header = PE (24 bytes)
+000120: PE optional header (240 bytes)
+000210: section header (240 bytes)
+000400: section .text (15872 bytes)
+004200: section .rdata (11776 bytes)
+007000: section .data (512 bytes)
+007200: section .pdata (1024 bytes)
+007600: section .rsrc (1536 bytes)
+007c00: section .reloc (512 bytes)

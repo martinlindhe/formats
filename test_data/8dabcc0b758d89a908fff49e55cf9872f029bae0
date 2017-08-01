@@ -1,0 +1,14 @@
+mz-ne (Executable) application/x-dosexec, ne-win95_mnmtph16.dll
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (64 bytes)
+000080: external header = NE (64 bytes)
+0000c0: NE segment table (32 bytes)
+0000e0: NE resource table (24 bytes)
+0000f8: NE resident names table (87 bytes)
+00014f: NE module reference table (4 bytes)
+000153: NE imported names table (69 bytes)
+000193: NE entry table (87 bytes)
+0001ea: NE nonresident names table (454 bytes)
+0003c0: fast-load area (64 bytes)

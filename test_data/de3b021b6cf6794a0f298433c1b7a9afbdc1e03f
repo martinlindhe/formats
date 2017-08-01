@@ -1,0 +1,9 @@
+gif (Image) image/gif, gif_89a_006_win95_attlogo.gif
+
+000000: header (6 bytes)
+000006: logical screen descriptor (7 bytes)
+00000d: global color table (384 bytes)
+00018d: graphic control extension (8 bytes)
+000195: image descriptor (10 bytes)
+00019f: image data (879 bytes)
+00050e: trailer (1 bytes)

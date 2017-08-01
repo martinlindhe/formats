@@ -1,0 +1,9 @@
+gif (Image) image/gif, gif_87a_002_apples.gif
+
+000000: header (6 bytes)
+000006: logical screen descriptor (7 bytes)
+00000d: global color table (6 bytes)
+000013: image descriptor (10 bytes)
+00001d: local color table (768 bytes)
+00031d: image data (5399 bytes)
+001834: trailer (1 bytes)

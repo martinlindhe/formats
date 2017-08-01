@@ -1,0 +1,12 @@
+mz-pe (Executable) application/x-dosexec, pe-win32_exe_001_pbrush.exe
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (64 bytes)
+000080: external header = PE (24 bytes)
+000098: PE optional header (224 bytes)
+000178: section header (160 bytes)
+000400: section .text (512 bytes)
+000600: section .idata (512 bytes)
+000800: section .rsrc (2048 bytes)
+001000: section .reloc (512 bytes)

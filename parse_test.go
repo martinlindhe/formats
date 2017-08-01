@@ -2,6 +2,9 @@ package formats
 
 import (
 	"bufio"
+	"crypto/sha1"
+	"encoding/hex"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,6 +12,13 @@ import (
 
 	"github.com/martinlindhe/formats/parse"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	hexView = parse.HexViewState{
+		BrowseMode: parse.ByGroup,
+		RowWidth:   16,
+	}
 )
 
 // some tests to see that parsed files look ok
@@ -26,6 +36,19 @@ func TestParsedLayout(t *testing.T) {
 		if fi.Size() == 0 {
 			return nil
 		}
+
+		sha1, err := sha1FromFile(path)
+		expectedFile := "test_data/" + sha1
+		expectedData := []byte{}
+		if exists(expectedFile) {
+			expectedData, err = ioutil.ReadFile(expectedFile)
+			if err != nil {
+				return err
+			}
+		} else {
+			t.Log("warning: test data missing for " + path)
+		}
+
 		f, err := os.Open(path)
 		defer f.Close()
 		if err != nil {
@@ -35,6 +58,18 @@ func TestParsedLayout(t *testing.T) {
 		layout, err := ParseLayout(f)
 		if err != nil {
 			t.Errorf("ParseLayout error %s", err)
+		}
+
+		actualData := layout.FullListing()
+
+		// uncomment if to update test_data
+		if !exists(expectedFile) {
+			err = ioutil.WriteFile(expectedFile, []byte(actualData), 0644)
+			if err != nil {
+				return err
+			}
+		} else {
+			assert.Equal(t, string(expectedData), actualData)
 		}
 
 		assert.Equal(t, true, layout != nil)
@@ -309,4 +344,14 @@ func runCommandReturnStdout(cmd string, step ...string) (string, error) {
 		return res, err
 	}
 	return res, nil
+}
+
+// returns sha1 as hex string
+func sha1FromFile(filename string) (string, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	sha1 := sha1.Sum(data)
+	return hex.EncodeToString(sha1[:]), nil
 }

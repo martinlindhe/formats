@@ -1,0 +1,6 @@
+mz-lx (Executable) application/x-dosexec, lx-os2-exe-001_fpart.exe
+
+000000: header (28 bytes)
+00001c: sub header (36 bytes)
+000040: dos stub (64 bytes)
+000080: external header = LX (196 bytes)

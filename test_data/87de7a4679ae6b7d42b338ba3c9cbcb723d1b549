@@ -1,0 +1,5 @@
+arj (Archive) application/x-arj, arj_001_tiny.arj
+
+000000: main header (53 bytes)
+000035: local file header 1 (64 bytes)
+000075: eof marker (4 bytes)

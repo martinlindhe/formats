@@ -1,0 +1,16 @@
+gif (Image) image/gif, gif_89a_002_anim.gif
+
+000000: header (6 bytes)
+000006: logical screen descriptor (7 bytes)
+00000d: comment extension (7 bytes)
+000014: application extension (19 bytes)
+000027: comment extension (13 bytes)
+000034: graphic control extension (8 bytes)
+00003c: image descriptor (10 bytes)
+000046: local color table (384 bytes)
+0001c6: image data (955 bytes)
+000581: graphic control extension (8 bytes)
+000589: image descriptor (10 bytes)
+000593: local color table (384 bytes)
+000713: image data (303 bytes)
+000842: trailer (1 bytes)

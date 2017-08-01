@@ -1,0 +1,11 @@
+mng (Image) image/png, mng_001.mng
+
+000000: header (8 bytes)
+000008: chunk MHDR (40 bytes)
+000030: chunk BACK (19 bytes)
+000043: chunk DEFI (14 bytes)
+000051: chunk FRAM (22 bytes)
+000067: chunk MOVE (25 bytes)
+000080: chunk IHDR (25 bytes)
+000099: chunk IDAT (5045 bytes)
+00144e: chunk IEND (12 bytes)

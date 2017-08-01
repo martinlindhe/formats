@@ -1,0 +1,5 @@
+ico (Image) image/x-ico, icon_embedded_png_001.ico
+
+000000: header (6 bytes)
+000006: resource 1 header (16 bytes)
+000016: resource 1 data (30961 bytes)

@@ -1,0 +1,5 @@
+mz (Executable) application/x-dosexec, mz-dos_lzexe_001_keen1.exe
+
+000000: header (28 bytes)
+00001c: LZEXE header (20 bytes)
+00c6ae: lzexe uncompressor (232 bytes)
